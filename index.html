@@ -23,14 +23,14 @@
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
-
+ 
 /* \u2500\u2500 LOGO (no link, just branding) \u2500\u2500 */
 .zn-logo{display:flex;align-items:center;gap:9px;cursor:default;user-select:none;}
 .zn-logo-img{height:26px;width:auto;display:block;}
 .zn-logo-name{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-0.2px;}
 .zn-logo-fallback{display:none;align-items:center;gap:8px;}
 .zn-mark{width:26px;height:26px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
+ 
 /* \u2500\u2500 HERO \u2500\u2500 */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px;background:var(--white);position:relative;overflow:hidden;}
 .hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#D1D8E8 1px,transparent 1px);background-size:28px 28px;opacity:0.45;pointer-events:none;}
@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .hero-features{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:44px;flex-wrap:wrap;animation:fadeUp 0.5s 0.38s ease both;}
 .hf-item{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:500;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
-
+ 
 /* \u2500\u2500 TOPBAR \u2500\u2500 */
 .step-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
 .step-page.active{display:flex;}
@@ -66,7 +66,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .nav-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;padding:6px 12px;transition:all 0.15s;}
 .nav-btn:hover{border-color:var(--border-strong);color:var(--ink);}
 .tracker-count{min-width:18px;height:18px;background:var(--accent);color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
-
+ 
 /* \u2500\u2500 STEPPER \u2500\u2500 */
 .stepper{display:flex;align-items:center;}
 .st-node{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--placeholder);transition:all 0.25s;white-space:nowrap;}
@@ -75,7 +75,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .st-circle{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:1.5px solid currentColor;flex-shrink:0;transition:all 0.25s;}
 .st-node.done .st-circle{background:var(--green);border-color:var(--green);color:#fff;}
 .st-line{width:24px;height:1px;background:var(--border);margin:0 2px;flex-shrink:0;}
-
+ 
 /* \u2500\u2500 STEP BODY \u2500\u2500 */
 .sbody{flex:1;max-width:820px;width:100%;margin:0 auto;padding:52px 40px 80px;}
 .step-kicker{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -86,7 +86,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .step-title em{font-style:italic;color:var(--accent);}
 .step-desc{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:560px;margin-bottom:32px;}
 .divider{height:1px;background:var(--border);margin:32px 0;}
-
+ 
 /* \u2500\u2500 FORM \u2500\u2500 */
 .field{margin-bottom:20px;}
 .f-label{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:7px;}
@@ -312,7 +312,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}\
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    ZILLION LOGO \u2014 dark bg version
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -323,7 +323,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 /* light-bg variant used inside step pages */
 .zn-logo.light .zn-wordmark{color:var(--ink);}
 .zn-logo.light .zn-icon path,.zn-logo.light .zn-icon circle{stroke:var(--ink);}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    HOME PAGE (dark, app-like)
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -338,7 +338,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
   background-image:linear-gradient(rgba(0,255,148,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,148,0.04) 1px,transparent 1px);
   background-size:48px 48px;
 }
-
+ 
 /* Home topbar */
 .home-bar{
   display:flex;align-items:center;justify-content:space-between;
@@ -355,13 +355,13 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 }
 .home-proposals-btn:hover{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);}
 .home-count{min-width:20px;height:20px;background:var(--accent);color:var(--dark);border-radius:999px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;}
-
+ 
 /* Home content */
 .home-content{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:48px 24px 60px;position:relative;z-index:1;text-align:center;
 }
-
+ 
 /* Status pill */
 .home-status{
   display:inline-flex;align-items:center;gap:7px;
@@ -372,7 +372,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 }
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
+ 
 .home h1{
   font-family:'Playfair Display',serif;
   font-size:clamp(40px,6vw,72px);font-weight:700;line-height:1.05;
@@ -380,13 +380,13 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
   animation:fadeUp 0.4s 0.06s ease both;
 }
 .home h1 em{font-style:italic;color:var(--accent);}
-
+ 
 .home-sub{
   font-size:clamp(15px,2vw,17px);color:rgba(255,255,255,0.5);
   font-weight:400;line-height:1.6;max-width:420px;margin:0 auto 40px;
   animation:fadeUp 0.4s 0.12s ease both;
 }
-
+ 
 /* Primary CTA row */
 .home-cta-row{
   display:flex;align-items:center;justify-content:center;gap:12px;
@@ -403,7 +403,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .btn-start:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(0,255,148,0.3);}
 .btn-start svg{transition:transform 0.18s;}
 .btn-start:hover svg{transform:translateX(3px);}
-
+ 
 .btn-view-proposals{
   display:inline-flex;align-items:center;gap:8px;
   background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);
@@ -412,7 +412,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
   cursor:pointer;transition:all 0.15s;
 }
 .btn-view-proposals:hover{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);}
-
+ 
 /* Pipeline pills */
 .home-pipeline{
   display:flex;align-items:center;justify-content:center;gap:0;
@@ -429,7 +429,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .pp-step:last-child{border-radius:0 var(--r-md) var(--r-md) 0;}
 .pp-step+.pp-step{border-left:none;}
 .pp-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);}
-
+ 
 /* Recent proposals preview */
 .home-recent{
   width:100%;max-width:680px;margin-top:48px;
@@ -451,9 +451,9 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .rs-success{background:rgba(14,122,86,0.2);color:#34D399;border:1px solid rgba(14,122,86,0.4);}
 .rs-lost{background:rgba(192,57,43,0.2);color:#F87171;border:1px solid rgba(192,57,43,0.3);}
 .home-recent-empty{text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:13px;}
-
+ 
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    TOPBAR (step pages)
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -469,7 +469,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .tl-sep{width:1px;height:18px;background:rgba(255,255,255,0.12);margin:0 10px;}
 .tl-sub{font-size:12px;color:rgba(255,255,255,0.35);font-weight:400;}
 .topbar-right{display:flex;align-items:center;gap:8px;}
-
+ 
 /* Nav buttons \u2014 bolder, more visible */
 .nav-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -484,7 +484,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .nav-btn.accent{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
 .nav-btn.accent:hover{background:rgba(0,255,148,0.18);}
 .tracker-count{min-width:18px;height:18px;background:var(--accent);color:var(--dark);border-radius:999px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    STEPPER
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -495,7 +495,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .st-circle{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:1.5px solid currentColor;flex-shrink:0;transition:all 0.25s;}
 .st-node.done .st-circle{background:var(--green);border-color:var(--green);color:#fff;}
 .st-line{width:24px;height:1px;background:rgba(255,255,255,0.1);margin:0 2px;flex-shrink:0;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    STEP BODY
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -508,7 +508,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .step-title em{font-style:italic;color:var(--blue);}
 .step-desc{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:560px;margin-bottom:32px;}
 .divider{height:1px;background:var(--border);margin:32px 0;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    FORM ELEMENTS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -523,7 +523,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .tab.active{background:var(--white);color:var(--ink);font-weight:600;box-shadow:var(--shadow-sm);}
 .sample-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--blue);cursor:pointer;padding:0;}
 .sample-btn:hover{color:var(--blue-hover);}
-
+ 
 /* Reprompt box */
 .reprompt-row{display:flex;gap:8px;margin-top:10px;align-items:flex-start;}
 .reprompt-input{flex:1;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);color:var(--ink);font-family:'Inter',sans-serif;font-size:13px;padding:10px 13px;outline:none;resize:none;transition:border-color 0.15s;line-height:1.5;}
@@ -531,7 +531,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .reprompt-input::placeholder{color:var(--placeholder);}
 .reprompt-send{display:inline-flex;align-items:center;gap:6px;background:var(--dark);color:#fff;border:none;border-radius:var(--r-md);padding:10px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .reprompt-send:hover{background:var(--ink2);}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    BUTTONS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -548,7 +548,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .btn-ghost{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;padding:8px 4px;transition:color 0.15s;}
 .btn-ghost:hover{color:var(--red);}
 .btn-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    CARDS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -562,7 +562,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .card-body[contenteditable=true]:focus{box-shadow:inset 0 0 0 2px rgba(26,86,219,0.12);}
 .out-empty{color:var(--placeholder);font-style:italic;font-family:'Inter',sans-serif;}
 .edit-hint{font-size:11px;color:var(--placeholder);display:flex;align-items:center;gap:4px;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    CHIPS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -578,7 +578,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .rag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);}
 .rag-notice{display:flex;align-items:flex-start;gap:10px;background:var(--blue-subtle);border:1px solid rgba(26,86,219,0.15);border-radius:var(--r-md);padding:12px 15px;margin-bottom:18px;}
 .rag-text{font-size:12.5px;color:var(--blue);line-height:1.5;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    CONFIDENCE SCORE
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -594,7 +594,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .conf-reasoning{font-size:12.5px;color:var(--muted);line-height:1.5;}
 .conf-matches{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
 .conf-match-pill{font-size:11px;font-weight:600;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:999px;padding:2px 9px;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    EDIT BAR
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -606,7 +606,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .btn-save:hover{background:var(--blue-hover);}
 .btn-revert{display:inline-flex;align-items:center;gap:5px;background:var(--white);color:var(--muted);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 13px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;}
 .btn-revert:hover{border-color:var(--border-strong);color:var(--ink);}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    TAGS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -614,7 +614,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .tag-blue{background:var(--blue-light);color:var(--blue);}
 .tag-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .tag-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    INVENTORY
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -625,7 +625,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .inv-table tr:last-child td{border-bottom:none;}
 .inv-table tbody tr:hover td{background:#FAFBFC;}
 .s-ok{color:var(--green);font-weight:600;}.s-low{color:var(--amber);font-weight:600;}.s-out{color:var(--red);font-weight:600;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    RACK PANEL
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -641,7 +641,7 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 .rack-option-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--blue-subtle);border:1px solid rgba(26,86,219,0.15);border-radius:var(--r-md);margin-bottom:12px;}
 .rack-option-row label{font-size:13px;font-weight:500;color:var(--blue);cursor:pointer;display:flex;align-items:center;gap:8px;}
 input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    TREE OF THOUGHT
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -654,7 +654,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .tot-path.winning .tot-path-label{color:var(--green);}
 .tot-path.eliminated .tot-path-label{color:var(--red);}
 .tot-path-body{font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    HITL
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -662,7 +662,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .hitl-ico{font-size:20px;flex-shrink:0;}
 .hitl-title{font-size:14px;font-weight:600;color:var(--amber);margin-bottom:3px;}
 .hitl-desc{font-size:13px;color:#7A5510;line-height:1.5;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    STATUS / SPINNER
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -673,7 +673,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:rot 0.6s linear infinite;}
 @keyframes rot{to{transform:rotate(360deg);}}
 .spin-dark{border-color:rgba(26,86,219,0.2);border-top-color:var(--blue);}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    PROPOSAL OUTPUT
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -687,7 +687,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .act-btn{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 13px;font-size:12.5px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;box-shadow:var(--shadow-sm);}
 .act-btn:hover{border-color:var(--border-strong);background:var(--bg);}
 .act-btn.disabled{opacity:0.4;cursor:not-allowed;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    VERSION STRIP
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -703,7 +703,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .storage-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:999px;padding:3px 10px;}
 .storage-badge.saving{color:var(--amber);background:var(--amber-bg);border-color:var(--amber-border);}
 .storage-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
-
+ 
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    TRACKER PAGE
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
@@ -759,7 +759,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .filter-btn{padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--muted);font-family:'Inter',sans-serif;transition:all 0.15s;}
 .filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 .filter-btn:hover:not(.active){border-color:var(--border-strong);color:var(--ink);}
-
+ 
 @media(max-width:700px){
   .topbar,.home-bar{padding:0 16px;}
   .sbody,.tracker-body{padding:32px 16px 64px;}
@@ -768,7 +768,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
   .tracker-stats{grid-template-columns:1fr 1fr;}
   .home-content{padding:32px 16px 40px;}
 }
-
+ 
 /* ─── Home two-column layout ─── */
 .home-columns{display:flex;gap:24px;margin-top:44px;width:100%;max-width:880px;align-items:flex-start;flex-wrap:wrap;text-align:left;}
 .home-col{flex:1;min-width:240px;}
@@ -776,13 +776,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .home-pipeline.col{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;margin-top:0;}
 .home-pipeline.col .pp-step{border-radius:var(--r-md) !important;width:100%;border:1px solid var(--border) !important;box-sizing:border-box;}
 .home-pipeline.col .pp-step+.pp-step{border-left:1px solid var(--border) !important;}
-
+ 
 /* ─── Version summary card ─── */
 .ver-summary-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;margin-bottom:14px;}
 .ver-summary-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
 .ver-summary-text{font-size:13px;color:var(--ink2);line-height:1.65;font-style:italic;outline:none;}
 .ver-summary-text:empty::before{content:'No summary yet.';color:var(--placeholder);font-style:normal;}
-
+ 
 /* ─── Inventory Resource Tab ─── */
 .inv-tab-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
 .inv-tab-page.active{display:flex;}
@@ -839,7 +839,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 </style>
 </head>
 <body>
-
+ 
 <!-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 HOME PAGE \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <div id="screenHome" style="display:flex;" class="">
   <div class="home">
@@ -865,12 +865,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         </button>
       </div>
     </nav>
-
+ 
     <div class="home-content">
       <div class="home-status"><div class="status-dot"></div>AI Proposal Engine \u00b7 Active</div>
       <h1>Generate a <em>hardware</em><br>proposal in minutes.</h1>
       <p class="home-sub">Paste meeting notes. Get a structured, client-ready proposal \u2014 with rack planning, cost breakdown, and a full engagement timeline.</p>
-
+ 
       <div class="home-cta-row">
         <button class="btn-start" onclick="startNewAssessment()">
           New Assessment
@@ -883,7 +883,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           🖥 Inventory
         </button>
       </div>
-
+ 
       <!-- Agent Pipeline + Recent Proposals side-by-side -->
       <div class="home-columns">
         <div class="home-col">
@@ -902,8 +902,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 STEP 1 \u2014 DISCOVERY \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <div id="screen1" class="step-page">
   <nav class="topbar">
@@ -925,7 +925,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <button class="nav-btn" onclick="goHome()">\u2302 Home</button>
     </div>
   </nav>
-
+ 
   <div class="sbody">
     <div class="step-kicker"><div class="kicker-num">1</div><span class="kicker-label">Discovery Agent</span><span class="kicker-agent">\u2014 The Listener</span></div>
     <h2 class="step-title">Drop in your<br><em>meeting notes.</em></h2>
@@ -942,12 +942,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     </div>
     <div id="tabGdoc" class="field" style="display:none"><div class="f-label">Google Doc URL <span class="f-hint">\u2014 Workspace SDK placeholder</span></div><textarea id="gdocInput" rows="2" placeholder="https://docs.google.com/document/d/\u2026"></textarea></div>
     <div id="tabSlack" class="field" style="display:none"><div class="f-label">Slack Export</div><textarea id="slackInput" rows="6" placeholder="Paste Slack export JSON or channel thread\u2026"></textarea></div>
-
+ 
     <div class="status-row"><div class="sdot" id="s1d"></div><span id="s1s">Ready to extract constraints</span></div>
     <div class="btn-row">
       <button class="btn-dark" id="btn1" onclick="runAgent1()">Run Discovery Agent \u2192</button>
     </div>
-
+ 
     <div id="out1" style="display:none;margin-top:36px;">
       <div class="divider"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -965,7 +965,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <div class="edit-bar-msg">\u270f\ufe0f Unsaved constraint edits</div>
         <div class="edit-bar-actions"><button class="btn-revert" onclick="revertConstraints()">\u21ba Revert</button><button class="btn-save" onclick="saveConstraints()">\u2713 Save</button></div>
       </div>
-
+ 
       <!-- Confidence score -->
       <div class="confidence-card" id="confCard" style="display:none;">
         <div class="conf-ring-wrap">
@@ -982,7 +982,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           <div class="conf-matches" id="confMatches"></div>
         </div>
       </div>
-
+ 
       <div class="card">
         <div class="card-header"><div class="card-title">\ud83d\udccb Constraint Summary</div><div style="display:flex;gap:8px;align-items:center;"><span class="edit-hint">\u270f\ufe0f Click to edit</span><span class="tag tag-blue">The Listener</span></div></div>
         <div class="card-body" id="out1body" contenteditable="true" spellcheck="false"></div>
@@ -991,7 +991,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <div class="edit-bar-msg">\u270f\ufe0f Unsaved summary edits</div>
         <div class="edit-bar-actions"><button class="btn-revert" onclick="revertSummary()">\u21ba Revert</button><button class="btn-save" onclick="saveSummary()">\u2713 Save</button></div>
       </div>
-
+ 
       <!-- Reprompt for Discovery re-run -->
       <div style="margin-top:4px;margin-bottom:16px;">
         <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Re-run with feedback</div>
@@ -1000,15 +1000,15 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           <button class="reprompt-send" onclick="rerunAgent1()">\u21ba Re-run Agent</button>
         </div>
       </div>
-
+ 
       <div class="btn-row">
         <button class="btn-primary" onclick="goStep(2)">Continue to Architect Agent \u2192</button>
       </div>
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 STEP 2 \u2014 ARCHITECT \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <div id="screen2" class="step-page">
   <nav class="topbar">
@@ -1030,12 +1030,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <button class="nav-btn" onclick="goHome()">\u2302 Home</button>
     </div>
   </nav>
-
+ 
   <div class="sbody">
     <div class="step-kicker"><div class="kicker-num" style="background:var(--ink);">2</div><span class="kicker-label">Architect Agent</span><span class="kicker-agent">\u2014 The Engineer (Tree-of-Thought)</span></div>
     <h2 class="step-title">Hardware<br><em>recommendation.</em></h2>
     <p class="step-desc">The Architect Agent explores multiple hardware paths \u2014 including rack and facility requirements \u2014 scores each against all constraints, and surfaces the optimal configuration.</p>
-
+ 
     <div class="f-label" style="margin-bottom:10px;">Current Inventory Snapshot</div>
     <div class="inv-wrap">
       <table class="inv-table">
@@ -1049,7 +1049,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         </tbody>
       </table>
     </div>
-
+ 
     
       <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;"><button class="act-btn" onclick="goInventory()" style="font-size:12px;color:var(--blue);border-color:rgba(26,86,219,.25);">🖥 View Full Inventory →</button></div>
       <div class="rack-panel">
@@ -1078,10 +1078,10 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         </div>
       </div>
     </div>
-
+ 
     <div class="status-row"><div class="sdot" id="s2d"></div><span id="s2s">Ready \u2014 constraints loaded from Step 1</span></div>
     <div class="btn-row"><button class="btn-dark" id="btn2" onclick="runAgent2()">Run Architect Agent \u2192</button></div>
-
+ 
     <div id="out2" style="display:none;margin-top:36px;">
       <div class="divider"></div>
       <div class="tot-header">\u26a1 Tree-of-Thought: Explored Paths</div>
@@ -1094,7 +1094,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <div class="edit-bar-msg">\u270f\ufe0f Unsaved recommendation edits</div>
         <div class="edit-bar-actions"><button class="btn-revert" onclick="revertRec()">\u21ba Revert</button><button class="btn-save" onclick="saveRec()">\u2713 Save</button></div>
       </div>
-
+ 
       <!-- Reprompt for Architect re-run -->
       <div style="margin-top:4px;margin-bottom:16px;">
         <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Re-run with feedback</div>
@@ -1103,7 +1103,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           <button class="reprompt-send" onclick="runAgent2()">\u21ba Re-run Agent</button>
         </div>
       </div>
-
+ 
       <div class="hitl-notice"><div class="hitl-ico">\u26a0\ufe0f</div><div><div class="hitl-title">Human Review Required \u2014 HITL Checkpoint</div><div class="hitl-desc">Xander / Yuhan: review the reasoning and recommendation. Edit inline if needed, then approve.</div></div></div>
       <div class="btn-row">
         <button class="btn-green" onclick="approveContinue()">\u2713 Approve &amp; Generate Proposal</button>
@@ -1112,8 +1112,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 STEP 3 \u2014 WRITER \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <div id="screen3" class="step-page">
   <nav class="topbar">
@@ -1135,13 +1135,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <button class="nav-btn" onclick="goHome()">\u2302 Home</button>
     </div>
   </nav>
-
+ 
   <div class="sbody">
     <div class="step-kicker"><div class="kicker-num" style="background:var(--green);">3</div><span class="kicker-label">Writer Agent</span><span class="kicker-agent">\u2014 The Author</span></div>
     <h2 class="step-title">Your client<br><em>proposal.</em></h2>
     <p class="step-desc">Click anywhere in the proposal to edit inline. Save a version at any point to capture your changes before continuing negotiations.</p>
     <div class="status-row"><div class="sdot" id="s3d"></div><span id="s3s">Generating proposal\u2026</span></div>
-
+ 
     <!-- Version strip -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <div class="version-strip" id="versionStrip">
@@ -1151,7 +1151,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       </div>
       <div class="storage-badge" id="storageBadge" style="display:none;"><div class="storage-dot"></div><span id="storageBadgeText">Saved</span></div>
     </div>
-
+ 
     <div class="proposal-card">
       <div class="card-header"><div class="card-title">\ud83d\udcc4 Proposal Output</div><div style="display:flex;gap:8px;align-items:center;"><span class="edit-hint">\u270f\ufe0f Click anywhere to edit</span><span class="tag tag-green">The Author</span></div></div>
       <div class="proposal-body out-empty" id="out3body" contenteditable="false" spellcheck="false">Drafting client-facing proposal\u2026</div>
@@ -1160,7 +1160,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <div class="edit-bar-msg">\u270f\ufe0f Unsaved proposal edits</div>
       <div class="edit-bar-actions"><button class="btn-revert" onclick="revertProposal()">\u21ba Revert to saved</button><button class="btn-save" onclick="saveProposalEdits()">\u2713 Save edits</button></div>
     </div>
-
+ 
     <div id="propActions" style="display:none;">
       <div class="act-strip">
         <button class="act-btn" id="copyBtn" onclick="doCopy()">\ud83d\udccb Copy Markdown</button>
@@ -1174,8 +1174,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     </div>
   </div>
 </div>
-
-
+ 
+ 
 <!-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 PROPOSALS TRACKER \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 -->
 <div id="screenTracker" class="tracker-page">
   <nav class="topbar">
@@ -1211,8 +1211,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     <div class="proposal-list" id="proposalList"></div>
   </div>
 </div>
-
-
+ 
+ 
 <script>
 /* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    STATE
@@ -1223,7 +1223,7 @@ let proposals=[];
 let currentFilter='all';
 let currentVersionIndex=0;
 let proposalVersions=[];
-
+ 
 /* \u2550\u2550\u2550 STORAGE (localStorage) \u2550\u2550\u2550 */
 const SK='zn_proposals_v5';
 function storageSave(){
@@ -1247,7 +1247,7 @@ function showStorageBadge(state,text){
   document.getElementById('storageBadgeText').textContent=text;
   if(state==='saved'||state==='error')setTimeout(()=>{b.style.display='none';},2500);
 }
-
+ 
 /* \u2550\u2550\u2550 MOCK DATA \u2550\u2550\u2550 */
 const MOCK_R1={
   client_name:"Acme Research Labs",budget:"$180,000 \u2013 $220,000",
@@ -1258,7 +1258,7 @@ const MOCK_R1={
   key_requirements:["Min 192GB VRAM/node \u2014 prior cluster had OOM failures","NVLink bandwidth critical for 70B param distributed training","Cluster operational before July 1st pharma contract start"],
   confidence:{score:8.7,label:"High Confidence",reasoning:"Strong signal match on 4 past Zillion pharma AI deployments. Budget, VRAM floor, timeline urgency, and milestone-revenue structure all align with closed deals. Minor uncertainty on NVLink topology before finalizing.",matched_deals:["Pharma AI \u2014 $156k \u2713","BioFoundry \u2014 $112k \u2713","GenomicsLab \u2014 $198k \u2713","MedSeq \u2014 $84k \u23f3"]}
 };
-
+ 
 const MOCK_TOT_PATHS=[
   {label:"Path A \u2014 RTX 5090 8\u00d7 (Max Performance)",status:"eliminated",content:"3\u00d7 5090-8x @ $52k = $156k | 768GB VRAM | only 3 in stock\
 Eliminated: 4+ nodes require backorder \u2014 delivery risk vs. mid-June hard deadline.",score:"Score: 6.1/10"},
@@ -1270,41 +1270,41 @@ Selected: Meets VRAM floor, $12k under budget, zero supply risk, mid-June delive
   {label:"Path D \u2014 A100-80G 8\u00d7 (Data Center Grade)",status:"eliminated",content:"1\u00d7 A100-8x @ $180k | 640GB VRAM | 1 in stock\
 Eliminated: Single node, insufficient for distributed 70B training. Consumes full budget.",score:"Score: 5.4/10"}
 ];
-
+ 
 const MOCK_R2=`FINAL RECOMMENDATION
-
+ 
 Hardware: RTX 4090 8\u00d7 Cluster (SKU: 4090-8x)
 Quantity: 6 nodes (48\u00d7 RTX 4090 total)
 Total Cost: $168,000 \u2014 $12,000 under primary budget
-
+ 
 Rack & Facility:
 - Footprint: 24U (6\u00d7 4U nodes) \u2014 42U rack minimum
 - Power: ~19.2 kW full load \u2014 recommend 30 kW PDU
 - Cooling: Air-cooled CRAC sufficient; in-row liquid cooling recommended
 - Network: 200Gb InfiniBand HDR, 36-port HDR switch
-
+ 
 Justification: 1,152GB aggregate VRAM eliminates OOM risk. Full stock available, zero backorder exposure. Homogeneous 4090 architecture simplifies NCCL config. Cluster validated and delivered well ahead of mid-June deadline.
-
+ 
 Risks:
 1. NVLink is pair-based on 4090 \u2014 correct NCCL topology file required
 2. 19.2 kW full load \u2014 confirm PDU and cooling before ship
 3. 6 additional 4090-8x in stock for scale-out if needed`;
-
+ 
 const MOCK_PROPOSAL=`# Hardware Proposal \u2014 GPU Training Cluster
 **Client:** Acme Research Labs
 **Date:** March 31, 2026
 **Reference:** ZN-2026-0331-ACM
-
+ 
 ---
-
+ 
 ## Executive Summary
-
+ 
 Acme Research Labs is executing a milestone-based biomedical AI training contract with a hard July 1st delivery date. This proposal delivers a 6-node RTX 4090 cluster at $168,000 \u2014 $12k under primary budget \u2014 with full rack planning, managed services, and a deployment timeline built to protect the client's pharma contract.
-
+ 
 ---
-
+ 
 ## Client Requirements
-
+ 
 | Requirement | Detail |
 |---|---|
 | Workload | 70B param LLaMA-based model, distributed training |
@@ -1312,23 +1312,23 @@ Acme Research Labs is executing a milestone-based biomedical AI training contrac
 | Min VRAM | 192GB per node |
 | Budget | $180k primary / $220k stretch |
 | Hard deadline | Mid-June 2026 |
-
+ 
 ---
-
+ 
 ## Proposed Hardware
-
+ 
 **6\u00d7 RTX 4090 8\u00d7 Cluster (SKU: 4090-8x)**
-
+ 
 | Spec | Per Node | Total |
 |---|---|---|
 | GPUs | 8\u00d7 RTX 4090 | 48\u00d7 RTX 4090 |
 | VRAM | 192 GB | 1,152 GB |
 | Cost | $28,000 | $168,000 |
-
+ 
 ---
-
+ 
 ## Rack & Facility Plan
-
+ 
 | Item | Spec |
 |---|---|
 | Rack footprint | 24U \u2014 one 42U rack |
@@ -1336,11 +1336,11 @@ Acme Research Labs is executing a milestone-based biomedical AI training contrac
 | PDU recommendation | 30 kW |
 | Cooling | Air-cooled CRAC (min) |
 | Network fabric | 200Gb InfiniBand HDR |
-
+ 
 ---
-
+ 
 ## Cost Breakdown
-
+ 
 | Line Item | Total |
 |---|---|
 | 6\u00d7 RTX 4090 8\u00d7 Cluster Node | $168,000 |
@@ -1349,11 +1349,11 @@ Acme Research Labs is executing a milestone-based biomedical AI training contrac
 | InfiniBand Cables | $2,160 |
 | Rack PDU (30 kW) | $1,400 |
 | **Hardware Subtotal** | **$181,260** |
-
+ 
 ---
-
+ 
 ## Deployment Timeline
-
+ 
 | Milestone | Target |
 |---|---|
 | PO confirmed | Apr 4 |
@@ -1364,38 +1364,38 @@ Acme Research Labs is executing a milestone-based biomedical AI training contrac
 | Smoke test | May 2 |
 | Acceptance sign-off | May 16 |
 | **Hard deadline** | **June 13** |
-
+ 
 ---
-
+ 
 ## Engagement Next Steps
-
+ 
 **This Week (by Apr 4)**
 - [ ] Sign MSA / SOW
 - [ ] Confirm PO and shipping address
 - [ ] Share facility specs (PDU ratings, floor plan)
 - [ ] Schedule 30-min site assessment call
-
+ 
 **Week of Apr 7**
 - [ ] Complete facility assessment
 - [ ] Nominate ML infra lead as technical contact
 - [ ] Confirm InfiniBand topology with Acme ML team
-
+ 
 **Week of Apr 14**
 - [ ] Hardware ships
 - [ ] Confirm rack space is clear and PDU is live
-
+ 
 **Week of May 2**
 - [ ] Joint smoke test on 1B param proxy model
 - [ ] Resolve any config issues within 48 hours
-
+ 
 **Week of May 9**
 - [ ] Full-scale training test on biomedical dataset subset
 - [ ] Sign acceptance checklist
-
+ 
 **Ongoing**
 - [ ] Zillion on-call support during first training run (2-hr response SLA)
 - [ ] Post-run debrief: throughput, cost-per-token, utilization report`;
-
+ 
 /* \u2550\u2550\u2550 ADDITIONAL TEST CASE PROPOSALS \u2550\u2550\u2550 */
 const SEED_PROPOSALS = [
   {
@@ -1405,17 +1405,17 @@ const SEED_PROPOSALS = [
     text:`# Hardware Proposal \u2014 Inference Cluster Scale-Out
 **Client:** NovaStar AI
 **Reference:** ZN-2026-0318-421
-
+ 
 ## Executive Summary
 NovaStar AI required a 4-node RTX 5090 inference cluster to serve their production LLM API at sub-100ms P95 latency. Delivered under budget with a 3-week lead time.
-
+ 
 ## Proposed Hardware
 4\u00d7 RTX 5090 8\u00d7 Cluster (SKU: 5090-8x)
 Total VRAM: 1,024GB | Total Cost: $208,000
-
+ 
 ## Rack & Facility
 16U footprint | ~19.2 kW | Zillion DC \u2014 Los Angeles
-
+ 
 ## Cost Breakdown
 | Line Item | Total |
 |---|---|
@@ -1423,7 +1423,7 @@ Total VRAM: 1,024GB | Total Cost: $208,000
 | InfiniBand HDR Switch | $8,500 |
 | Rack & PDU | $2,600 |
 | **Total** | **$219,100** |
-
+ 
 ## Outcome
 Cluster deployed Mar 28. P95 inference latency: 74ms. Client signed 12-month managed services contract.`,
     notes:'Upsell opportunity: client asked about dedicated training cluster for Q3. Follow up in June.',
@@ -1437,15 +1437,15 @@ Cluster deployed Mar 28. P95 inference latency: 74ms. Client signed 12-month man
     text:`# Hardware Proposal \u2014 Genomics ML Training Node
 **Client:** Vertex Genomics
 **Reference:** ZN-2026-0305-187
-
+ 
 ## Executive Summary
 Vertex Genomics needed a single high-memory training node for fine-tuning protein structure prediction models. Co-location option selected \u2014 customer ships their existing A100 server to Zillion DC Dallas for managed hosting.
-
+ 
 ## Configuration
 Customer Hardware: 1\u00d7 Dell PowerEdge XE9680 (8\u00d7 A100 80GB)
 Co-located at: Zillion DC \u2014 Dallas, TX
 Managed Services: $3,200/mo
-
+ 
 ## Cost Breakdown
 | Line Item | Total |
 |---|---|
@@ -1453,7 +1453,7 @@ Managed Services: $3,200/mo
 | 12-month managed services | $38,400 |
 | Network fabric upgrade | $4,200 |
 | **First Year Total** | **$45,000** |
-
+ 
 ## Outcome
 Hardware arrived Mar 12. Customer running daily training jobs. Net new ARR: $38,400.`,
     notes:'Renewal coming up in March 2027. Client mentioned expanding to 3 nodes \u2014 schedule QBR in Jan.',
@@ -1467,19 +1467,19 @@ Hardware arrived Mar 12. Customer running daily training jobs. Net new ARR: $38,
     text:`# Hardware Proposal \u2014 Sim-to-Real Training Infrastructure
 **Client:** Meridian Robotics
 **Reference:** ZN-2026-0228-093
-
+ 
 ## Executive Summary
 Meridian Robotics is building sim-to-real transfer learning infrastructure for their manipulation robotics line. Requires both training (large batch RL) and low-latency inference (real-time control policy). Hybrid workload demands a split cluster configuration.
-
+ 
 ## Proposed Configuration
 Training Cluster: 6\u00d7 RTX 4090 8\u00d7 Cluster \u2014 $168,000
 Inference Nodes: 4\u00d7 RTX 5090 4\u00d7 Node \u2014 $112,000 (pending restock)
 Networking & Rack: $28,000
 Total: $308,000
-
+ 
 ## Status
 Pending: 5090-4x nodes are currently out of stock. Client willing to wait 6\u20138 weeks for restock. Proposal on hold pending inventory update.
-
+ 
 ## Risk
 Competitor (Lambda Labs) submitted a competing quote for $285,000 using A100 nodes. Client prefers Zillion's managed services model but price gap needs to close.`,
     notes:'Need to check 5090-4x restock ETA with procurement. Price sensitivity is real \u2014 consider a managed services discount to close gap. Call scheduled Apr 8.',
@@ -1493,16 +1493,16 @@ Competitor (Lambda Labs) submitted a competing quote for $285,000 using A100 nod
     text:`# Hardware Proposal \u2014 Edge Inference Deployment
 **Client:** CloudMind Systems
 **Reference:** ZN-2026-0214-672
-
+ 
 ## Summary
 CloudMind Systems requested a proposal for 8\u00d7 RTX 4090 4\u00d7 nodes for distributed edge inference across their regional data centers. Budget was $65k \u2014 below Zillion's cost floor for this configuration.
-
+ 
 ## Proposed Configuration
 8\u00d7 RTX 4090 4\u00d7 Node (SKU: 4090-4x) \u2014 $124,000
-
+ 
 ## Outcome
 Lost. Client went with refurbished A30 nodes from a secondary market vendor at $58,000. Budget mismatch was the primary disqualifier. Zillion's managed services value proposition did not resonate with their self-managed ops model.
-
+ 
 ## Lessons Learned
 - Qualify budget ceiling earlier in the process
 - Edge inference deployments with self-managed ops teams are low-fit for Zillion's model
@@ -1518,16 +1518,16 @@ Lost. Client went with refurbished A30 nodes from a secondary market vendor at $
     text:`# Hardware Proposal \u2014 Foundation Model Training Infrastructure
 **Client:** Helios Foundation Models
 **Reference:** ZN-2026-0122-331
-
+ 
 ## Executive Summary
 Helios Foundation Models required a large-scale training cluster to pre-train a 140B parameter multimodal foundation model. Largest single deal in Zillion history. Full datacenter cage deployment at Zillion DC Ashburn.
-
+ 
 ## Proposed Configuration
 Training Cluster: 1\u00d7 A100-80G 8\u00d7 Server + 18\u00d7 RTX 4090 8\u00d7 Cluster
 Total VRAM: 4,096GB aggregate
 Network: Full-fat InfiniBand HDR200 fabric, 648-port switch
 Power: 160 kW dedicated cage, dual-feed UPS
-
+ 
 ## Cost Breakdown
 | Line Item | Total |
 |---|---|
@@ -1537,7 +1537,7 @@ Power: 160 kW dedicated cage, dual-feed UPS
 | Dedicated Cage Build-Out | $78,000 |
 | 24-Month Managed Services | $144,000 |
 | **Total** | **$974,000** |
-
+ 
 ## Outcome
 Negotiated to $892,000 with 24-month commit. Cluster went live Feb 10. First 140B pre-training run completed March 3. Client signed LOI for second cage expansion in Q3.`,
     notes:'Expansion LOI signed. Second cage proposal target: $1.1M. Schedule kickoff for Q3 cage design in May.',
@@ -1545,27 +1545,27 @@ Negotiated to $892,000 with 24-month commit. Cluster went live Feb 10. First 140
     createdAt:'2026-01-22T08:00:00Z'
   }
 ];
-
+ 
 const SAMPLE=`Client: Acme Research Labs
 Date: March 28, 2026
 Attendees: Sarah Chen (CTO, Acme), Marcus Wright (Lead ML Eng), Xander (Zillion)
-
+ 
 Sarah: We're training a 70B parameter LLaMA-based model on proprietary biomedical data.
 The dataset is roughly 2TB of tokenized text. We need to finish the first training run within 6 weeks.
-
+ 
 Marcus: GPU memory is critical. We had OOM errors on our last cluster.
 We're thinking we need at least 192GB of VRAM per node, possibly more.
-
+ 
 Sarah: Budget-wise we have about $180k approved, potentially stretching to $220k if the ROI case is strong.
 We're not doing inference at scale \u2014 this is pure training.
-
+ 
 Marcus: We also care about NVLink bandwidth. The 5090s would be ideal but availability is tight.
-
+ 
 Sarah: Timeline is firm \u2014 contract with our pharma partner starts July 1st. We need the cluster
 up, tested, and running by mid-June at the absolute latest.
-
+ 
 Xander: Got it. I'll have a hardware proposal over to you by end of week.`;
-
+ 
 /* \u2550\u2550\u2550 NAV \u2550\u2550\u2550 */
 function goHome(){
   document.getElementById('screenHome').style.display='flex';
@@ -1596,11 +1596,11 @@ function switchTab(t){
 }
 function loadSample(){document.getElementById('txInput').value=SAMPLE;}
 function mockDelay(ms){return new Promise(r=>setTimeout(r,ms));}
-
+ 
 /* \u2550\u2550\u2550 RACK PANEL \u2550\u2550\u2550 */
 function toggleRackPanel(){const b=document.getElementById('rackBody');const l=document.getElementById('rackToggleLabel');const o=b.classList.toggle('open');l.textContent=o?'\u25be Collapse':'\u25b8 Expand';}
 function toggleColoFields(){document.getElementById('coloFields').style.display=document.getElementById('coloCheck').checked?'block':'none';}
-
+ 
 /* \u2550\u2550\u2550 SAVE / REVERT \u2550\u2550\u2550 */
 function watchEdits(ids,barId){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>document.getElementById(barId).classList.add('visible'));});}
 function flashBar(barId,msg){
@@ -1621,7 +1621,7 @@ function revertProposal(){
   else if(origProposal){document.getElementById('out3body').textContent=origProposal;}
   document.getElementById('proposalBar').classList.remove('visible');
 }
-
+ 
 /* \u2550\u2550\u2550 AGENT 1 \u2550\u2550\u2550 */
 async function runAgent1(){
   const inp=document.getElementById('txInput').value.trim()||document.getElementById('gdocInput').value.trim()||document.getElementById('slackInput').value.trim();
@@ -1656,7 +1656,7 @@ ${p.key_requirements.map((r,i)=>`  ${i+1}. ${r}`).join('\
     done('s1d','s1s','btn1','Run Discovery Agent \u2192','Constraints extracted \u2713'+(feedback?' (feedback applied)':''));
   }catch(e){err('s1d','s1s','btn1','Run Discovery Agent \u2192',e.message);}
 }
-
+ 
 // CHANGE 4: re-run with feedback from reprompt box
 function rerunAgent1(){
   document.getElementById('out1').style.display='none';
@@ -1678,7 +1678,7 @@ function renderConfidenceScore(conf){
   fill.style.stroke=conf.score>=8?'var(--green)':conf.score>=6?'var(--amber)':'var(--red)';
   document.getElementById('confMatches').innerHTML=(conf.matched_deals||[]).map(d=>`<span class="conf-match-pill">${d}</span>`).join('');
 }
-
+ 
 /* \u2550\u2550\u2550 AGENT 2 \u2550\u2550\u2550 */
 async function runAgent2(){
   if(!r1){alert('Complete Step 1 first.');return;}
@@ -1717,7 +1717,7 @@ function rejectHitl(){
   document.getElementById('s2d').className='sdot';document.getElementById('s2s').textContent='Rejected \u2014 re-run or adjust feedback and re-run';
   document.getElementById('btn2').disabled=false;document.getElementById('btn2').innerHTML='Run Architect Agent \u2192';
 }
-
+ 
 /* \u2550\u2550\u2550 AGENT 3 \u2550\u2550\u2550 */
 async function runAgent3(){
   document.getElementById('s3d').className='sdot running';document.getElementById('s3s').textContent='Drafting proposal\u2026';
@@ -1738,7 +1738,7 @@ async function runAgent3(){
     document.getElementById('s3d').className='sdot';document.getElementById('s3s').textContent='Error: '+e.message;b.textContent='Error: '+e.message;
   }
 }
-
+ 
 /* \u2550\u2550\u2550 VERSION MANAGEMENT \u2550\u2550\u2550 */
 function saveVersion(){
   const txt=document.getElementById('out3body').innerText||'';if(!txt.trim())return;
@@ -1773,7 +1773,7 @@ function deleteVersion(idx){
   document.getElementById('out3body').textContent=proposalVersions[currentVersionIndex].text;
   renderVersionBtns();
 }
-
+ 
 /* \u2550\u2550\u2550 TRACKER VERSION HELPERS \u2550\u2550\u2550 */
 function renderTrackerVersionBtns(p){
   if(!p.versions||!p.versions.length)return '';
@@ -1823,7 +1823,7 @@ function revertTrackerEdit(id){
   const el=document.getElementById('ptext-'+id);
   if(el)el.textContent=curVer?curVer.text:(p.savedText||p.text);
 }
-
+ 
 /* \u2550\u2550\u2550 EXPORT \u2550\u2550\u2550 */
 function doCopy(){
   const txt=document.getElementById('out3body').innerText||'';
@@ -1833,7 +1833,7 @@ function doExport(){
   const txt=document.getElementById('out3body').innerText||'';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/markdown'}));a.download='zillion_proposal.md';a.click();
 }
-
+ 
 /* \u2550\u2550\u2550 TRACKER \u2550\u2550\u2550 */
 function saveToTracker(){
   if(!r1){alert('No proposal data to save.');return;}
@@ -1956,7 +1956,7 @@ function deleteProposal(id){
   proposals=proposals.filter(p=>p.id!==id);updateTrackerCount();storageSave();renderTracker();renderHomeRecent();
 }
 function saveNotes(id){const p=proposals.find(p=>p.id===id);if(p){p.notes=document.getElementById('pnotes-'+id).value;storageSave();}}
-
+ 
 /* \u2550\u2550\u2550 RESET (full clean state) \u2550\u2550\u2550 */
 function resetAll(){
   r1=null;r2=null;origConstraints=null;origSummary=null;origRec=null;origProposal=null;savedProposal=null;
@@ -1980,7 +1980,7 @@ function resetAll(){
   // Reset tab to raw
   switchTab('raw');
 }
-
+ 
 /* \u2550\u2550\u2550 INIT \u2550\u2550\u2550 */
 document.addEventListener('DOMContentLoaded',()=>{
   // Load from localStorage
@@ -1994,10 +1994,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   createdAt:'2026-04-14T14:00:00Z',
   text:`# Hardware Proposal — 128-GPU MGX CX8 Cluster
 **Client:** Ab Initia Labs | **Reference:** ZN-2026-0414-ABL2 | **Date:** April 14, 2026
-
+ 
 ## Executive Summary
 Following architecture review with Feizhi Ding, MGX CX8 Switch Board is recommended over PCIe passthrough for multi-node training at 128-GPU scale. CX8 delivers 400 Gbps/GPU vs 25 Gbps passthrough — 16× bandwidth advantage. Premium of ~$1.5M over passthrough is justified by materially faster NCCL all-reduce and higher GPU utilization during distributed training runs.
-
+ 
 ## Architecture Comparison
 | Attribute | Passthrough (ZN-0412) | MGX CX8 (Recommended) |
 |---|---|---|
@@ -2008,7 +2008,7 @@ Following architecture review with Feizhi Ding, MGX CX8 Switch Board is recommen
 | Cluster BW | ~3.2 Tbps | ~51.2 Tbps |
 | Rack layout | 4 racks × 4 servers | 2 racks × 8 servers |
 | Server cost | $128,014 | ~$200,000 |
-
+ 
 ## Plan #1 — Customer Buys, Zillion Hosts
 | Item | Total |
 |---|---|
@@ -2016,11 +2016,11 @@ Following architecture review with Feizhi Ding, MGX CX8 Switch Board is recommen
 | 4× SN5600 leaf + 2× spine + cabling | $230,800 |
 | **Hardware Total** | **$3,430,800** |
 | Monthly colo (Irvine, 5kW × 16) | $35,840/mo |
-
+ 
 ## Plan #2 — GPU Lease (128 GPUs, CX8 tier)
 - 12-month: $1.35/GPU/hr → $126,144/mo
 - 24-month: $1.22/GPU/hr → $113,971/mo
-
+ 
 ## Next Steps
 - [ ] Jarren Qiao: approve Plan #1 vs Plan #2 by Apr 28
 - [ ] Zillion: verify SYS-422GL-NR availability (Supermicro eStore, 3-5 biz days)
@@ -2035,10 +2035,10 @@ Following architecture review with Feizhi Ding, MGX CX8 Switch Board is recommen
   createdAt:'2026-03-01T09:00:00Z',
   text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support
 **Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Signed:** March 5, 2026
-
+ 
 ## Executive Summary
 Cudo Ventures operates 1,024–4,096 NVIDIA H100 GPU clusters across multiple global regions (North America, Europe, Middle East). Zillion provides 24/7 L3 technical support as the external escalation layer above Cudo's L1/L2 teams — covering GPU health monitoring via DCGM, InfiniBand fabric diagnostics via UFM, NCCL performance tuning, Slurm management, and complex incident RCA.
-
+ 
 ## Cluster Specifications (4K GPU Reference)
 | Parameter | Specification |
 |---|---|
@@ -2047,12 +2047,12 @@ Cudo Ventures operates 1,024–4,096 NVIDIA H100 GPU clusters across multiple gl
 | RAM | 2TB per node |
 | GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
 | Network storage | Vast Data NFS: 7PB (2PB HPS + 5PB S3) |
-
+ 
 ## Scope of Work
 1. **Daily Monitoring** — DCGM every 60s (ECC, thermal, SM utilization), UFM IB fabric health, IPMI/BMC node status, Prometheus + Grafana alerting to Slack/email
 2. **L3 Technical Support** — Complex issue escalation, NCCL degradation, IB transceiver faults, storage anomalies. RCA reports issued within 48hr of resolution
 3. **Software Deployment** — Ubuntu 22.04, NVIDIA Driver 535.161.08, DCGM 3.3.7, UFM, MLNX_OFED 23.10, Slurm, Container Toolkit 1.16.1, Proxmox KVM
-
+ 
 ## SLA
 | Priority | Condition | Response |
 |---|---|---|
@@ -2060,10 +2060,10 @@ Cudo Ventures operates 1,024–4,096 NVIDIA H100 GPU clusters across multiple gl
 | High | Service significantly disturbed | <4 hours |
 | Medium | Minor inconvenience | <6 hours |
 | Non-critical | Config requests | <24 hours |
-
+ 
 ## Commercial Terms
 $22,500/mo × 24 months = **$540,000**
-
+ 
 *Zillion case study: Identified 800G InfiniBand transceiver port-flapping issue on H100 cluster — diagnosed PD supplier fault and resolved 1 month ahead of a leading hyperscaler who later reported the same problem.*`,
   versions:[
     {label:'v1 — SoW Draft',text:'SoW draft. Scope: 24/7 L3 support, 1,024-4,096 H100 GPUs. Rate: $22,500/mo x 24mo = $540,000. SLA: Urgent <4hr, High <4hr, Medium <6hr. Covers DCGM, UFM, Slurm, Prometheus/Grafana, RCA.',summary:'Draft SoW for Cudo Ventures L3 managed support. $22,500/mo x 24 months = $540,000. Covers DCGM GPU monitoring, InfiniBand UFM diagnostics, Slurm management, and incident RCA across 1,024-4,096 H100 GPU clusters globally.',ts:'2026-03-01T09:00:00Z',current:false},
@@ -2075,11 +2075,11 @@ $22,500/mo × 24 months = **$540,000**
   updateTrackerCount();
   renderHomeRecent();
 });
-
+ 
 /* helpers */
 function busy(dot,stat,btn,label){document.getElementById(dot).className='sdot running';document.getElementById(stat).textContent=label;const b=document.getElementById(btn);b.disabled=true;b.innerHTML=`<span class="spin"></span> ${label}`;}
 function done(dot,stat,btn,btnTxt,statTxt){document.getElementById(dot).className='sdot done';document.getElementById(stat).textContent=statTxt;const b=document.getElementById(btn);b.disabled=false;b.innerHTML=btnTxt;}
-
+ 
 function getCurrentVersionSummary(p){
   if(!p.versions||!p.versions.length)return '';
   var cur=p.versions.find(function(v){return v.current;});
@@ -2097,8 +2097,8 @@ function autoSummary(text,label){
   return summary.trim()||('Snapshot captured '+label+'.');
 }
 function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sdot';document.getElementById(stat).textContent='Error: '+msg;const b=document.getElementById(btn);b.disabled=false;b.innerHTML=btnTxt;}
-
-
+ 
+ 
 /* ═══════════════════════════════════════
    INVENTORY TAB — full feature set
 ═══════════════════════════════════════ */
@@ -2107,7 +2107,7 @@ var _invSource = null;
 var _invRefreshTimer = null;
 var INV_STORE_KEY = 'zn_inventory_v1';
 var INV_SRC_KEY   = 'zn_inv_source_v1';
-
+ 
 function invLoad(){
   try{ var raw=localStorage.getItem(INV_STORE_KEY); _invData=raw?JSON.parse(raw):null; }catch(e){ _invData=null; }
   if(!_invData||!_invData.length){
@@ -2127,7 +2127,7 @@ function invSave(){
 function invSaveSource(){
   try{ localStorage.setItem(INV_SRC_KEY,JSON.stringify(_invSource)); }catch(e){}
 }
-
+ 
 function goInventory(){
   document.getElementById('screenHome').style.display='none';
   ['screen1','screen2','screen3','screenTracker'].forEach(function(id){
@@ -2139,7 +2139,7 @@ function goInventory(){
   invUpdateSourceBar();
   window.scrollTo(0,0);
 }
-
+ 
 function invRender(){
   var tbody=document.getElementById('invTableBody');
   if(!tbody)return;
@@ -2169,7 +2169,7 @@ function invRender(){
   e=document.getElementById('invStatLow');    if(e)e.textContent=lowStock;
   e=document.getElementById('invStatOut');    if(e)e.textContent=outStock;
 }
-
+ 
 function invCellEdit(el){
   var row=el.closest('tr');
   if(!row)return;
@@ -2186,7 +2186,7 @@ function invCellEdit(el){
   }else{ _invData[idx][field]=val; }
   invSave();
 }
-
+ 
 function invAddRow(){
   if(!_invData)_invData=[];
   _invData.push({sku:'NEW-SKU',name:'New Hardware',gpu:'',vram:0,price:0,stock:0,rackU:1,power:0,arch:'passthrough',lease12:''});
@@ -2201,13 +2201,13 @@ function invAddRow(){
     }
   }
 }
-
+ 
 function invDeleteRow(idx){
   if(!_invData)return;
   if(!confirm('Remove "'+(_invData[idx].name||_invData[idx].sku)+'" from inventory?'))return;
   _invData.splice(idx,1); invSave(); invRender();
 }
-
+ 
 function handleInvCsv(input){
   var file=input.files&&input.files[0];
   if(!file)return;
@@ -2224,7 +2224,7 @@ function handleInvCsv(input){
   };
   reader.readAsText(file);
 }
-
+ 
 function parseCsvToInventory(text){
   var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
   if(lines.length<2)return null;
@@ -2241,7 +2241,7 @@ function parseCsvToInventory(text){
     };
   }).filter(function(r){return r.sku||r.name;});
 }
-
+ 
 function openInvSourceModal(){
   if(_invSource){
     var t=_invSource.type||'url';
@@ -2264,7 +2264,7 @@ function switchInvTab(tab,btn){
   var el=document.getElementById('invTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if(el)el.style.display='';
 }
-
+ 
 function saveInvSource(){
   var activeSrc=null;
   document.querySelectorAll('.inv-source-tab').forEach(function(b,i){
@@ -2295,7 +2295,7 @@ function saveInvSource(){
   if(_invRefreshTimer)clearInterval(_invRefreshTimer);
   if(interval>0)_invRefreshTimer=setInterval(refreshInvSource,interval*1000);
 }
-
+ 
 async function refreshInvSource(){
   if(!_invSource||!_invSource.type)return;
   var dot=document.getElementById('invSourceDot');
@@ -2332,7 +2332,7 @@ async function refreshInvSource(){
     console.warn('Inventory sync error:',err);
   }
 }
-
+ 
 function invUpdateSourceBar(){
   var dot=document.getElementById('invSourceDot');
   var name=document.getElementById('invSourceName');
@@ -2354,16 +2354,16 @@ function invUpdateSourceBar(){
   }
   if(refreshBtn)refreshBtn.style.display=_invSource.type!=='csv_file'?'':'none';
 }
-
+ 
 /* ═══ INIT ═══ */
 document.addEventListener('DOMContentLoaded',function(){
   storageLoad();
   if(proposals.length===0){proposals=[...SEED_PROPOSALS];storageSave();}
   updateTrackerCount();renderHomeRecent();
 });
-
+ 
 </script>
-
+ 
 <!-- ════════ INVENTORY RESOURCE TAB ════════ -->
 <div id="screenInventory" class="inv-tab-page">
   <nav class="topbar">
@@ -2412,7 +2412,7 @@ document.addEventListener('DOMContentLoaded',function(){
     <div style="margin-top:12px;font-size:12px;color:var(--muted);">Changes save automatically. Connect a live source (Google Sheets, Airtable, CSV URL) to sync on refresh.</div>
   </div>
 </div>
-
+ 
 <!-- ════════ INVENTORY SOURCE MODAL ════════ -->
 <div id="invSourceModal" class="inv-modal-overlay hidden">
   <div class="inv-modal-box">
@@ -2430,6 +2430,6 @@ document.addEventListener('DOMContentLoaded',function(){
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;"><button class="btn-secondary" onclick="closeInvSourceModal()">Cancel</button><button class="btn-primary" onclick="saveInvSource()">Save &amp; Connect</button></div>
   </div>
 </div>
-
+ 
 </body>
 </html>
