@@ -1,0 +1,5 @@
+# Proxy API calls to backend (set BACKEND_URL in Netlify env vars)
+/api/*  https://:BACKEND_URL/api/:splat  200
+
+# SPA fallback
+/*    /index.html   200
