@@ -42,9 +42,9 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .home-bar .zn-wordmark{color:#00C47A !important;}
 /* light-bg variant used inside step pages */
 .zn-logo.light .zn-wordmark{color:var(--ink);}
-.zn-logo.light .zn-icon path,.zn-logo.light .zn-icon circle{stroke:var(--ink);}
+
 /* Topbar is now light — darken logo strokes */
-.topbar .zn-icon circle,.topbar .zn-icon line{stroke:var(--ink) !important;}
+/* logo stays green on topbar — strokes hardcoded #00C47A */
 
 /* ══════════════════════════════
    HOME PAGE — light, consistent with site
@@ -176,7 +176,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 /* ══════════════════════════════
    TOPBAR (step pages)
 ══════════════════════════════ */
-.step-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
+.step-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
 .step-page.active{display:flex;}
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
@@ -426,7 +426,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 /* ══════════════════════════════
    TRACKER PAGE
 ══════════════════════════════ */
-.tracker-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
+.tracker-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
 .tracker-page.active{display:flex;}
 .tracker-body{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:48px 40px 80px;}
 .tracker-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
@@ -621,7 +621,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .ver-summary-text{font-size:13px;color:var(--ink2);line-height:1.65;font-style:italic;outline:none;}
 .ver-summary-text:empty::before{content:'No summary — save a version to generate.';color:var(--placeholder);font-style:normal;}
 /* ─── Inventory tab ─── */
-.inv-tab-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
+.inv-tab-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
 .inv-tab-page.active{display:flex;}
 .inv-tab-body{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:40px 40px 80px;}
 @media(max-width:768px){.inv-tab-body{padding:24px 16px 64px;}}
@@ -640,7 +640,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .inv-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);}
 .inv-stat-num{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.5px;}
 .inv-stat-label{font-size:11.5px;color:var(--muted);margin-top:2px;}
-.inv-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);}
+.inv-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);}.inv-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
 .inv-table-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg);gap:10px;flex-wrap:wrap;}
 .inv-table-title{font-size:13px;font-weight:700;color:var(--ink2);}
 .inv-add-row-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
@@ -671,6 +671,17 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .inv-field input,.inv-field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color .15s;}
 .inv-field input:focus,.inv-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,196,122,.1);}
 .inv-field input::placeholder{color:var(--placeholder);}
+
+/* ─── SPA page isolation: prevent screens bleeding into each other ─── */
+.step-page.active,.tracker-page.active,.inv-tab-page.active{
+  overflow-y:auto;overflow-x:hidden;
+  max-height:100vh;
+  height:100vh;
+}
+body:has(.tracker-page.active) .inv-tab-page,
+body:has(.inv-tab-page.active) .tracker-page{
+  display:none !important;
+}
 </style>
 </head>
 <body>
@@ -1806,7 +1817,112 @@ function captureEditDelta(proposalId,agentName){
 
 /* ═══ SEED PROPOSALS ═══ */
 var SEED_PROPOSALS=[
-  {id:'ZN-2026-0412-AIL',client:'Ab Initia Labs',amount:'$2,048,223',date:'Apr 12, 2026',status:'pending',followup:'2026-04-21',confidence:{score:8.9,label:'High Confidence'},text:'# Hardware Proposal — 128-GPU AI Research Cluster\n**Client:** Ab Initia Labs\n**Date:** April 12, 2026\n**Reference:** ZN-2026-0412-AIL\n\n---\n\n## Executive Summary\n\nAb Initia Labs requires a 128-GPU cluster (16 servers × 8 RTX Pro 6000 Server Edition) for AI drug discovery research. Two architecture options evaluated: PCIe passthrough ($128K/server, CX6 100GbE) and MGX CX8 switch board ($180-220K/server, CX8 800GbE). Client decision pending on workload profile — inference/dev favors Option A, multi-node training favors Option B.\n\n---\n\n## Proposed Configuration (Option A — PCIe Passthrough)\n\n| Spec | Per Node | Total |\n|---|---|---|\n| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |\n| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |\n| Memory | 768 GB DDR5 4800 | 12,288 GB |\n| NIC | 1× CX6 Dx 100GbE | 16 NICs |\n| Cost | $128,014 | $2,048,223 |\n\n## Network Fabric\n| Component | Qty | Unit | Total |\n|---|---|---|---|\n| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |\n| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |\n| Mgmt: 1GbE 48-port | 1 | $800 | $800 |\n| **Network Subtotal** | | | **$78,800** |\n\n## Colocation (Irvine, CA)\n| Item | Monthly |\n|---|---|\n| Power (5kW × 16 servers) | $35,840 |\n| IP Block | $50 |\n| Managed Services (24/7) | Included |\n| **Total Monthly** | **$35,890** |\n\n## Alternative: GPU Lease (Plan #2)\n| Term | Rate | Monthly (128 GPU) |\n|---|---|---|\n| 12-month | $1.25/GPU/hr | $116,800 |\n| 24-month | $1.15/GPU/hr | $107,456 |\n\n---\n\n## Next Steps\n- [ ] Confirm workload type (inference vs training) to select architecture\n- [ ] Get CX8 switch board pricing from Supermicro\n- [ ] Schedule architecture call with Feizhi Ding\n- [ ] PNY GPU pricing confirmation',notes:'Two options on the table: passthrough ($2M) vs CX8 ($3M+). Jarren is decision maker, Feizhi is technical. Architecture call needed to decide. Jasmine Shao (Transformer Legal) is advisor/introducer.',versions:[{label:'v1 — AI Draft',text:'Initial BOM-based quote. Option A only.',ts:'2026-04-12T10:00:00Z',current:false},{label:'v2 — Dual option',text:'Added CX8 architecture comparison and lease pricing (Plan #2).',ts:'2026-04-14T09:00:00Z',current:true}],createdAt:'2026-04-12T10:00:00Z'},
+  {id:'ZN-2026-0412-AIL',client:'Ab Initia Labs',amount:'$2,048,223',date:'Apr 12, 2026',status:'pending',followup:'2026-04-21',confidence:{score:8.9,label:'High Confidence'},text:'# Hardware Proposal — 128-GPU AI Research Cluster\n**Client:** Ab Initia Labs\n**Date:** April 12, 2026\n**Reference:** ZN-2026-0412-AIL\n\n---\n\n## Executive Summary\n\nAb Initia Labs requires a 128-GPU cluster (16 servers × 8 RTX Pro 6000 Server Edition) for AI drug discovery research. Two architecture options evaluated: PCIe passthrough ($128K/server, CX6 100GbE) and MGX CX8 switch board ($180-220K/server, CX8 800GbE). Client decision pending on workload profile — inference/dev favors Option A, multi-node training favors Option B.\n\n---\n\n## Proposed Configuration (Option A — PCIe Passthrough)\n\n| Spec | Per Node | Total |\n|---|---|---|\n| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |\n| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |\n| Memory | 768 GB DDR5 4800 | 12,288 GB |\n| NIC | 1× CX6 Dx 100GbE | 16 NICs |\n| Cost | $128,014 | $2,048,223 |\n\n## Network Fabric\n| Component | Qty | Unit | Total |\n|---|---|---|---|\n| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |\n| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |\n| Mgmt: 1GbE 48-port | 1 | $800 | $800 |\n| **Network Subtotal** | | | **$78,800** |\n\n## Colocation (Irvine, CA)\n| Item | Monthly |\n|---|---|\n| Power (5kW × 16 servers) | $35,840 |\n| IP Block | $50 |\n| Managed Services (24/7) | Included |\n| **Total Monthly** | **$35,890** |\n\n## Alternative: GPU Lease (Plan #2)\n| Term | Rate | Monthly (128 GPU) |\n|---|---|---|\n| 12-month | $1.25/GPU/hr | $116,800 |\n| 24-month | $1.15/GPU/hr | $107,456 |\n\n---\n\n## Next Steps\n- [ ] Confirm workload type (inference vs training) to select architecture\n- [ ] Get CX8 switch board pricing from Supermicro\n- [ ] Schedule architecture call with Feizhi Ding\n- [ ] PNY GPU pricing confirmation',notes:'Two options on the table: passthrough ($2M) vs CX8 ($3M+). Jarren is decision maker, Feizhi is technical. Architecture call needed to decide. Jasmine Shao (Transformer Legal) is advisor/introducer.',versions:[{label:'v1 — AI Draft',text:`# Hardware Proposal — 128-GPU AI Research Cluster (Option A: PCIe Passthrough)
+**Client:** Ab Initia Labs | **Reference:** ZN-2026-0412-AIL | **Date:** April 12, 2026
+**Prepared by:** Zillion Network
+
+---
+
+## Executive Summary
+
+Ab Initia Labs requires a 128-GPU cluster for AI drug discovery research — specifically large-scale protein structure prediction and molecular dynamics simulation workloads. This v1 proposal covers Option A: 16 servers × 8 RTX Pro 6000 Server Edition GPUs using PCIe passthrough architecture, hosted at Zillion DC Irvine, CA.
+
+Total CapEx: **$2,048,224** | Monthly Colo: **$35,890/mo**
+
+---
+
+## Proposed Configuration — Option A (PCIe Passthrough)
+
+| Spec | Per Node | Total (16 Nodes) |
+|---|---|---|
+| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |
+| Total VRAM | 768 GB | 12,288 GB |
+| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |
+| Memory | 768 GB DDR5 4800 | 12,288 GB |
+| NIC | 1× CX6 Dx dual-port 100GbE | 16 NICs |
+| Form factor | 7U | 4 racks × 4 servers |
+| Server cost | $128,014 | $2,048,224 |
+
+## Network Fabric (Passthrough)
+
+| Component | Qty | Unit | Total |
+|---|---|---|---|
+| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |
+| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |
+| Mgmt: 1GbE 48-port | 1 | $800 | $800 |
+| **Network Subtotal** | | | **$78,800** |
+
+**Architecture note:** PCIe passthrough — GPU → CPU PCIe Root Complex → xGMI cross-socket fabric → CX6 NIC. Effective bandwidth ~25 Gbps/GPU. Best suited for inference, dev, and single-node training workloads.
+
+## Colocation — Irvine, CA
+
+| Item | Rate | Monthly |
+|---|---|---|
+| Power (5 kW × 16 servers) | $448/kW | $35,840 |
+| IP Block (/29) | flat | $50 |
+| Managed Services (24/7) | included | — |
+| **Total Monthly** | | **$35,890** |
+
+**SLA:** 99.95% network · 99.99% power · <15 min incident response · <4hr hardware replacement
+
+## Next Steps
+- [ ] Confirm workload type (inference vs. multi-node training) to select final architecture
+- [ ] Architecture call with Feizhi Ding (Technical Lead) to review passthrough vs. CX8
+- [ ] PNY GPU pricing confirmation for RTX Pro 6000 SE
+- [ ] Jarren Qiao (Decision Maker) to approve architecture direction`,ts:'2026-04-12T10:00:00Z',current:false},{label:'v2 — Dual option',text:`# Hardware Proposal — 128-GPU Cluster: Dual-Architecture Option
+**Client:** Ab Initia Labs | **Reference:** ZN-2026-0412-AIL | **Date:** April 14, 2026 (v2)
+**Prepared by:** Zillion Network
+
+---
+
+## Executive Summary
+
+Following the architecture review with Feizhi Ding, this updated proposal presents both architecture options side-by-side. Client decision pending on workload profile — inference/dev favors Option A (passthrough, $2.05M), multi-node training favors Option B (CX8, ~$3.4M+).
+
+---
+
+## Architecture Comparison
+
+| Attribute | Option A — PCIe Passthrough | Option B — MGX CX8 |
+|---|---|---|
+| Server platform | Custom 7U, AMD EPYC 9J14 | Supermicro SYS-422GL-NR (4U) |
+| GPU interconnect | PCIe Gen5, CPU in data path | PCIe Gen6 48-lane switch, CPU bypassed |
+| NIC | 1× CX6 Dx, 100GbE | 4× CX8 SuperNIC, 800GbE each (integrated) |
+| Bandwidth per GPU | ~25 Gbps | 400 Gbps (16× faster) |
+| Cluster total BW | ~3.2 Tbps | ~51.2 Tbps |
+| Leaf switch | SN2700 100GbE ($12K) | SN5600 800GbE ($35K) |
+| Network cost (16 nodes) | ~$78,800 | ~$210,800 |
+| Server unit cost | $128,014 | ~$200,000–220,000 |
+| Rack layout | 4 racks × 4 servers (7U) | 2 racks × 8 servers (4U) |
+| Best for | Inference / dev / small clusters | Multi-node training at scale ✓ |
+| **Hardware total** | **$2,048,224** | **~$3,400,000+** |
+
+## Option A — PCIe Passthrough Pricing
+
+16× Custom 7U Server @ $128,014 = **$2,048,224**
+Network fabric (SN2700 leaf-spine) = **$78,800**
+Monthly colo (Irvine, 5kW × 16) = **$35,890/mo**
+
+## Option B — MGX CX8 Pricing (Preliminary)
+
+16× SYS-422GL-NR (est. with CX8 switchboard) = **~$3,200,000**
+Network fabric (SN5600 800GbE leaf-spine) = **~$210,800**
+Monthly colo (Irvine, 5kW × 16) = **$35,890/mo**
+
+## Alternative: GPU Lease — Plan #2
+
+| Term | Rate (128 GPUs) | Monthly Cost |
+|---|---|---|
+| 12-month | $1.25/GPU/hr | $116,800 |
+| 24-month | $1.15/GPU/hr | $107,456 |
+
+*Deposit: 1 month (12-mo term) or 2 months (24-mo term)*
+
+## Next Steps
+- [ ] Confirm workload type (inference vs. training) to select architecture — call with Feizhi Ding
+- [ ] Get confirmed CX8 switchboard pricing from Supermicro
+- [ ] Jarren Qiao: approve Plan #1 (buy) vs Plan #2 (lease) direction
+- [ ] Zillion: verify SYS-422GL-NR availability (3–5 biz days from Supermicro eStore)`,ts:'2026-04-14T09:00:00Z',current:true}],createdAt:'2026-04-12T10:00:00Z'},
   {id:'ZN-2026-0318-421',client:'NovaStar AI',amount:'$312,000',date:'Mar 18, 2026',status:'success',confidence:{score:9.1,label:'High Confidence'},text:'# Hardware Proposal — Inference Cluster Scale-Out\n**Client:** NovaStar AI\n**Reference:** ZN-2026-0318-421\n\n## Executive Summary\nNovaStar AI required a 4-node RTX 5090 inference cluster to serve their production LLM API at sub-100ms P95 latency. Delivered under budget with a 3-week lead time.\n\n## Proposed Hardware\n4× RTX 5090 8× Cluster (SKU: 5090-8x)\nTotal VRAM: 1,024GB | Total Cost: $208,000\n\n## Rack & Facility\n16U footprint | ~19.2 kW | Zillion DC — Los Angeles\n\n## Cost Breakdown\n| Line Item | Total |\n|---|---|\n| 4× RTX 5090 8× Cluster | $208,000 |\n| InfiniBand HDR Switch | $8,500 |\n| Rack & PDU | $2,600 |\n| **Total** | **$219,100** |\n\n## Outcome\nCluster deployed Mar 28. P95 inference latency: 74ms. Client signed 12-month managed services contract ($4,500/mo). Net ARR: $54,000.',notes:'Upsell opportunity: client asked about dedicated training cluster for Q3. Follow up in June.',versions:[{label:'v1 — AI Draft',text:'# Inference Cluster Scale-Out\n**Client:** NovaStar AI | **Ref:** ZN-2026-0318-421\n\nOriginal hardware-only proposal. 4× RTX 5090 8× at $208,000. No managed services included.\n\n## Cost (v1)\n| Item | Total |\n|---|---|\n| 4× RTX 5090 8× | $208,000 |\n| Network | $8,500 |\n| Rack | $2,600 |\n| **Total** | **$219,100** |',ts:'2026-03-18T09:00:00Z',current:false},{label:'v2 — Post-negotiation',text:'# Inference Cluster — Final\n**Client:** NovaStar AI | **Ref:** ZN-2026-0318-421\n\n## Summary\n12-month managed services added after negotiation. Final: $273,100.\n\n## Cost (Final)\n| Item | Total |\n|---|---|\n| 4× RTX 5090 8× | $208,000 |\n| Network + Rack | $11,100 |\n| 12-Mo Managed Services | $54,000 |\n| **Total** | **$273,100** |\n\n## Outcome\nP95 latency: 74ms at 2,400 req/s peak. ARR: $54,000.',ts:'2026-03-20T14:30:00Z',current:true}],createdAt:'2026-03-18T09:00:00Z'},
   {id:'ZN-2026-0305-187',client:'Vertex Genomics',amount:'$94,000',date:'Mar 5, 2026',status:'success',confidence:{score:7.8,label:'Good Confidence'},text:'# Hardware Proposal — Genomics ML Training Node\n**Client:** Vertex Genomics\n**Reference:** ZN-2026-0305-187\n\n## Executive Summary\nVertex Genomics needed a single high-memory training node for fine-tuning protein structure prediction models. Co-location option selected — customer ships their existing A100 server to Zillion DC Dallas for managed hosting.\n\n## Configuration\nCustomer Hardware: 1× Dell PowerEdge XE9680 (8× A100 80GB)\nCo-located at: Zillion DC — Dallas, TX\nManaged Services: $3,200/mo\n\n## Cost Breakdown\n| Line Item | Total |\n|---|---|\n| Co-location setup fee | $2,400 |\n| 12-month managed services | $38,400 |\n| Network fabric upgrade | $4,200 |\n| **First Year Total** | **$45,000** |\n\n## Outcome\nHardware arrived Mar 12. Customer running daily training jobs. Net new ARR: $38,400.',notes:'Renewal coming up in March 2027. Client mentioned expanding to 3 nodes — schedule QBR in Jan.',versions:[{label:'v1 — AI Draft',text:'Co-location proposal. Customer A100 at Zillion DC Dallas.\nSetup: $2,400 | Managed: $38,400/yr | Network: $4,200 | Year 1: $45,000',ts:'2026-03-05T10:00:00Z',current:true}],createdAt:'2026-03-05T10:00:00Z'},
   {id:'ZN-2026-0228-093',client:'Meridian Robotics',amount:'$540,000',date:'Feb 28, 2026',status:'pending',followup:'2026-04-08',confidence:{score:7.2,label:'Moderate Confidence'},text:'# Hardware Proposal — Sim-to-Real Training Infrastructure\n**Client:** Meridian Robotics\n**Reference:** ZN-2026-0228-093\n\n## Executive Summary\nMeridian Robotics is building sim-to-real transfer learning infrastructure for their manipulation robotics line. Requires both training (large batch RL) and low-latency inference (real-time control policy). Hybrid workload demands a split cluster.\n\n## Proposed Configuration\nTraining Cluster: 6× RTX 4090 8× Cluster — $168,000\nInference Nodes: 4× RTX 5090 4× Node — $112,000 (pending restock)\nNetworking & Rack: $28,000\nTotal: $308,000\n\n## Status\nPending: 5090-4x nodes out of stock. Client willing to wait 6–8 weeks.\n\n## Risk\nCompetitor (Lambda Labs) submitted competing quote for $285,000 using A100 nodes. Client prefers Zillion managed services but price gap needs to close.\n\n## Zillion vs Lambda Labs\n| Factor | Zillion | Lambda |\n|---|---|---|\n| Hardware cost | $308,000 | $285,000 |\n| Managed services | ✓ Included | ✗ Not offered |\n| 24/7 on-call | ✓ 2-hr SLA | ✗ Business hours |\n| NVLink expertise | ✓ In-house | ✗ Customer-managed |',notes:'Need to check 5090-4x restock ETA with procurement. Price sensitivity is real — consider a managed services discount to close gap. Call scheduled Apr 8.',versions:[{label:'v1 — AI Draft',text:'Original draft — training + inference hybrid',ts:'2026-02-28T11:00:00Z',current:false},{label:'v2 — Competitor response',text:'Revised with Lambda Labs comparison table. Hardware: $308k + managed ($54k/yr) = $362k 12-mo total vs Lambda $285k + ops cost.',ts:'2026-03-10T09:00:00Z',current:true}],createdAt:'2026-02-28T11:00:00Z'},
@@ -2030,22 +2146,171 @@ Cudo Ventures has deployed multiple H100 GPU clusters (1,024 to 4,096 GPU scale)
 - [ ] Baseline NCCL allreduce benchmarks established within 48hrs of access`,
   notes:'Contract signed Mar 1. 24-month L3 managed support across 1K–4K H100 clusters. Renewal window opens Jan 2028. Flag for upsell: Cudo is deploying H200 clusters — propose expanded SoW in Q3.',
   versions:[
-    {label:'v1 — SoW Draft',text:`# SoW Draft — Cudo Ventures L3 Support
-**Ref:** ZN-2026-0301-CDV | Mar 1, 2026
+    {label:'v1 — SoW Draft',text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support (Draft)
+**Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Date:** March 1, 2026
+**Prepared by:** Zillion Network
 
-Scope: 24/7 L3 support across 1,024–4,096 H100 GPU clusters
-Rate: $22,500/mo × 24 months = $540,000
-SLA: Urgent <4hr avg · High <4hr · Medium <6hr
+---
 
-Includes: DCGM monitoring, IB/UFM diagnostics, Slurm ops, Prometheus/Grafana, Proxmox KVM, RCA reports.`,ts:'2026-03-01T09:00:00Z',current:false},
-    {label:'v2 — Signed',text:`# SoW — Cudo Ventures L3 Support (SIGNED)
-**Ref:** ZN-2026-0301-CDV | Signed: Mar 5, 2026
+## Overview
 
-Contract executed. 24-month term, $22,500/mo.
-Total contract value: $540,000
-Go-live: March 8, 2026
+Cudo Ventures has deployed multiple NVIDIA H100 GPU clusters (1,024 to 4,096 GPU scale) across North America, Europe, and the Middle East to serve AI training and GPU compute workloads for multinational clients. Zillion will provide 24/7 L3 technical support as the external escalation layer above Cudo's L1/L2 teams.
 
-Cluster access granted. Baseline NCCL benchmarks completed Mar 10.`,ts:'2026-03-05T14:00:00Z',current:true}
+**Contract Value:** $22,500/mo × 24 months = **$540,000**
+
+---
+
+## Cluster Specifications (4K GPU Reference Cluster)
+
+| Parameter | Specification |
+|---|---|
+| GPU nodes | 512× Dell H100 SXM5 8-GPU nodes (4,088 GPUs + 8 spare) |
+| CPU per node | 2× Intel Xeon 8480+ |
+| RAM per node | 2TB |
+| NVMe per node | ~30TB U.2 (8× 4TB drives) |
+| GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
+| Storage fabric | 1× ConnectX-6, 100G LACP bonded |
+| Network storage | Vast Data NFS: 7PB total (2PB HPS + 5PB S3) |
+| Block storage | 10TB VM datastores + 2TB backup |
+| Management | 2× UFM servers (IB) + 8× monitoring/mgmt nodes |
+| Orchestration | Proxmox: 5× PVE + 1× NFS backup |
+
+*Cluster sizes in scope: 1,024 GPU · 2,048 GPU · 4,096 GPU — multiple regions*
+
+---
+
+## Scope of Work
+
+### 1. Daily Cluster Monitoring & Operations
+- GPU health: DCGM 3.3.7 every 60s — ECC errors, thermal throttling, SM utilization, power draw
+- InfiniBand fabric: UFM port state, throughput, error rates, flapping detection
+- Node health: IPMI/BMC temps, fan speeds, PSU status, memory errors — 24/7, auto-ticket
+- Slurm: queue health, fairshare, partition configuration, job failure triage
+- Alerting: Prometheus + Grafana → email, SMS, Slack — all thresholds monitored continuously
+
+### 2. L3 Technical Support & Troubleshooting (SLA-Backed)
+- Complex issue escalation unresolvable by Cudo L1/L2 — multi-domain diagnostics
+- NCCL degradation, IB transceiver faults, storage I/O anomalies, GPU ECC failures
+- RCA reports within 48hr of major incident resolution
+- Real-time Slack channel with L1/L2 for live escalation
+
+**Reference case:** Zillion diagnosed 800G InfiniBand transceiver port flapping on H100 cluster — identified PD supplier fault, resolved 1 month ahead of a leading hyperscaler who later reported the same issue.
+
+### 3. Software Deployment & Updates
+- OS: Ubuntu 22.04 (kernel 5.15.0-113)
+- GPU Driver: NVIDIA 535.161.08 | DCGM 3.3.7 | UFM | MLNX_OFED 23.10-2.1.3.1
+- Container Toolkit 1.16.1 | Slurm | Proxmox KVM
+- Local Ubuntu + NVIDIA package mirror maintained by Zillion
+- Optional: Kubernetes + Volcano, Docker, PyTorch
+
+---
+
+## SLA Commitments
+
+| Priority | Condition | Response |
+|---|---|---|
+| Urgent | >5% cluster offline or major perf degradation | Average <60 min (max 4hr) |
+| High | Service significantly disturbed, repeated instability | <4 hours |
+| Medium | Minor inconvenience, 95%+ service available | <6 hours |
+| Non-critical | Config requests, minor bugs | 24hrs / Next business day |
+
+**Backup node strategy:** Zillion recommends reserving 3 nodes per 128-node group as hot-standby during large training runs. Auto-kickin on primary node failure to prevent training interruption.
+
+---
+
+## Commercial Terms
+
+| Item | Rate | Duration | Total |
+|---|---|---|---|
+| 24/7 L3 Managed Support | $22,500/mo | 24 months | $540,000 |
+| Deployment & onboarding | included | — | — |
+| RCA reporting | included | — | — |
+
+## Next Steps
+- [ ] MSA counter-signature from Cudo executive team
+- [ ] Cluster access credentials provisioned for Zillion NOC
+- [ ] Slack NOC channel created (#cudo-zillion-l3)
+- [ ] Baseline NCCL allreduce benchmarks established within 48hrs of access`,ts:'2026-03-01T09:00:00Z',current:false},
+    {label:'v2 — Signed',text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support (SIGNED)
+**Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Signed:** March 5, 2026
+**Prepared by:** Zillion Network
+
+---
+
+## Contract Executed
+
+24-month managed L3 support contract signed March 5, 2026. Coverage went live March 8, 2026.
+Total contract value: **$540,000** ($22,500/mo × 24 months)
+
+---
+
+## Cluster Specifications (4K GPU Reference Cluster)
+
+| Parameter | Specification |
+|---|---|
+| GPU nodes | 512× Dell H100 SXM5 8-GPU nodes (4,088 GPUs + 8 spare) |
+| CPU per node | 2× Intel Xeon 8480+ |
+| RAM per node | 2TB |
+| NVMe per node | ~30TB U.2 (8× 4TB drives) |
+| GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
+| Network storage | Vast Data NFS: 7PB (2PB HPS + 5PB S3) |
+
+*Cluster sizes: 1,024 · 2,048 · 4,096 GPU across multiple global regions*
+
+---
+
+## Deployed Software Stack
+
+| Component | Version |
+|---|---|
+| OS | Ubuntu 22.04 (kernel 5.15.0-113) |
+| GPU Driver | NVIDIA 535.161.08 |
+| DCGM | 3.3.7 |
+| UFM | Latest stable |
+| MLNX_OFED | 23.10-2.1.3.1 |
+| Container Toolkit | 1.16.1 |
+| Job Scheduler | Slurm |
+| VM Management | Proxmox (5× PVE + 1× NFS backup) |
+| Monitoring | Prometheus + Grafana, alerting via Slack/email/SMS |
+
+---
+
+## Go-Live Milestones
+
+| Milestone | Date |
+|---|---|
+| Contract signed | March 5, 2026 |
+| Coverage live | March 8, 2026 |
+| Baseline NCCL benchmarks | March 10, 2026 |
+| NOC Slack channel active (#cudo-zillion-l3) | March 8, 2026 |
+
+---
+
+## SLA (As Executed)
+
+| Priority | Response |
+|---|---|
+| Urgent (>5% offline) | Avg <60 min, max 4hr |
+| High | <4 hours |
+| Medium | <6 hours |
+| Non-critical | <24 hours |
+
+---
+
+## Renewal & Upsell
+
+Renewal window opens: **January 2028**
+
+Cudo is expanding to H200 clusters in Q3 2026. Zillion to propose expanded SoW covering H200 fleet — target contract value: $720,000 (32-month term, $22,500/mo).
+
+---
+
+## Active Monitoring Summary
+
+- DCGM polling every 60s across all GPU nodes
+- IB fabric monitored via UFM — port flapping alerts wired to Slack
+- Baseline NCCL allreduce busBW established March 10 — used as degradation threshold
+- Proxmox KVM environment deployed and stable`,ts:'2026-03-05T14:00:00Z',current:true}
   ],createdAt:'2026-03-01T09:00:00Z'}
 ];
 
@@ -2296,7 +2561,7 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
         <div class="inv-table-title">SKU Catalogue <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">Click any cell to edit inline</span></div>
         <button class="inv-add-row-btn" onclick="invAddRow()">+ Add SKU</button>
       </div>
-      <div style="overflow-x:auto;">
+      <div class="inv-table-scroll">
         <table class="inv-table"><thead><tr>
           <th>SKU</th><th>Name</th><th>GPU</th><th>VRAM (GB)</th><th>Price ($)</th>
           <th>Stock</th><th>Rack U</th><th>Power (kW)</th><th>Arch</th><th>Lease 12mo</th><th></th>
