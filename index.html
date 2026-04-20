@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 /* Home topbar — matches step pages exactly */
 .home-bar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;height:60px;
+  padding:0 40px;height:72px;
   background:var(--white);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;
 }
@@ -181,7 +181,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .step-page.active{display:flex;}
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;height:60px;
+  padding:0 32px;height:72px;
   background:var(--white);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;
 }
@@ -198,7 +198,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
   border-radius:var(--r-sm);
   color:var(--ink2);
   font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
-  cursor:pointer;padding:7px 14px;transition:all 0.15s;
+  cursor:pointer;padding:9px 16px;transition:all 0.15s;
 }
 .nav-btn:hover{background:var(--border);color:var(--ink);border-color:var(--border-strong);}
 .nav-btn.accent{background:var(--blue-light);border-color:rgba(26,86,219,0.3);color:var(--blue);}
@@ -338,8 +338,8 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 /* ══════════════════════════════
    INVENTORY
 ══════════════════════════════ */
-.inv-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;}
-.inv-table{width:100%;border-collapse:collapse;font-size:13px;}
+.inv-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;-webkit-overflow-scrolling:touch;}
+.inv-table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
 .inv-table th{text-align:left;padding:10px 15px;font-size:11px;font-weight:600;color:var(--placeholder);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg);}
 .inv-table td{padding:10px 15px;border-bottom:1px solid var(--border);color:var(--ink);}
 .inv-table tr:last-child td{border-bottom:none;}
@@ -562,7 +562,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 
 /* ── MOBILE FIXES ── */
 @media(max-width:700px){
-  .topbar,.home-bar{padding:0 16px;height:52px;}
+  .topbar,.home-bar{padding:0 16px;height:60px;}
   .sbody,.tracker-body{padding:24px 16px 64px;}
   .chips{grid-template-columns:1fr;}
   .rack-grid{grid-template-columns:1fr;}
@@ -723,16 +723,15 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <textarea id="txInput" rows="9" placeholder="Paste raw meeting notes, client transcript, or Slack thread…"></textarea>
     </div>
     <div id="tabGranola" class="field" style="display:none">
-      <div class="f-label">Granola Meeting Summary <span class="f-hint">— Paste your Granola AI-generated summary</span></div>
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px 14px;background:var(--blue-subtle);border:1px solid rgba(26,86,219,0.15);border-radius:var(--r-md);">
+      <div class="f-label">Granola Meeting Summary <span class="f-hint">— Paste your full Granola transcript</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:12px 16px;background:var(--blue-subtle);border:1px solid rgba(26,86,219,0.15);border-radius:var(--r-md);">
         <span style="font-size:16px;flex-shrink:0;">🎙️</span>
-        <div style="font-size:12.5px;color:var(--blue);line-height:1.5;"><strong>Granola Integration</strong> — Granola summarizes your video calls into structured meeting notes. Paste the summary here and the Discovery Agent will extract hardware constraints, profile the client's business model, and classify the workload against past Zillion deployments.</div>
+        <div style="font-size:12.5px;color:var(--blue);line-height:1.6;"><strong>Granola Integration</strong> — Paste the complete Granola output including attendees, discussion points, and any action items. The Discovery Agent will extract hardware constraints, identify deal stage, flag follow-up questions for the team, and surface competitive intel. Granola may miss technical details — the AI will infer from context and flag ambiguity.</div>
       </div>
-      <textarea id="granolaInput" rows="9" placeholder="Paste your Granola meeting summary here…&#10;&#10;Example:&#10;Meeting with [Client] — [Date]&#10;Attendees: ...&#10;&#10;Key Discussion Points:&#10;• Client needs GPU compute for [workload]&#10;• Budget range: $X–$Y&#10;• Timeline: [deadline]&#10;• Technical requirements: [VRAM, NVLink, etc.]"></textarea>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
-        <span style="font-size:11px;color:var(--placeholder);">Or</span>
-        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--blue);padding:5px 10px;background:var(--blue-light);border:1px solid rgba(26,86,219,0.2);border-radius:var(--r-sm);">
-          📎 Upload Granola .md file
+      <textarea id="granolaInput" rows="12" placeholder="Paste your Granola meeting transcript here. Include everything — the AI extracts more value from complete transcripts.&#10;&#10;Granola typically outputs:&#10;• Meeting title and date&#10;• Attendees and their roles&#10;• Key discussion topics&#10;• Decisions made&#10;• Action items&#10;&#10;The Discovery Agent will identify:&#10;→ Budget, GPU needs, timeline, workload type&#10;→ Deal stage (Discovery / Tech Discussion / POC / Negotiation)&#10;→ Follow-up questions your team should ask&#10;→ Competitive intel (other vendors mentioned)&#10;→ Confidence score based on similar past Zillion deals"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--blue);padding:6px 12px;background:var(--blue-light);border:1px solid rgba(26,86,219,0.2);border-radius:var(--r-sm);">
+          📎 Upload Granola file (.md, .txt)
           <input type="file" accept=".md,.txt,.json" style="display:none;" onchange="loadGranolaFile(event)"/>
         </label>
       </div>
@@ -761,6 +760,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <div class="chip"><div class="chip-label">GPU Type ✏️</div><div class="chip-val" id="cGpu" contenteditable="true" spellcheck="false">—</div></div>
         <div class="chip"><div class="chip-label">Workflow ✏️</div><div class="chip-val" id="cWorkflow" contenteditable="true" spellcheck="false">—</div></div>
         <div class="chip"><div class="chip-label">Timeline ✏️</div><div class="chip-val" id="cTimeline" contenteditable="true" spellcheck="false">—</div></div>
+        <div class="chip"><div class="chip-label">Deal Stage</div><div class="chip-val" id="cDealStage" style="color:var(--green);font-weight:600;">—</div></div>
         <div class="chip-wide"><div class="chip-label">Business Model &amp; Client Profile ✏️</div><div class="chip-body" id="cBizModel" contenteditable="true" spellcheck="false">—</div><div class="rag-badge" id="ragBadge" style="display:none;"><div class="rag-dot"></div><span id="ragLabel">RAG: Matched</span></div></div>
       </div>
       <div class="edit-bar" id="constraintBar">
@@ -782,6 +782,22 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           <div class="conf-title" id="confTitle">—</div>
           <div class="conf-reasoning" id="confReasoning">—</div>
           <div class="conf-matches" id="confMatches"></div>
+        </div>
+      </div>
+
+      <!-- Deal Intelligence Panel -->
+      <div id="dealIntelCard" style="display:none;margin-bottom:16px;padding:16px 20px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);">Deal Intelligence</div>
+          <span id="dealStageBadge" style="display:none;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);"></span>
+        </div>
+        <div id="fuQuestionsWrap" style="display:none;margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Follow-up Questions for Sales Team</div>
+          <div id="fuQuestionsList" style="font-size:13px;color:var(--ink2);line-height:1.7;"></div>
+        </div>
+        <div id="compIntelWrap" style="display:none;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Competitive Intel</div>
+          <div id="compIntelText" style="font-size:13px;color:var(--ink2);line-height:1.6;padding:8px 12px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-sm);"></div>
         </div>
       </div>
 
@@ -1415,7 +1431,7 @@ async function logEditDelta(proposalId,agent,originalText,editedText,outcome){
 }
 
 /* ═══ MOCK DATA ═══ */
-const MOCK_R1={client_name:"Acme Research Labs",budget:"$180,000 – $220,000",gpu_preference:"RTX 5090 preferred, 4090 acceptable",workflow:"Training (pure — no inference)",timeline:"Mid-June 2026 (hard deadline)",business_model:"Contract biomedical AI research firm. Revenue is milestone-based tied to pharma contract checkpoints. Compute cost directly affects project margin — budget adherence is critical.",rag_classification:"LLM Fine-Tune / Large-Scale Training · matched 4 Zillion deployments",key_requirements:["Min 192GB VRAM/node — prior cluster had OOM failures","NVLink bandwidth critical for 70B param distributed training","Cluster operational before July 1st pharma contract start"],confidence:{score:8.7,label:"High Confidence",reasoning:"Strong signal match on 4 past Zillion pharma AI deployments. Budget, VRAM floor, timeline urgency all align with closed deals.",matched_deals:["Pharma AI — $156k ✓","BioFoundry — $112k ✓","GenomicsLab — $198k ✓","MedSeq — $84k ⏳"]}};
+const MOCK_R1={client_name:"Acme Research Labs",budget:"$180,000 – $220,000",gpu_preference:"RTX 5090 preferred, 4090 acceptable",workflow:"Training (pure — no inference)",timeline:"Mid-June 2026 (hard deadline)",deal_stage:"Tech Discussion",business_model:"Contract biomedical AI research firm. Revenue is milestone-based tied to pharma contract checkpoints. Compute cost directly affects project margin — budget adherence is critical.",rag_classification:"LLM Fine-Tune / Large-Scale Training · matched 4 Zillion deployments",key_requirements:["Min 192GB VRAM/node — prior cluster had OOM failures","NVLink bandwidth critical for 70B param distributed training","Cluster operational before July 1st pharma contract start"],follow_up_questions:["Confirm whether 192GB VRAM is per-node or aggregate cluster minimum","Verify if pharma partner requires on-prem or can accept colo at Zillion DC","Ask about data sovereignty requirements for biomedical datasets"],competitive_intel:"Client previously evaluated CoreWeave cloud ($38K/mo) but found queue times unacceptable. Prefers owned hardware for cost predictability.",confidence:{score:8.7,label:"High Confidence",reasoning:"Strong signal match on 4 past Zillion pharma AI deployments. Budget, VRAM floor, timeline urgency all align with closed deals.",matched_deals:["Ab Initia Labs — $2M ✓","Vertex Genomics — $94K ✓","Helios — $892K ✓","MedSeq — $84k ⏳"]}};
 
 /* ═══ DYNAMIC ToT ═══ */
 function generateToTPaths(c){
@@ -1657,7 +1673,7 @@ async function runAgent1(){
   try{
     let p;
     if(useApi){
-      const sys='You are the Discovery Agent for Zillion Network, a GPU infrastructure company that sells GPU servers, provides colocation hosting (Irvine CA, Dallas TX, Ashburn VA), managed 24/7 L3 support, and GPU-as-a-Service leasing.\n\nZILLION PRICING BENCHMARKS:\n- RTX Pro 6000 SE 8-GPU server: ~$128K (customer-owned, 10% margin)\n- Colocation: $2,240-2,290/mo per 8-GPU server (5kW)\n- GPU lease: $1.25-1.42/GPU/hr (12-mo) / $1.15-1.32/GPU/hr (24-mo)\n- Managed services: included in colo — 24/7 monitoring, <15min incident response, <4hr HW replacement\n- Cluster architectures: PCIe passthrough (CX6 100GbE) vs MGX CX8 (800GbE, training-optimized)\n\nPAST DEAL PATTERNS:\n- Pharma/biomedical AI: $150-220K, VRAM-sensitive, NVLink critical\n- Foundation model training: $500K-1M+, dedicated cage, InfiniBand HDR200\n- Inference: $100-300K, latency-sensitive sub-200ms P95\n- Co-location: customer hardware at Zillion DC, $3-5K/mo managed\n\nExtract constraints. Return ONLY valid JSON (no markdown, no backticks):\n{"client_name":"","budget":"$X – $Y","gpu_preference":"","workflow":"Training/Inference/Hybrid","timeline":"","business_model":"2-3 sentences","rag_classification":"workload type","key_requirements":["req1","req2"],"confidence":{"score":7.5,"label":"High/Moderate/Low Confidence","reasoning":"why, reference similar past deals","matched_deals":["deal — $XK status"]}}\n\nBe precise. No AI fluff.';
+      const sys='You are the Discovery Agent for Zillion Network, a GPU infrastructure company. Your job is to extract actionable deal intelligence from meeting notes, transcripts, or Granola summaries.\n\nZILLION BUSINESS:\n- Sells GPU servers (RTX 4090, 5090, Pro 6000 SE, A100, H100)\n- Colocation hosting at Irvine CA, Dallas TX, Ashburn VA ($448/kW/mo, $2,240/mo per 8-GPU server)\n- 24/7 L3 managed support (<15min incident, <4hr HW replacement)\n- GPU-as-a-Service leasing ($1.25-1.42/GPU/hr 12-mo)\n- Cluster architectures: PCIe passthrough (CX6 100GbE) vs MGX CX8 (800GbE, training-optimized)\n\nBUSINESS WORKFLOW STAGES (identify which stage this deal is in):\n1. Demand Discovery — initial contact, understanding the client need\n2. Tech Discussion — architecture alignment, workload profiling, GPU selection\n3. POC/Evaluation — proof-of-concept, benchmark testing\n4. Contract Negotiation — pricing, terms, SLA commitments\n5. Deal Closing — PO, MSA signing\n6. Service Delivery — deployment, monitoring, ongoing ops\n\nPAST DEAL PATTERNS:\n- Pharma/biomedical AI: $150-220K, VRAM-sensitive, NVLink critical (Ab Initia Labs $2M, Vertex Genomics $94K)\n- Foundation model training: $500K-1M+, cage deployment (Helios $892K)\n- Inference: $100-300K, latency-sensitive (NovaStar AI $312K)\n- Managed services: multi-cluster worldwide ops (Cudo Ventures 4,096 GPUs)\n- Lost deals: budget mismatch, edge/self-managed low-fit (CloudMind $76K lost)\n\nINPUT HANDLING:\n- The input may be raw meeting notes, Granola AI summaries, Slack threads, or email chains\n- Granola summaries often miss granular technical details — infer from context where possible\n- Flag anything ambiguous as a follow-up question for the sales team\n\nReturn ONLY valid JSON (no markdown, no backticks):\n{"client_name":"","budget":"$X – $Y or Unknown","gpu_preference":"specific GPU or Best fit","workflow":"Training/Inference/Hybrid/Managed Services","timeline":"","deal_stage":"Discovery/Tech Discussion/POC/Negotiation/Closing/Delivery","business_model":"2-3 sentences about the client business and why they need compute","rag_classification":"workload type — matched against Zillion past deals","key_requirements":["req1","req2","req3"],"follow_up_questions":["question the sales team should ask next"],"competitive_intel":"any competitors mentioned or implied","confidence":{"score":7.5,"label":"High/Moderate/Low Confidence","reasoning":"explain your confidence level, reference similar past Zillion deals","matched_deals":["Ab Initia Labs — $2M ✓","similar deal — $XK status"]}}\n\nBe precise. Extract everything you can. Flag what you cannot determine as follow-up questions.';
       const usr='Extract constraints from:\n\n'+inp+(fb?'\n\nReviewer feedback: '+fb:'');
       const raw=await callClaude(sys,usr,"discovery");p=JSON.parse(raw.replace(/```json|```/g,'').trim());
     } else {await mockDelay(fb?1800:1400);p=MOCK_R1;}
@@ -1665,18 +1681,36 @@ async function runAgent1(){
     document.getElementById('cBudget').textContent=p.budget;document.getElementById('cGpu').textContent=p.gpu_preference;
     document.getElementById('cWorkflow').textContent=p.workflow;document.getElementById('cTimeline').textContent=p.timeline;
     document.getElementById('cBizModel').textContent=p.business_model;
+    document.getElementById('cDealStage').textContent=p.deal_stage||'Discovery';
     document.getElementById('ragLabel').textContent='RAG: '+(p.rag_classification||'Classified');document.getElementById('ragBadge').style.display='inline-flex';
     origConstraints={budget:p.budget,gpu:p.gpu_preference,workflow:p.workflow,timeline:p.timeline,biz:p.business_model};
-    const sum='CLIENT: '+p.client_name+'\n\nSUMMARY:\n'+p.business_model+'\n\nKEY REQUIREMENTS:\n'+(p.key_requirements||[]).map((r,i)=>'  '+(i+1)+'. '+r).join('\n');
+    // Build rich summary with new fields
+    var sum='CLIENT: '+(p.client_name||'Unknown')+'\nDEAL STAGE: '+(p.deal_stage||'Discovery')+'\n\nBUSINESS MODEL:\n'+p.business_model+'\n\nKEY REQUIREMENTS:\n'+(p.key_requirements||[]).map((r,i)=>'  '+(i+1)+'. '+r).join('\n');
+    if(p.follow_up_questions&&p.follow_up_questions.length>0)sum+='\n\nFOLLOW-UP QUESTIONS FOR SALES TEAM:\n'+p.follow_up_questions.map((q,i)=>'  '+(i+1)+'. '+q).join('\n');
+    if(p.competitive_intel&&p.competitive_intel!=='None'&&p.competitive_intel!=='none')sum+='\n\nCOMPETITIVE INTEL:\n  '+p.competitive_intel;
     const b=document.getElementById('out1body');b.classList.remove('out-empty');b.textContent=sum;origSummary=sum;
     if(p.confidence)renderConfidenceScore(p.confidence);
+    // Render Deal Intelligence panel
+    var diCard=document.getElementById('dealIntelCard');
+    if(p.deal_stage||p.follow_up_questions||p.competitive_intel){
+      diCard.style.display='block';
+      if(p.deal_stage){var dsb=document.getElementById('dealStageBadge');dsb.textContent=p.deal_stage;dsb.style.display='inline-flex';}
+      if(p.follow_up_questions&&p.follow_up_questions.length>0){
+        document.getElementById('fuQuestionsWrap').style.display='block';
+        document.getElementById('fuQuestionsList').innerHTML=p.follow_up_questions.map(function(q,i){return '<div style="margin-bottom:4px;padding-left:16px;text-indent:-16px;">'+(i+1)+'. '+escHtml(q)+'</div>';}).join('');
+      }
+      if(p.competitive_intel&&p.competitive_intel!=='None'&&p.competitive_intel!=='none'&&p.competitive_intel!==''){
+        document.getElementById('compIntelWrap').style.display='block';
+        document.getElementById('compIntelText').textContent=p.competitive_intel;
+      }
+    } else {diCard.style.display='none';}
     document.getElementById('out1').style.display='block';
     watchEdits(['cBudget','cGpu','cWorkflow','cTimeline','cBizModel'],'constraintBar');watchEdits(['out1body'],'summaryBar');
     done('s1d','s1s','btn1','Run Discovery Agent →','Constraints extracted ✓'+(fb?' (feedback)':'')+(useApi?' [API]':' [Mock]'));
     hideValidation('val1');agentRunning=false;saveDraft();
   }catch(e){console.error(e);err('s1d','s1s','btn1','Run Discovery Agent →',e.message);showValidation('val1','error','Agent failed: '+e.message+(useApi?' — Check API key in ⚙ Settings or switch to Mock.':''));agentRunning=false;}
 }
-function rerunAgent1(){document.getElementById('out1').style.display='none';['cBudget','cGpu','cWorkflow','cTimeline','cBizModel'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('ragBadge').style.display='none';document.getElementById('out1body').textContent='';document.getElementById('confCard').style.display='none';['constraintBar','summaryBar'].forEach(id=>document.getElementById(id).classList.remove('visible'));r1=null;origConstraints=null;origSummary=null;runAgent1();}
+function rerunAgent1(){document.getElementById('out1').style.display='none';['cBudget','cGpu','cWorkflow','cTimeline','cBizModel'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('ragBadge').style.display='none';document.getElementById('out1body').textContent='';document.getElementById('confCard').style.display='none';document.getElementById('dealIntelCard').style.display='none';document.getElementById('dealStageBadge').style.display='none';document.getElementById('fuQuestionsWrap').style.display='none';document.getElementById('compIntelWrap').style.display='none';['constraintBar','summaryBar'].forEach(id=>document.getElementById(id).classList.remove('visible'));r1=null;origConstraints=null;origSummary=null;runAgent1();}
 function renderConfidenceScore(conf){document.getElementById('confCard').style.display='flex';document.getElementById('confNum').textContent=conf.score;document.getElementById('confTitle').textContent=conf.label;document.getElementById('confReasoning').textContent=conf.reasoning;const fill=document.getElementById('confRingFill');const pct=conf.score/10;fill.style.strokeDashoffset=188.5*(1-pct);fill.style.stroke=conf.score>=8?'var(--green)':conf.score>=6?'var(--amber)':'var(--red)';document.getElementById('confMatches').innerHTML=(conf.matched_deals||[]).map(d=>'<span class="conf-match-pill">'+d+'</span>').join('');}
 
 /* ═══ AGENT 2 — ARCHITECT ═══ */
