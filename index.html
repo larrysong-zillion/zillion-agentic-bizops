@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+.hidden{display:none !important;}
 :root{
   --black:#0A0A0A;--dark:#111212;--dark2:#1A1C1C;
   --white:#FFFFFF;--bg:#F8F9FB;
@@ -34,17 +35,17 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 /* ══════════════════════════════
    ZILLION LOGO — dark bg version
 ══════════════════════════════ */
-.zn-logo{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;text-decoration:none;transition:opacity 0.15s;}.zn-logo:hover{opacity:0.75;}
+.zn-logo{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;text-decoration:none;}
 /* SVG graph icon — matches the Zillion brand mark */
 .zn-icon{width:28px;height:28px;flex-shrink:0;}
 .zn-wordmark{font-size:15px;font-weight:700;letter-spacing:-0.3px;color:var(--accent);font-family:'Inter',sans-serif;}
-
+.topbar .zn-wordmark{color:var(--accent);}
 .home-bar .zn-wordmark{color:#00C47A !important;}
 /* light-bg variant used inside step pages */
 .zn-logo.light .zn-wordmark{color:var(--ink);}
-
+.zn-logo.light .zn-icon path,.zn-logo.light .zn-icon circle{stroke:var(--ink);}
 /* Topbar is now light — darken logo strokes */
-/* logo stays green on topbar — strokes hardcoded #00C47A */
+.topbar .zn-icon circle,.topbar .zn-icon line{stroke:var(--accent) !important;}
 
 /* ══════════════════════════════
    HOME PAGE — light, consistent with site
@@ -176,7 +177,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 /* ══════════════════════════════
    TOPBAR (step pages)
 ══════════════════════════════ */
-.step-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
+.step-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
 .step-page.active{display:flex;}
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
@@ -426,7 +427,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 /* ══════════════════════════════
    TRACKER PAGE
 ══════════════════════════════ */
-.tracker-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
+.tracker-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);}
 .tracker-page.active{display:flex;}
 .tracker-body{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:48px 40px 80px;}
 .tracker-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
@@ -491,9 +492,9 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 
 /* ── SEARCH & FILTER BAR ── */
 .tracker-controls{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
-.search-wrap{flex:1;min-width:220px;max-width:380px;}
-
-.search-input{width:100%;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:var(--shadow-sm);}
+.search-wrap{position:relative;flex:1;min-width:220px;max-width:380px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--placeholder);pointer-events:none;z-index:2;}
+.search-input{width:100%;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px 9px 36px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:var(--shadow-sm);}
 .search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,0.1);}
 .search-input::placeholder{color:var(--placeholder);}
 .client-filter-wrap{position:relative;}
@@ -608,80 +609,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .split-toggle:hover,.split-toggle.active{background:var(--blue-subtle) !important;color:var(--blue) !important;border-color:rgba(26,86,219,0.3) !important;}
 @media(max-width:700px){.split-pane{grid-template-columns:1fr;}.split-left{border-right:none;border-bottom:1px solid var(--border);max-height:250px;}}
 /* ═══ SPARKLINE ═══ */
-
-
-
-
-
-
-
-/* ─── Version summary card ─── */
-.ver-summary-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;margin-bottom:14px;}
-.ver-summary-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.ver-summary-text{font-size:13px;color:var(--ink2);line-height:1.65;font-style:italic;outline:none;}
-.ver-summary-text:empty::before{content:'No summary — save a version to generate.';color:var(--placeholder);font-style:normal;}
-/* ─── Inventory tab ─── */
-.inv-tab-page{display:none;min-height:100vh;flex-direction:column;background:var(--bg);overflow:hidden;}
-.inv-tab-page.active{display:flex;}
-.inv-tab-body{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:40px 40px 80px;}
-@media(max-width:768px){.inv-tab-body{padding:24px 16px 64px;}}
-.inv-source-bar{display:flex;align-items:center;justify-content:space-between;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 20px;margin-bottom:20px;box-shadow:var(--shadow-sm);flex-wrap:wrap;gap:10px;}
-.inv-source-info{display:flex;align-items:center;gap:10px;flex:1;min-width:200px;}
-.inv-source-dot{width:8px;height:8px;border-radius:50%;background:var(--placeholder);flex-shrink:0;transition:background .3s;}
-.inv-source-dot.live{background:var(--green);animation:blink 2s infinite;}
-.inv-source-dot.manual{background:var(--amber);}
-.inv-source-text{font-size:13px;color:var(--muted);}
-.inv-source-text strong{color:var(--ink2);font-weight:600;}
-.inv-source-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.inv-source-btn{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:7px 13px;font-size:12.5px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
-.inv-source-btn:hover{background:var(--bg);border-color:var(--accent);color:var(--accent);}
-.inv-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-@media(max-width:600px){.inv-stats{grid-template-columns:1fr 1fr;}}
-.inv-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);}
-.inv-stat-num{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.5px;}
-.inv-stat-label{font-size:11.5px;color:var(--muted);margin-top:2px;}
-.inv-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);}.inv-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
-.inv-table-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg);gap:10px;flex-wrap:wrap;}
-.inv-table-title{font-size:13px;font-weight:700;color:var(--ink2);}
-.inv-add-row-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
-.inv-add-row-btn:hover{opacity:.88;}
-.inv-table{width:100%;border-collapse:collapse;font-size:13px;}
-.inv-table th{text-align:left;padding:9px 12px;font-size:10.5px;font-weight:600;color:var(--placeholder);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap;}
-.inv-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle;white-space:nowrap;}
-.inv-table tbody tr:last-child td{border-bottom:none;}
-.inv-table tbody tr:hover td{background:var(--bg);}
-.inv-table td[contenteditable=true]{cursor:text;outline:none;min-width:60px;}
-.inv-table td[contenteditable=true]:focus{background:rgba(0,196,122,0.07);box-shadow:inset 0 0 0 1.5px rgba(0,196,122,0.4);}
-.inv-stock-ok{color:var(--green);font-weight:600;}
-.inv-stock-low{color:var(--amber);font-weight:600;}
-.inv-stock-out{color:var(--red);font-weight:600;}
-.inv-row-del{background:none;border:none;color:var(--placeholder);cursor:pointer;padding:3px 7px;border-radius:var(--r-sm);font-size:13px;transition:all .12s;}
-.inv-row-del:hover{color:var(--red);background:var(--red-bg);}
-.inv-modal-overlay{position:fixed;inset:0;background:rgba(15,17,23,.45);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
-.inv-modal-overlay.hidden{display:none;}
-.inv-modal-box{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px 32px;max-width:500px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp .2s ease;}
-@keyframes slideUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
-.inv-modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.4px;margin-bottom:4px;}
-.inv-modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.55;}
-.inv-src-tabs{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px;margin-bottom:16px;}
-.inv-src-tab{flex:1;text-align:center;padding:7px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif;color:var(--muted);transition:all .15s;}
-.inv-src-tab.active{background:var(--white);color:var(--ink);font-weight:600;box-shadow:var(--shadow-sm);}
-.inv-field{margin-bottom:14px;}
-.inv-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
-.inv-field input,.inv-field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color .15s;}
-.inv-field input:focus,.inv-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,196,122,.1);}
-.inv-field input::placeholder{color:var(--placeholder);}
-
-/* ─── SPA page isolation: prevent screens bleeding into each other ─── */
-.step-page.active,.tracker-page.active,.inv-tab-page.active{
-  overflow-y:auto;overflow-x:hidden;
-  max-height:100vh;
-  height:100vh;
-}
-body:has(.tracker-page.active) .inv-tab-page,
-body:has(.inv-tab-page.active) .tracker-page{
-  display:none !important;
-}
+.sparkline-wrap{display:inline-flex;align-items:center;gap:6px;margin-left:8px;}
+.sparkline-wrap svg{display:block;}
+.sparkline-trend{font-size:10px;font-weight:600;}
+.sparkline-trend.up{color:var(--green);}
+.sparkline-trend.down{color:var(--red);}
+.sparkline-trend.flat{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -691,7 +624,7 @@ body:has(.inv-tab-page.active) .tracker-page{
   <div class="home" style="flex:1;display:flex;flex-direction:column;width:100%;">
     <nav class="home-bar">
       <!-- LOGO: Zillion brand mark + green wordmark on dark bg -->
-      <div class="zn-logo" onclick="goHome()" title="Home">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;">
         <svg class="zn-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/>
           <circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/>
@@ -706,11 +639,10 @@ body:has(.inv-tab-page.active) .tracker-page{
         <span class="zn-wordmark" style="color:#00C47A;">Zillion Network</span>
       </div>
       <div class="home-bar-right">
+        <div style="display:flex;align-items:center;gap:6px;margin-right:12px;"><div id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);"></div><span id="apiStatusText" style="font-size:11px;color:var(--muted);">Mock Mode</span></div>
+        <button onclick="loadSettingsIntoModal();openSettings()" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;margin-right:8px;" title="Settings" aria-label="Open Settings">⚙</button>
         <button class="home-proposals-btn" onclick="goTracker()">
           All Proposals <span class="home-count" id="homeCount">0</span>
-        </button>
-        <button class="home-proposals-btn" onclick="goInventory()" style="background:rgba(0,196,122,0.08);border-color:rgba(0,196,122,0.3);color:var(--accent);">
-          🖥 Inventory
         </button>
       </div>
     </nav>
@@ -727,6 +659,9 @@ body:has(.inv-tab-page.active) .tracker-page{
         </button>
         <button class="btn-view-proposals" onclick="goTracker()">
           View All Proposals
+        </button>
+        <button class="btn-view-proposals" onclick="goInventory()">
+          📦 Hardware Inventory
         </button>
       </div>
 
@@ -754,7 +689,7 @@ body:has(.inv-tab-page.active) .tracker-page{
 <div id="screen1" class="step-page">
   <nav class="topbar">
     <div class="tl">
-      <div class="zn-logo" onclick="goHome()" title="Home">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;">
         <svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg>
         <span class="zn-wordmark">Zillion Network</span>
       </div>
@@ -812,7 +747,7 @@ body:has(.inv-tab-page.active) .tracker-page{
       <span class="api-badge mock" id="apiBadge">MOCK MODE</span></label>
     </div>
     <div class="btn-row">
-      <button class="btn-dark" id="btn1" onclick="runAgent1()">Run Discovery Agent →</button>
+      <button class="btn-dark" id="btn1" onclick="runAgent1()" aria-label="Run Discovery Agent">Run Discovery Agent →</button>
     </div>
 
     <div id="out1" style="display:none;margin-top:36px;">
@@ -880,7 +815,7 @@ body:has(.inv-tab-page.active) .tracker-page{
 <div id="screen2" class="step-page">
   <nav class="topbar">
     <div class="tl">
-      <div class="zn-logo" onclick="goHome()" title="Home">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;">
         <svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg>
         <span class="zn-wordmark">Zillion Network</span>
       </div>
@@ -948,7 +883,7 @@ body:has(.inv-tab-page.active) .tracker-page{
     </div>
 
     <div class="status-row"><div class="sdot" id="s2d"></div><span id="s2s">Ready — constraints loaded from Step 1</span></div>
-    <div class="btn-row"><button class="btn-dark" id="btn2" onclick="runAgent2()">Run Architect Agent →</button></div>
+    <div class="btn-row"><button class="btn-dark" id="btn2" onclick="runAgent2()" aria-label="Run Architect Agent">Run Architect Agent →</button></div>
 
     <div id="out2" style="display:none;margin-top:36px;">
       <div class="divider"></div>
@@ -986,7 +921,7 @@ body:has(.inv-tab-page.active) .tracker-page{
 <div id="screen3" class="step-page">
   <nav class="topbar">
     <div class="tl">
-      <div class="zn-logo" onclick="goHome()" title="Home">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;">
         <svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg>
         <span class="zn-wordmark">Zillion Network</span>
       </div>
@@ -1069,7 +1004,7 @@ body:has(.inv-tab-page.active) .tracker-page{
 <div id="screenTracker" class="tracker-page">
   <nav class="topbar">
     <div class="tl">
-      <div class="zn-logo" onclick="goHome()" title="Home">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;">
         <svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg>
         <span class="zn-wordmark">Zillion Network</span>
       </div>
@@ -1077,7 +1012,6 @@ body:has(.inv-tab-page.active) .tracker-page{
     </div>
     <div style="font-size:13px;font-weight:600;color:var(--muted);">All Proposals</div>
     <div class="topbar-right">
-      <button class="nav-btn" onclick="goInventory()">🖥 Inventory</button>
       <button class="nav-btn accent" onclick="startNewAssessment()">+ New Assessment</button>
       <button class="nav-btn" onclick="goHome()">⌂ Home</button>
     </div>
@@ -1105,7 +1039,7 @@ body:has(.inv-tab-page.active) .tracker-page{
     <!-- Search + status filter -->
     <div class="tracker-controls">
       <div class="search-wrap">
-        <input class="search-input" id="searchInput" type="text" placeholder="Search by client name, reference, or amount…" oninput="clearTimeout(window._searchDebounce);window._searchDebounce=setTimeout(renderTracker,300)"/>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search by client name, reference, or amount…" oninput="clearTimeout(window._searchDebounce);window._searchDebounce=setTimeout(renderTracker,300)" style="padding-left:14px;"/>
       </div>
       <div class="filter-bar" style="margin-bottom:0;flex-wrap:nowrap;">
         <button class="filter-btn active" onclick="filterProposals('all',this)">All</button>
@@ -1125,6 +1059,48 @@ body:has(.inv-tab-page.active) .tracker-page{
   </div>
 </div>
 
+<!-- ════════ INVENTORY MANAGEMENT PAGE ════════ -->
+<div id="screenInventory" class="step-page">
+  <nav class="topbar">
+    <div class="tl">
+      <div class="zn-logo" onclick="goHome()" style="cursor:pointer;"><svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg><span class="zn-wordmark">Zillion Network</span></div>
+      <div class="tl-sep"></div><span class="tl-sub">Hardware Inventory</span>
+    </div>
+    <div class="topbar-right">
+      <button class="nav-btn accent" onclick="goTracker()">📁 Proposals <span class="tracker-count" id="tcInv">0</span></button>
+      <button class="nav-btn" onclick="goHome()">⌂ Home</button>
+    </div>
+  </nav>
+  <div class="sbody">
+    <h2 class="step-title" style="font-size:26px;">Hardware <em>Inventory</em></h2>
+    <p class="step-desc" style="margin-bottom:24px;">Manage Zillion's GPU hardware catalogue. Edit cells inline, import from CSV/URL, or add SKUs manually.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);">
+      <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--ink2);">
+        📎 Upload CSV
+        <input type="file" accept=".csv,.tsv" style="display:none;" onchange="invImportCsv(this)"/>
+      </label>
+      <button onclick="invPromptUrl()" style="padding:6px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--ink2);">🔗 Import from URL</button>
+      <button onclick="invPromptSheets()" style="padding:6px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--ink2);">📊 Google Sheets</button>
+      <button onclick="invResetToDefault()" style="padding:6px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);">↺ Reset to Default</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+      <div class="stat-card"><div class="stat-num" id="invStatTotal">—</div><div class="stat-label">Total SKUs</div></div>
+      <div class="stat-card success"><div class="stat-num" id="invStatInStock">—</div><div class="stat-label">In Stock</div></div>
+      <div class="stat-card pending"><div class="stat-num" id="invStatLow">—</div><div class="stat-label">Low Stock (≤3)</div></div>
+      <div class="stat-card lost"><div class="stat-num" id="invStatOut">—</div><div class="stat-label">Out of Stock</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:600;color:var(--ink);">SKU Catalogue <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">Click any cell to edit inline</span></div>
+      <button class="btn-dark" style="padding:6px 16px;font-size:12px;" onclick="invAddRow()">+ Add SKU</button>
+    </div>
+    <div class="inv-wrap">
+      <table class="inv-table"><thead><tr>
+        <th>SKU</th><th>Name</th><th>GPU</th><th>VRAM</th><th>Price</th>
+        <th>Stock</th><th>Rack U</th><th>Power</th><th>Arch</th><th></th>
+      </tr></thead><tbody id="invTableBody"></tbody></table>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════
@@ -1139,6 +1115,34 @@ let proposalVersions=[];
 let currentPage=1;
 const PAGE_SIZE=10;
 let useApi=false;
+let agentRunning=false;
+
+/* ═══ COLLISION-SAFE ID ═══ */
+var _idCounter=0;
+function genId(){_idCounter++;var now=new Date();return 'ZN-'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+String(Date.now()).slice(-5)+String(_idCounter).padStart(2,'0');}
+
+/* ═══ DRAFT AUTOSAVE ═══ */
+function saveDraft(){try{localStorage.setItem('zn_draft',JSON.stringify({tx:document.getElementById('txInput')?document.getElementById('txInput').value:'',r1:r1,r2:r2,ts:Date.now()}));}catch(e){}}
+function clearDraft(){try{localStorage.removeItem('zn_draft');}catch(e){}}
+function restoreDraft(){
+  try{
+    var raw=localStorage.getItem('zn_draft');if(!raw)return;
+    var d=JSON.parse(raw);
+    if(!d.ts||(Date.now()-d.ts)>4*3600000){clearDraft();return;} // >4hrs old
+    if(!d.tx&&!d.r1)return;
+    if(!confirm('You have an in-progress assessment'+(d.r1?' for '+d.r1.client_name:'')+'. Restore it?')){clearDraft();return;}
+    if(d.tx){var el=document.getElementById('txInput');if(el)el.value=d.tx;}
+    if(d.r1){r1=d.r1;goStep(1);}
+  }catch(e){clearDraft();}
+}
+
+/* ═══ KEYBOARD SHORTCUTS ═══ */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    var sm=document.getElementById('settingsModal');if(sm&&!sm.classList.contains('hidden')){closeSettings();return;}
+    var pm=document.getElementById('pdfModal');if(pm&&!pm.classList.contains('hidden')){closePdfModal();return;}
+  }
+});
 
 /* ═══ STORAGE (localStorage) ═══ */
 const SK='zn_proposals_v5';
@@ -1146,21 +1150,20 @@ function storageSave(){
   showStorageBadge('saving','Saving…');
   // Always save to localStorage as fallback
   try{localStorage.setItem(SK,JSON.stringify(proposals));}catch(e){console.warn('localStorage save failed:',e);}
-  // Also sync to backend if available
-  if(API_BASE||window.location.hostname==='localhost'){
-    // Backend is a sync target — don't block UI on it
+  // Also sync to backend if proxy mode with a real API_BASE
+  if(API_BASE&&ZN_API_MODE==='proxy'){
     syncToBackend().then(function(){showStorageBadge('saved','Synced ✓');}).catch(function(){showStorageBadge('saved','Saved locally ✓');});
   } else {
     showStorageBadge('saved','Saved ✓');
   }
 }
-async function syncToBackend(){
-  // Lightweight sync: POST any proposals not yet on server
-  // For now, just fire-and-forget individual saves when needed
-}
+async function syncToBackend(){}
+function backendHeaders(){var h={'Content-Type':'application/json'};var tok=localStorage.getItem('zn_auth_token');if(tok)h['Authorization']='Bearer '+tok;return h;}
+function hasBackend(){return !!(API_BASE&&ZN_API_MODE==='proxy');}
 async function saveProposalToBackend(p){
+  if(!hasBackend())return;
   try{
-    await fetch(API_BASE+'/api/proposals',{method:'POST',headers:apiHeaders(),body:JSON.stringify({
+    await fetch(API_BASE+'/api/proposals',{method:'POST',headers:backendHeaders(),body:JSON.stringify({
       id:p.id,client:p.client,amount:p.amount,date:p.date,status:p.status,
       text:p.savedText||p.text,notes:p.notes||'',followup:p.followup||null,
       confidence:p.confidence||null,
@@ -1169,18 +1172,21 @@ async function saveProposalToBackend(p){
   }catch(e){console.warn('Backend save failed for '+p.id+':',e);}
 }
 async function updateProposalOnBackend(id,updates){
+  if(!hasBackend())return;
   try{
-    await fetch(API_BASE+'/api/proposals/'+id,{method:'PATCH',headers:apiHeaders(),body:JSON.stringify(updates)});
+    await fetch(API_BASE+'/api/proposals/'+id,{method:'PATCH',headers:backendHeaders(),body:JSON.stringify(updates)});
   }catch(e){console.warn('Backend update failed for '+id+':',e);}
 }
 async function deleteProposalOnBackend(id){
+  if(!hasBackend())return;
   try{
-    await fetch(API_BASE+'/api/proposals/'+id,{method:'DELETE',headers:apiHeaders()});
+    await fetch(API_BASE+'/api/proposals/'+id,{method:'DELETE',headers:backendHeaders()});
   }catch(e){console.warn('Backend delete failed for '+id+':',e);}
 }
 async function loadFromBackend(){
+  if(!hasBackend())return false;
   try{
-    var r=await fetch(API_BASE+'/api/proposals',{headers:apiHeaders()});
+    var r=await fetch(API_BASE+'/api/proposals',{headers:backendHeaders()});
     if(!r.ok)return false;
     var data=await r.json();
     if(data&&data.length>0){
@@ -1206,7 +1212,7 @@ function storageLoad(){
       proposals=JSON.parse(raw)||[];
       proposals.forEach(p=>{
         if(!p.versions||!p.versions.length)p.versions=[{label:'v1 — Original',text:p.savedText||p.text,ts:p.createdAt,current:true}];
-        p.versions.forEach(function(v,vi){if(!v.text||v.text.length<80)v.text=vi===p.versions.length-1?(p.savedText||p.text):(p.text||v.text||'No content.');});
+        p.versions.forEach(function(v,vi){if(!v.text)v.text=v.current?(p.savedText||p.text||'No content.'):'No content.';});
       });
       updateTrackerCount();renderHomeRecent();
     }
@@ -1223,7 +1229,12 @@ function showStorageBadge(state,text){
 
 /* ═══ API MODE ═══ */
 function toggleApiMode(){
-  useApi=document.getElementById('apiMode').checked;
+  var checked=document.getElementById('apiMode').checked;
+  if(checked&&!ZN_API_KEY){
+    document.getElementById('apiMode').checked=false;
+    openSettings();return;
+  }
+  useApi=checked;
   const badge=document.getElementById('apiBadge');
   badge.textContent=useApi?'LIVE API':'MOCK MODE';
   badge.className='api-badge '+(useApi?'live':'mock');
@@ -1296,25 +1307,111 @@ const COMPETITIVE_INTEL={
   zillionEdge:['Customer-owned hardware (CapEx) — unique vs cloud-only','Managed services included in colo (not add-on)','24/7 L3 support <15min response','3-week deployment with MLPerf benchmarks','GPU lease (Plan #2) for OpEx clients','Architecture consulting (passthrough vs CX8)','Proactive DCGM monitoring every 60s']
 };
 
-/* ═══ BACKEND CONFIG ═══ */
-var API_BASE=window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://localhost:8000':''; // empty = same origin (Netlify proxy)
-var AUTH_TOKEN=localStorage.getItem('zn_auth_token')||'';
-function apiHeaders(){var h={'Content-Type':'application/json'};if(AUTH_TOKEN)h['Authorization']='Bearer '+AUTH_TOKEN;return h;}
+/* ═══ API CONFIG — Direct mode for GitHub Pages (no backend needed) ═══ */
+var ZN_API_KEY=localStorage.getItem('zn_api_key')||'';
+var ZN_API_MODE=localStorage.getItem('zn_api_mode')||'direct'; // 'direct' (browser→Anthropic), 'proxy' (browser→backend→Anthropic), 'mock'
+var API_BASE=localStorage.getItem('zn_api_base')||''; // only used in proxy mode
 
-/* ═══ CLAUDE API (via backend proxy) ═══ */
-async function callClaude(sys,usr,agentName){
-  agentName=agentName||'discovery';
-  var url=API_BASE+'/api/agent/'+agentName;
-  var r=await fetch(url,{method:'POST',headers:apiHeaders(),body:JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:4000})});
-  if(!r.ok){var e=await r.text().catch(function(){return 'Unknown error';});throw new Error('Agent '+agentName+' failed ('+r.status+'): '+e);}
-  var d=await r.json();return d.text||'';
+function getApiMode(){
+  if(!ZN_API_KEY&&ZN_API_MODE!=='mock')return 'mock';
+  return ZN_API_MODE;
+}
+function updateApiIndicator(){
+  var mode=getApiMode();
+  var dot=document.getElementById('apiStatusDot');
+  var txt=document.getElementById('apiStatusText');
+  if(!dot||!txt)return;
+  if(mode==='direct'){dot.style.background='var(--green)';txt.textContent='API Connected (Direct)';}
+  else if(mode==='proxy'){dot.style.background='var(--blue)';txt.textContent='API Connected (Proxy)';}
+  else{dot.style.background='var(--amber)';txt.textContent='Mock Mode — configure API key in Settings';}
 }
 
-/* ═══ EDIT DELTA LOGGING (RLHF signal) ═══ */
+/* ═══ SETTINGS MODAL ═══ */
+function openSettings(){document.getElementById('settingsModal').classList.remove('hidden');}
+function closeSettings(){document.getElementById('settingsModal').classList.add('hidden');}
+function saveSettings(){
+  var key=document.getElementById('settingsApiKey').value.trim();
+  var mode=document.querySelector('input[name="apiModeRadio"]:checked');
+  var base=document.getElementById('settingsApiBase').value.trim();
+  if(key){localStorage.setItem('zn_api_key',key);ZN_API_KEY=key;}
+  else{localStorage.removeItem('zn_api_key');ZN_API_KEY='';}
+  if(mode){localStorage.setItem('zn_api_mode',mode.value);ZN_API_MODE=mode.value;}
+  if(base){localStorage.setItem('zn_api_base',base);API_BASE=base;}
+  else{localStorage.removeItem('zn_api_base');API_BASE='';}
+  // Sync the API toggle checkbox on Step 1
+  var chk=document.getElementById('apiMode');
+  if(chk)chk.checked=getApiMode()!=='mock';
+  toggleApiMode();
+  updateApiIndicator();
+  closeSettings();
+}
+function loadSettingsIntoModal(){
+  document.getElementById('settingsApiKey').value=ZN_API_KEY;
+  document.getElementById('settingsApiBase').value=API_BASE;
+  var radios=document.querySelectorAll('input[name="apiModeRadio"]');
+  radios.forEach(function(r){r.checked=r.value===ZN_API_MODE;});
+  document.getElementById('settingsProxySection').style.display=ZN_API_MODE==='proxy'?'block':'none';
+}
+
+/* ═══ CLAUDE API — Direct or Proxy with timeout + retry ═══ */
+async function callClaude(sys,usr,agentName){
+  agentName=agentName||'discovery';
+  var mode=getApiMode();
+  if(mode==='mock')throw new Error('API not configured — set your API key in Settings (⚙ gear icon).');
+  var maxRetries=2;var attempt=0;
+  while(attempt<=maxRetries){
+    var controller=new AbortController();
+    var timeoutId=setTimeout(function(){controller.abort();},65000);
+    try{
+      var r;
+      if(mode==='direct'){
+        // Call Anthropic directly from browser (beta/testing mode)
+        r=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',signal:controller.signal,
+          headers:{'Content-Type':'application/json','x-api-key':ZN_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:sys,messages:[{role:'user',content:usr}]})
+        });
+      } else {
+        // Call backend proxy
+        r=await fetch(API_BASE+'/api/agent/'+agentName,{
+          method:'POST',signal:controller.signal,
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('zn_auth_token')||'')},
+          body:JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:4000})
+        });
+      }
+      clearTimeout(timeoutId);
+      if(!r.ok){
+        var e=await r.text().catch(function(){return '';});
+        if(r.status>=500&&attempt<maxRetries){attempt++;await new Promise(function(ok){setTimeout(ok,1000*Math.pow(2,attempt));});continue;}
+        throw new Error('Agent '+agentName+' ('+r.status+'): '+(e||'Unknown error').substring(0,200));
+      }
+      var d=await r.json();
+      if(mode==='direct'){return(d.content||[]).map(function(b){return b.text||'';}).join('');}
+      else{return d.text||'';}
+    }catch(err){
+      clearTimeout(timeoutId);
+      if(err.name==='AbortError')throw new Error('Agent '+agentName+' timed out (65s). Try again or check your connection.');
+      if(attempt<maxRetries&&!err.message.includes('timed out')){attempt++;await new Promise(function(ok){setTimeout(ok,1000*Math.pow(2,attempt));});continue;}
+      throw err;
+    }
+  }
+}
+
+/* ═══ EDIT DELTA LOGGING (RLHF signal — stores locally when no backend) ═══ */
 async function logEditDelta(proposalId,agent,originalText,editedText,outcome){
+  // Always log locally
   try{
-    await fetch(API_BASE+'/api/edit-log',{method:'POST',headers:apiHeaders(),body:JSON.stringify({proposal_id:proposalId,agent:agent,original_text:originalText,edited_text:editedText,deal_outcome:outcome||null})});
-  }catch(e){console.warn('Edit log failed:',e);}
+    var logs=JSON.parse(localStorage.getItem('zn_edit_log')||'[]');
+    logs.push({proposal_id:proposalId,agent:agent,original:originalText.substring(0,500),edited:editedText.substring(0,500),outcome:outcome||null,ts:new Date().toISOString()});
+    if(logs.length>200)logs=logs.slice(-200); // cap at 200 entries
+    localStorage.setItem('zn_edit_log',JSON.stringify(logs));
+  }catch(e){}
+  // Try backend if proxy mode configured
+  if(hasBackend()){
+    try{
+      await fetch(API_BASE+'/api/edit-log',{method:'POST',headers:backendHeaders(),body:JSON.stringify({proposal_id:proposalId,agent:agent,original_text:originalText,edited_text:editedText,deal_outcome:outcome||null})});
+    }catch(e){}
+  }
 }
 
 /* ═══ MOCK DATA ═══ */
@@ -1449,7 +1546,7 @@ function generateToTPaths(c){
     }
     paths[0].status='winning';paths[0].label=paths[0].label.replace(/\(.*?\)/,'(Best Available ✓)');
   }
-  // Sort: winner first, then by score descending. Cap at 4 paths for clean UX.
+  // Sort: winner first, then by score descending — keep top 4 only
   paths.sort(function(a,b){if(a.status==='winning')return -1;if(b.status==='winning')return 1;return b._score-a._score;});
   return paths.slice(0,4);
 }
@@ -1477,7 +1574,7 @@ function generateProposal(c,rec,paths){
   const totalGpus=nodes*8;
   const up=w.content.match(/@ \$([\d,]+)/);const perNode=up?up[1]:'N/A';
   const coloMatch=w.content.match(/Colo: \$([\d,]+)/);const coloMo=coloMatch?coloMatch[1]:(nodes*2240);
-  const now=new Date();const ref='ZN-'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+Math.floor(Math.random()*900+100);
+  const now=new Date();const ref=genId();
   const alts=paths.filter(p=>p.status!=='winning').slice(0,4).map(p=>{const pc=p.content.match(/= \$([\d,]+)/);const pv=p.content.match(/([\d,]+)GB VRAM/);const lines=p.content.split('\n');const reason=lines[lines.length-1].replace(/^(Eliminated|Note|Not selected): /,'');return '| '+p.label.replace(/ \(.*?\)/,'')+' | '+(pv?pv[1]:'—')+' GB | '+(pc?'$'+pc[1]:'—')+' | '+reason.substring(0,80)+' |';}).join('\n');
   const reqs=(c.key_requirements||[]).map(r=>'| '+r+' | ✓ |').join('\n');
   const costNum=parseInt((cost+'').replace(/,/g,''))||0;
@@ -1516,8 +1613,9 @@ Xander: Got it. I'll have a hardware proposal over to you by end of week.`;
 
 /* ═══ NAV ═══ */
 function goHome(){document.getElementById('screenHome').style.display='flex';['screen1','screen2','screen3','screenTracker','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});renderHomeRecent();window.scrollTo(0,0);}
-function goStep(n){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i===n-1));window.scrollTo(0,0);}
-function goTracker(){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3'].forEach(id=>document.getElementById(id).classList.remove('active'));document.getElementById('screenTracker').classList.add('active');renderTracker();window.scrollTo(0,0);}
+function goStep(n){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screen'+n).classList.add('active');window.scrollTo(0,0);}
+function goTracker(){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screenTracker').classList.add('active');renderTracker();window.scrollTo(0,0);}
+function goInventory(){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screenInventory').classList.add('active');invRender();window.scrollTo(0,0);}
 function startNewAssessment(){resetAll();goStep(1);}
 function switchTab(t){document.querySelectorAll('.tabs .tab').forEach((b,i)=>b.classList.toggle('active',['raw','granola','gdoc','slack'][i]===t));document.getElementById('tabRaw').style.display=t==='raw'?'':'none';document.getElementById('tabGranola').style.display=t==='granola'?'':'none';document.getElementById('tabGdoc').style.display=t==='gdoc'?'':'none';document.getElementById('tabSlack').style.display=t==='slack'?'':'none';}
 function loadSample(){document.getElementById('txInput').value=SAMPLE;}
@@ -1547,6 +1645,7 @@ function loadGranolaFile(evt){var f=evt.target.files[0];if(!f)return;var reader=
 
 /* ═══ AGENT 1 — DISCOVERY ═══ */
 async function runAgent1(){
+  if(agentRunning)return;agentRunning=true;
   const inp=document.getElementById('txInput').value.trim()||document.getElementById('granolaInput').value.trim()||document.getElementById('gdocInput').value.trim()||document.getElementById('slackInput').value.trim();
   hideValidation('val1');
   const v=validateTranscript(inp);
@@ -1574,15 +1673,17 @@ async function runAgent1(){
     document.getElementById('out1').style.display='block';
     watchEdits(['cBudget','cGpu','cWorkflow','cTimeline','cBizModel'],'constraintBar');watchEdits(['out1body'],'summaryBar');
     done('s1d','s1s','btn1','Run Discovery Agent →','Constraints extracted ✓'+(fb?' (feedback)':'')+(useApi?' [API]':' [Mock]'));
-    hideValidation('val1');
-  }catch(e){console.error(e);err('s1d','s1s','btn1','Run Discovery Agent →',e.message);showValidation('val1','error','Agent failed: '+e.message+(useApi?' — Check API or switch to Mock.':''));}
+    hideValidation('val1');agentRunning=false;saveDraft();
+  }catch(e){console.error(e);err('s1d','s1s','btn1','Run Discovery Agent →',e.message);showValidation('val1','error','Agent failed: '+e.message+(useApi?' — Check API key in ⚙ Settings or switch to Mock.':''));agentRunning=false;}
 }
 function rerunAgent1(){document.getElementById('out1').style.display='none';['cBudget','cGpu','cWorkflow','cTimeline','cBizModel'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('ragBadge').style.display='none';document.getElementById('out1body').textContent='';document.getElementById('confCard').style.display='none';['constraintBar','summaryBar'].forEach(id=>document.getElementById(id).classList.remove('visible'));r1=null;origConstraints=null;origSummary=null;runAgent1();}
 function renderConfidenceScore(conf){document.getElementById('confCard').style.display='flex';document.getElementById('confNum').textContent=conf.score;document.getElementById('confTitle').textContent=conf.label;document.getElementById('confReasoning').textContent=conf.reasoning;const fill=document.getElementById('confRingFill');const pct=conf.score/10;fill.style.strokeDashoffset=188.5*(1-pct);fill.style.stroke=conf.score>=8?'var(--green)':conf.score>=6?'var(--amber)':'var(--red)';document.getElementById('confMatches').innerHTML=(conf.matched_deals||[]).map(d=>'<span class="conf-match-pill">'+d+'</span>').join('');}
 
 /* ═══ AGENT 2 — ARCHITECT ═══ */
 async function runAgent2(){
+  if(agentRunning)return;
   if(!r1){alert('Complete Step 1 first.');return;}
+  agentRunning=true;
   const fb=document.getElementById('reprompt2').value.trim();
   busy('s2d','s2s','btn2','Exploring reasoning paths…'+(fb?' (with feedback)':''));
   document.getElementById('totPaths').innerHTML='';document.getElementById('out2').style.display='none';document.getElementById('out2body').textContent='';document.getElementById('recBar').classList.remove('visible');
@@ -1602,14 +1703,15 @@ async function runAgent2(){
     await mockDelay(300);
     r2=recommendation+(fb?'\n\nNote: feedback applied: "'+fb+'"':'');origRec=r2;
     const b=document.getElementById('out2body');b.classList.remove('out-empty');b.textContent=r2;document.getElementById('out2').style.display='block';
-    watchEdits(['out2body'],'recBar');done('s2d','s2s','btn2','Run Architect Agent →','Recommendation ready — awaiting HITL'+(useApi?' [API]':' [Mock]'));
-  }catch(e){console.error(e);err('s2d','s2s','btn2','Run Architect Agent →',e.message);}
+    watchEdits(['out2body'],'recBar');done('s2d','s2s','btn2','Run Architect Agent →','Recommendation ready — awaiting HITL'+(useApi?' [API]':' [Mock]'));agentRunning=false;saveDraft();
+  }catch(e){console.error(e);err('s2d','s2s','btn2','Run Architect Agent →',e.message);agentRunning=false;}
 }
 function approveContinue(){goStep(3);runAgent3();}
 function rejectHitl(){r2=null;document.getElementById('out2').style.display='none';document.getElementById('totPaths').innerHTML='';document.getElementById('out2body').textContent='';document.getElementById('recBar').classList.remove('visible');document.getElementById('s2d').className='sdot';document.getElementById('s2s').textContent='Rejected — re-run with feedback';document.getElementById('btn2').disabled=false;document.getElementById('btn2').innerHTML='Run Architect Agent →';}
 
 /* ═══ AGENT 3 — WRITER ═══ */
 async function runAgent3(){
+  if(agentRunning)return;agentRunning=true;
   document.getElementById('s3d').className='sdot running';document.getElementById('s3s').textContent='Drafting proposal…';
   const b=document.getElementById('out3body');b.classList.remove('out-empty');b.contentEditable='false';b.textContent='Drafting client-facing proposal…';document.getElementById('proposalBar').classList.remove('visible');
   try{
@@ -1622,8 +1724,8 @@ async function runAgent3(){
     origProposal=text;savedProposal=text;
     proposalVersions=[{label:'v1 — AI Draft',text:text,ts:new Date().toISOString(),current:true}];currentVersionIndex=0;
     b.textContent=text;b.contentEditable='true';renderVersionBtns();watchEdits(['out3body'],'proposalBar');
-    document.getElementById('s3d').className='sdot done';document.getElementById('s3s').textContent='Proposal ready — click to edit ✓'+(useApi?' [API]':' [Mock]');document.getElementById('propActions').style.display='block';document.getElementById('splitToggle').style.display='inline-block';
-  }catch(e){console.error(e);document.getElementById('s3d').className='sdot';document.getElementById('s3s').textContent='Error: '+e.message;b.textContent='Error: '+e.message;}
+    document.getElementById('s3d').className='sdot done';document.getElementById('s3s').textContent='Proposal ready — click to edit ✓'+(useApi?' [API]':' [Mock]');document.getElementById('propActions').style.display='block';document.getElementById('splitToggle').style.display='inline-block';agentRunning=false;clearDraft();
+  }catch(e){console.error(e);document.getElementById('s3d').className='sdot';document.getElementById('s3s').textContent='Error: '+e.message;b.textContent='Error: '+e.message;agentRunning=false;}
 }
 
 /* ═══ VERSION MANAGEMENT ═══ */
@@ -1635,7 +1737,7 @@ function deleteVersion(idx){if(proposalVersions.length<=1){alert('Cannot delete 
 /* ═══ TRACKER VERSION HELPERS ═══ */
 function renderTrackerVersionBtns(p){if(!p.versions||!p.versions.length)return '';var pid=p.id;var tot=p.versions.length;return p.versions.map(function(v,i){var cls='ver-btn'+(v.current?' current':'');var out='<button class="'+cls+'" onclick="event.stopPropagation();loadTrackerVersion(this)" data-pid="'+pid+'" data-idx="'+i+'" title="'+v.ts+'">'+v.label+'</button>';if(tot>1)out+='<button class="ver-delete-btn" onclick="event.stopPropagation();deleteTrackerVersionBtn(this)" data-pid="'+pid+'" data-idx="'+i+'" title="Delete">✕</button>';return out;}).join('');}
 function addTrackerVersion(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var el=document.getElementById('ptext-'+id);var txt=el.innerText||el.textContent;if(!p.versions)p.versions=[];var n=p.versions.length+1;p.versions.forEach(function(v){v.current=false;});p.versions.push({label:'v'+n+' — '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),text:txt,ts:new Date().toISOString(),current:true});p.text=txt;p.savedText=txt;storageSave();var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
-function loadTrackerVersion(btnOrId,idx){var id,vidx;if(typeof btnOrId==='string'){id=btnOrId;vidx=idx;}else{id=btnOrId.dataset.pid;vidx=parseInt(btnOrId.dataset.idx,10);}var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;p.versions.forEach(function(v,i){v.current=(i===vidx);});var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(p.versions[vidx].text||p.text||'');var sel=document.getElementById('vstext-'+id);if(sel)sel.textContent=p.versions[vidx].summary||'';var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
+function loadTrackerVersion(btnOrId,idx){var id,vidx;if(typeof btnOrId==='string'){id=btnOrId;vidx=idx;}else{id=btnOrId.dataset.pid;vidx=parseInt(btnOrId.dataset.idx,10);}var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;p.versions.forEach(function(v,i){v.current=(i===vidx);});var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(p.versions[vidx].text||p.text||'');var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
 function deleteTrackerVersionBtn(btn){deleteTrackerVersion(btn.dataset.pid,parseInt(btn.dataset.idx,10));}
 function deleteTrackerVersion(id,idx){var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;if(p.versions.length<=1){alert('Cannot delete the only version.');return;}if(!confirm('Delete "'+p.versions[idx].label+'"?'))return;p.versions.splice(idx,1);var ni=Math.max(0,Math.min(idx,p.versions.length-1));p.versions.forEach(function(v,i){v.current=(i===ni);});var nt=p.versions[ni].text||p.text||'';p.text=nt;p.savedText=nt;storageSave();var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(nt);var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
 function revertTrackerEdit(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var cur=p.versions&&p.versions.find(function(v){return v.current;});var txt=cur&&cur.text?cur.text:(p.savedText||p.text);var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(txt);}
@@ -1664,11 +1766,11 @@ function markdownToHtml(md){
 }
 
 /* ═══ EXPORT ═══ */
-function doCopy(){var txt=document.getElementById('out3body').innerText||'';navigator.clipboard.writeText(txt).then(function(){document.getElementById('copyBtn').textContent='✓ Copied!';setTimeout(function(){document.getElementById('copyBtn').textContent='📋 Copy Markdown';},2000);});}
-function doExport(){var txt=document.getElementById('out3body').innerText||'';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/markdown'}));a.download='zillion_proposal.md';a.click();}
+function doCopy(){var txt=splitPaneActive?(document.getElementById('splitEditor').value||''):(document.getElementById('out3body').innerText||'');navigator.clipboard.writeText(txt).then(function(){document.getElementById('copyBtn').textContent='✓ Copied!';setTimeout(function(){document.getElementById('copyBtn').textContent='📋 Copy Markdown';},2000);});}
+function doExport(){var txt=splitPaneActive?(document.getElementById('splitEditor').value||''):(document.getElementById('out3body').innerText||'');var name=r1&&r1.client_name?r1.client_name.replace(/[^a-zA-Z0-9]/g,'-'):'Proposal';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/markdown'}));a.download='Zillion_'+name+'_'+new Date().toISOString().slice(0,10)+'.md';a.click();}
 
 /* ═══ TRACKER ═══ */
-function saveToTracker(){if(!r1){alert('No proposal data to save.');return;}var txt=splitPaneActive?(document.getElementById('splitEditor').value||''):(document.getElementById('out3body').innerText||'');var now=new Date();var p={id:'ZN-'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+Math.floor(Math.random()*900+100),client:r1.client_name||'Unknown',amount:extractAmount(txt),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});})};proposals.unshift(p);updateTrackerCount();storageSave();saveProposalToBackend(p);var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);}
+function saveToTracker(){if(!r1){alert('No proposal data to save.');return;}var txt=splitPaneActive?(document.getElementById('splitEditor').value||''):(document.getElementById('out3body').innerText||'');var now=new Date();var p={id:genId(),client:r1.client_name||'Unknown',amount:extractAmount(txt),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});})};proposals.unshift(p);updateTrackerCount();storageSave();saveProposalToBackend(p);var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);}
 function extractAmount(txt){var m=txt.match(/\$[\d,]+/g);return m?m[0]:'N/A';}
 function updateTrackerCount(){var n=proposals.length;['homeCount','tc1','tc2','tc3','tcInv'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=n;});}
 function renderHomeRecent(){var wrap=document.getElementById('homeRecent');var list=document.getElementById('homeRecentList');if(!proposals.length){wrap.style.display='none';return;}wrap.style.display='block';var recent=proposals.slice(0,3);list.innerHTML=recent.map(function(p){return '<div class="recent-row" onclick="goTracker()"><span class="recent-client">'+escHtml(p.client)+'</span><div class="recent-meta"><span class="recent-amount">'+escHtml(p.amount)+'</span><span class="recent-status rs-'+p.status+'">'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Lost')+'</span></div></div>';}).join('');}
@@ -1719,11 +1821,32 @@ function renderTracker(){
   var rc=document.getElementById('resultsCount');if(rc)rc.textContent=filtered.length!==proposals.length?filtered.length+' of '+proposals.length+' proposals':'';
   var list=document.getElementById('proposalList');
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">'+(proposals.length?'🔍':'📭')+'</div><div class="empty-state-title">'+(proposals.length?'No proposals match this filter':'No proposals yet')+'</div></div>';document.getElementById('paginationControls').style.display='none';return;}
-  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div class="ver-summary-card" id="vscard-'+p.id+'"><div class="ver-summary-label">📝 Version Summary</div><div class="ver-summary-text" id="vstext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
+  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
   var pc=document.getElementById('paginationControls');if(totalPages>1){pc.style.display='flex';document.getElementById('pageInfo').textContent='Page '+currentPage+' of '+totalPages;document.getElementById('prevPage').disabled=currentPage<=1;document.getElementById('nextPage').disabled=currentPage>=totalPages;}else{pc.style.display='none';}
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function getCurrentVersionText(p){if(p.versions&&p.versions.length){var cur=p.versions.find(function(v){return v.current;});if(cur&&cur.text)return cur.text;}return p.text||'';}
+function getProposalSummary(p){
+  var txt=getCurrentVersionText(p);if(!txt)return '';
+  // Find executive summary section
+  var execMatch=txt.match(/## Executive Summary\n+([\s\S]*?)(?=\n##|\n---)/);
+  var exec=execMatch?execMatch[1].trim():'';
+  if(exec){
+    // Return the full executive summary — split into sentences and take complete ones
+    var sentences=exec.split(/(?<=[.!?])\s+/);
+    return sentences.join(' ');
+  }
+  // Fallback: first non-header, non-table paragraph — take complete sentences
+  var lines=txt.split('\n').filter(function(l){return l.trim()&&!l.startsWith('#')&&!l.startsWith('**Client')&&!l.startsWith('**Date')&&!l.startsWith('**Ref')&&!l.startsWith('**Prepared')&&!l.startsWith('|')&&!l.startsWith('---')&&l.trim().length>20;});
+  if(lines.length>0){
+    var combined=lines.slice(0,3).join(' ');
+    // Find the last complete sentence within a reasonable length
+    var sentenceEnd=combined.lastIndexOf('.',400);
+    if(sentenceEnd>50)return combined.substring(0,sentenceEnd+1);
+    return combined;
+  }
+  return p.client+' — '+p.amount;
+}
 function toggleProposal(id){var exp=document.getElementById('pexp-'+id);var row=document.getElementById('prow-'+id);var open=exp.classList.contains('open');document.querySelectorAll('.pr-expanded').forEach(function(e){e.classList.remove('open');});document.querySelectorAll('.proposal-row').forEach(function(r){r.classList.remove('expanded');});if(!open){exp.classList.add('open');row.classList.add('expanded');}}
 function toggleStatusPicker(id){var p=document.getElementById('sp-'+id);var open=p.classList.contains('open');document.querySelectorAll('.status-picker').forEach(function(x){x.classList.remove('open');});if(!open)p.classList.add('open');}
 document.addEventListener('click',function(){document.querySelectorAll('.status-picker').forEach(function(p){p.classList.remove('open');});});
@@ -1803,6 +1926,22 @@ function mdToHtml(md){
 function inlineMd(s){return escHtml(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
 
 /* ═══ DEAL SPARKLINE ═══ */
+function renderSparkline(containerId){
+  var el=document.getElementById(containerId);if(!el)return;
+  if(proposals.length<2){el.innerHTML='';return;}
+  // Build monthly deal values from proposals sorted by date
+  var sorted=proposals.slice().sort(function(a,b){return new Date(a.createdAt)-new Date(b.createdAt);});
+  var vals=sorted.map(function(p){var m=(p.amount||'').match(/[\d,]+/);return m?parseInt(m[0].replace(/,/g,'')):0;}).filter(function(v){return v>0;});
+  if(vals.length<2){el.innerHTML='';return;}
+  var pts=vals.slice(-8); // last 8 deals
+  var max=Math.max.apply(null,pts);var min=Math.min.apply(null,pts);
+  var range=max-min||1;var w=80;var h=24;var step=w/(pts.length-1);
+  var points=pts.map(function(v,i){return(i*step).toFixed(1)+','+(h-((v-min)/range)*h).toFixed(1);}).join(' ');
+  var last=pts[pts.length-1];var prev=pts[pts.length-2];
+  var trend=last>prev?'up':(last<prev?'down':'flat');
+  var arrow=trend==='up'?'↑':(trend==='down'?'↓':'→');
+  el.innerHTML='<span class="sparkline-wrap"><svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline points="'+points+'" fill="none" stroke="'+(trend==='up'?'var(--green)':trend==='down'?'var(--red)':'var(--muted)')+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sparkline-trend '+trend+'">'+arrow+'</span></span>';
+}
 
 /* ═══ EDIT DELTA CAPTURE ═══ */
 function captureEditDelta(proposalId,agentName){
@@ -1817,501 +1956,13 @@ function captureEditDelta(proposalId,agentName){
 
 /* ═══ SEED PROPOSALS ═══ */
 var SEED_PROPOSALS=[
-  {id:'ZN-2026-0412-AIL',client:'Ab Initia Labs',amount:'$2,048,223',date:'Apr 12, 2026',status:'pending',followup:'2026-04-21',confidence:{score:8.9,label:'High Confidence'},text:'# Hardware Proposal — 128-GPU AI Research Cluster\n**Client:** Ab Initia Labs\n**Date:** April 12, 2026\n**Reference:** ZN-2026-0412-AIL\n\n---\n\n## Executive Summary\n\nAb Initia Labs requires a 128-GPU cluster (16 servers × 8 RTX Pro 6000 Server Edition) for AI drug discovery research. Two architecture options evaluated: PCIe passthrough ($128K/server, CX6 100GbE) and MGX CX8 switch board ($180-220K/server, CX8 800GbE). Client decision pending on workload profile — inference/dev favors Option A, multi-node training favors Option B.\n\n---\n\n## Proposed Configuration (Option A — PCIe Passthrough)\n\n| Spec | Per Node | Total |\n|---|---|---|\n| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |\n| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |\n| Memory | 768 GB DDR5 4800 | 12,288 GB |\n| NIC | 1× CX6 Dx 100GbE | 16 NICs |\n| Cost | $128,014 | $2,048,223 |\n\n## Network Fabric\n| Component | Qty | Unit | Total |\n|---|---|---|---|\n| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |\n| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |\n| Mgmt: 1GbE 48-port | 1 | $800 | $800 |\n| **Network Subtotal** | | | **$78,800** |\n\n## Colocation (Irvine, CA)\n| Item | Monthly |\n|---|---|\n| Power (5kW × 16 servers) | $35,840 |\n| IP Block | $50 |\n| Managed Services (24/7) | Included |\n| **Total Monthly** | **$35,890** |\n\n## Alternative: GPU Lease (Plan #2)\n| Term | Rate | Monthly (128 GPU) |\n|---|---|---|\n| 12-month | $1.25/GPU/hr | $116,800 |\n| 24-month | $1.15/GPU/hr | $107,456 |\n\n---\n\n## Next Steps\n- [ ] Confirm workload type (inference vs training) to select architecture\n- [ ] Get CX8 switch board pricing from Supermicro\n- [ ] Schedule architecture call with Feizhi Ding\n- [ ] PNY GPU pricing confirmation',notes:'Two options on the table: passthrough ($2M) vs CX8 ($3M+). Jarren is decision maker, Feizhi is technical. Architecture call needed to decide. Jasmine Shao (Transformer Legal) is advisor/introducer.',versions:[{label:'v1 — AI Draft',text:`# Hardware Proposal — 128-GPU AI Research Cluster (Option A: PCIe Passthrough)
-**Client:** Ab Initia Labs | **Reference:** ZN-2026-0412-AIL | **Date:** April 12, 2026
-**Prepared by:** Zillion Network
-
----
-
-## Executive Summary
-
-Ab Initia Labs requires a 128-GPU cluster for AI drug discovery research — specifically large-scale protein structure prediction and molecular dynamics simulation workloads. This v1 proposal covers Option A: 16 servers × 8 RTX Pro 6000 Server Edition GPUs using PCIe passthrough architecture, hosted at Zillion DC Irvine, CA.
-
-Total CapEx: **$2,048,224** | Monthly Colo: **$35,890/mo**
-
----
-
-## Proposed Configuration — Option A (PCIe Passthrough)
-
-| Spec | Per Node | Total (16 Nodes) |
-|---|---|---|
-| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |
-| Total VRAM | 768 GB | 12,288 GB |
-| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |
-| Memory | 768 GB DDR5 4800 | 12,288 GB |
-| NIC | 1× CX6 Dx dual-port 100GbE | 16 NICs |
-| Form factor | 7U | 4 racks × 4 servers |
-| Server cost | $128,014 | $2,048,224 |
-
-## Network Fabric (Passthrough)
-
-| Component | Qty | Unit | Total |
-|---|---|---|---|
-| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |
-| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |
-| Mgmt: 1GbE 48-port | 1 | $800 | $800 |
-| **Network Subtotal** | | | **$78,800** |
-
-**Architecture note:** PCIe passthrough — GPU → CPU PCIe Root Complex → xGMI cross-socket fabric → CX6 NIC. Effective bandwidth ~25 Gbps/GPU. Best suited for inference, dev, and single-node training workloads.
-
-## Colocation — Irvine, CA
-
-| Item | Rate | Monthly |
-|---|---|---|
-| Power (5 kW × 16 servers) | $448/kW | $35,840 |
-| IP Block (/29) | flat | $50 |
-| Managed Services (24/7) | included | — |
-| **Total Monthly** | | **$35,890** |
-
-**SLA:** 99.95% network · 99.99% power · <15 min incident response · <4hr hardware replacement
-
-## Next Steps
-- [ ] Confirm workload type (inference vs. multi-node training) to select final architecture
-- [ ] Architecture call with Feizhi Ding (Technical Lead) to review passthrough vs. CX8
-- [ ] PNY GPU pricing confirmation for RTX Pro 6000 SE
-- [ ] Jarren Qiao (Decision Maker) to approve architecture direction`,ts:'2026-04-12T10:00:00Z',current:false},{label:'v2 — Dual option',text:`# Hardware Proposal — 128-GPU Cluster: Dual-Architecture Option
-**Client:** Ab Initia Labs | **Reference:** ZN-2026-0412-AIL | **Date:** April 14, 2026 (v2)
-**Prepared by:** Zillion Network
-
----
-
-## Executive Summary
-
-Following the architecture review with Feizhi Ding, this updated proposal presents both architecture options side-by-side. Client decision pending on workload profile — inference/dev favors Option A (passthrough, $2.05M), multi-node training favors Option B (CX8, ~$3.4M+).
-
----
-
-## Architecture Comparison
-
-| Attribute | Option A — PCIe Passthrough | Option B — MGX CX8 |
-|---|---|---|
-| Server platform | Custom 7U, AMD EPYC 9J14 | Supermicro SYS-422GL-NR (4U) |
-| GPU interconnect | PCIe Gen5, CPU in data path | PCIe Gen6 48-lane switch, CPU bypassed |
-| NIC | 1× CX6 Dx, 100GbE | 4× CX8 SuperNIC, 800GbE each (integrated) |
-| Bandwidth per GPU | ~25 Gbps | 400 Gbps (16× faster) |
-| Cluster total BW | ~3.2 Tbps | ~51.2 Tbps |
-| Leaf switch | SN2700 100GbE ($12K) | SN5600 800GbE ($35K) |
-| Network cost (16 nodes) | ~$78,800 | ~$210,800 |
-| Server unit cost | $128,014 | ~$200,000–220,000 |
-| Rack layout | 4 racks × 4 servers (7U) | 2 racks × 8 servers (4U) |
-| Best for | Inference / dev / small clusters | Multi-node training at scale ✓ |
-| **Hardware total** | **$2,048,224** | **~$3,400,000+** |
-
-## Option A — PCIe Passthrough Pricing
-
-16× Custom 7U Server @ $128,014 = **$2,048,224**
-Network fabric (SN2700 leaf-spine) = **$78,800**
-Monthly colo (Irvine, 5kW × 16) = **$35,890/mo**
-
-## Option B — MGX CX8 Pricing (Preliminary)
-
-16× SYS-422GL-NR (est. with CX8 switchboard) = **~$3,200,000**
-Network fabric (SN5600 800GbE leaf-spine) = **~$210,800**
-Monthly colo (Irvine, 5kW × 16) = **$35,890/mo**
-
-## Alternative: GPU Lease — Plan #2
-
-| Term | Rate (128 GPUs) | Monthly Cost |
-|---|---|---|
-| 12-month | $1.25/GPU/hr | $116,800 |
-| 24-month | $1.15/GPU/hr | $107,456 |
-
-*Deposit: 1 month (12-mo term) or 2 months (24-mo term)*
-
-## Next Steps
-- [ ] Confirm workload type (inference vs. training) to select architecture — call with Feizhi Ding
-- [ ] Get confirmed CX8 switchboard pricing from Supermicro
-- [ ] Jarren Qiao: approve Plan #1 (buy) vs Plan #2 (lease) direction
-- [ ] Zillion: verify SYS-422GL-NR availability (3–5 biz days from Supermicro eStore)`,ts:'2026-04-14T09:00:00Z',current:true}],createdAt:'2026-04-12T10:00:00Z'},
+  {id:'ZN-2026-0412-AIL',client:'Ab Initia Labs',amount:'$2,048,223',date:'Apr 12, 2026',status:'pending',followup:'2026-04-21',confidence:{score:8.9,label:'High Confidence'},text:'# Hardware Proposal — 128-GPU AI Research Cluster\n**Client:** Ab Initia Labs\n**Date:** April 12, 2026\n**Reference:** ZN-2026-0412-AIL\n\n---\n\n## Executive Summary\n\nAb Initia Labs requires a 128-GPU cluster (16 servers × 8 RTX Pro 6000 Server Edition) for AI drug discovery research. Two architecture options evaluated: PCIe passthrough ($128K/server, CX6 100GbE) and MGX CX8 switch board ($180-220K/server, CX8 800GbE). Client decision pending on workload profile — inference/dev favors Option A, multi-node training favors Option B.\n\n---\n\n## Proposed Configuration (Option A — PCIe Passthrough)\n\n| Spec | Per Node | Total |\n|---|---|---|\n| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |\n| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |\n| Memory | 768 GB DDR5 4800 | 12,288 GB |\n| NIC | 1× CX6 Dx 100GbE | 16 NICs |\n| Cost | $128,014 | $2,048,223 |\n\n## Network Fabric\n| Component | Qty | Unit | Total |\n|---|---|---|---|\n| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |\n| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |\n| Mgmt: 1GbE 48-port | 1 | $800 | $800 |\n| **Network Subtotal** | | | **$78,800** |\n\n## Colocation (Irvine, CA)\n| Item | Monthly |\n|---|---|\n| Power (5kW × 16 servers) | $35,840 |\n| IP Block | $50 |\n| Managed Services (24/7) | Included |\n| **Total Monthly** | **$35,890** |\n\n## Alternative: GPU Lease (Plan #2)\n| Term | Rate | Monthly (128 GPU) |\n|---|---|---|\n| 12-month | $1.25/GPU/hr | $116,800 |\n| 24-month | $1.15/GPU/hr | $107,456 |\n\n---\n\n## Next Steps\n- [ ] Confirm workload type (inference vs training) to select architecture\n- [ ] Get CX8 switch board pricing from Supermicro\n- [ ] Schedule architecture call with Feizhi Ding\n- [ ] PNY GPU pricing confirmation',notes:'Two options on the table: passthrough ($2M) vs CX8 ($3M+). Jarren is decision maker, Feizhi is technical. Architecture call needed to decide. Jasmine Shao (Transformer Legal) is advisor/introducer.',versions:[{label:'v1 — AI Draft',text:'Initial BOM-based quote. PCIe passthrough Option A only. $128,014/server × 16 servers = $2,048,223.',ts:'2026-04-12T10:00:00Z',current:false},{label:'v2 — Dual Option (Current)',text:'# Hardware Proposal — 128-GPU AI Research Cluster\n**Client:** Ab Initia Labs\n**Date:** April 12, 2026\n**Reference:** ZN-2026-0412-AIL\n\n---\n\n## Executive Summary\n\nAb Initia Labs requires a 128-GPU cluster (16 servers × 8 RTX Pro 6000 Server Edition) for AI drug discovery research. Two architecture options evaluated: PCIe passthrough ($128K/server, CX6 100GbE) and MGX CX8 switch board ($180-220K/server, CX8 800GbE). Client decision pending on workload profile — inference/dev favors Option A, multi-node training favors Option B.\n\n---\n\n## Proposed Configuration (Option A — PCIe Passthrough)\n\n| Spec | Per Node | Total |\n|---|---|---|\n| GPU | 8× RTX Pro 6000 SE (96GB GDDR7) | 128× RTX Pro 6000 SE |\n| CPU | 2× AMD EPYC 9J14 (96C/192T) | 32 CPUs |\n| Memory | 768 GB DDR5 4800 | 12,288 GB |\n| NIC | 1× CX6 Dx 100GbE | 16 NICs |\n| Cost | $128,014 | $2,048,223 |\n\n## Network Fabric\n| Component | Qty | Unit | Total |\n|---|---|---|---|\n| Leaf: Mellanox SN2700 32×100GbE | 4 | $12,000 | $48,000 |\n| Spine: Mellanox SN2700 | 2 | $15,000 | $30,000 |\n| Mgmt: 1GbE 48-port | 1 | $800 | $800 |\n| **Network Subtotal** | | | **$78,800** |\n\n## Colocation (Irvine, CA)\n| Item | Monthly |\n|---|---|\n| Power (5kW × 16 servers) | $35,840 |\n| IP Block | $50 |\n| Managed Services (24/7) | Included |\n| **Total Monthly** | **$35,890** |\n\n## Alternative: GPU Lease (Plan #2)\n| Term | Rate | Monthly (128 GPU) |\n|---|---|---|\n| 12-month | $1.25/GPU/hr | $116,800 |\n| 24-month | $1.15/GPU/hr | $107,456 |\n\n---\n\n## Next Steps\n- [ ] Confirm workload type (inference vs training) to select architecture\n- [ ] Get CX8 switch board pricing from Supermicro\n- [ ] Schedule architecture call with Feizhi Ding\n- [ ] PNY GPU pricing confirmation',ts:'2026-04-14T09:00:00Z',current:true}],createdAt:'2026-04-12T10:00:00Z'},
   {id:'ZN-2026-0318-421',client:'NovaStar AI',amount:'$312,000',date:'Mar 18, 2026',status:'success',confidence:{score:9.1,label:'High Confidence'},text:'# Hardware Proposal — Inference Cluster Scale-Out\n**Client:** NovaStar AI\n**Reference:** ZN-2026-0318-421\n\n## Executive Summary\nNovaStar AI required a 4-node RTX 5090 inference cluster to serve their production LLM API at sub-100ms P95 latency. Delivered under budget with a 3-week lead time.\n\n## Proposed Hardware\n4× RTX 5090 8× Cluster (SKU: 5090-8x)\nTotal VRAM: 1,024GB | Total Cost: $208,000\n\n## Rack & Facility\n16U footprint | ~19.2 kW | Zillion DC — Los Angeles\n\n## Cost Breakdown\n| Line Item | Total |\n|---|---|\n| 4× RTX 5090 8× Cluster | $208,000 |\n| InfiniBand HDR Switch | $8,500 |\n| Rack & PDU | $2,600 |\n| **Total** | **$219,100** |\n\n## Outcome\nCluster deployed Mar 28. P95 inference latency: 74ms. Client signed 12-month managed services contract ($4,500/mo). Net ARR: $54,000.',notes:'Upsell opportunity: client asked about dedicated training cluster for Q3. Follow up in June.',versions:[{label:'v1 — AI Draft',text:'# Inference Cluster Scale-Out\n**Client:** NovaStar AI | **Ref:** ZN-2026-0318-421\n\nOriginal hardware-only proposal. 4× RTX 5090 8× at $208,000. No managed services included.\n\n## Cost (v1)\n| Item | Total |\n|---|---|\n| 4× RTX 5090 8× | $208,000 |\n| Network | $8,500 |\n| Rack | $2,600 |\n| **Total** | **$219,100** |',ts:'2026-03-18T09:00:00Z',current:false},{label:'v2 — Post-negotiation',text:'# Inference Cluster — Final\n**Client:** NovaStar AI | **Ref:** ZN-2026-0318-421\n\n## Summary\n12-month managed services added after negotiation. Final: $273,100.\n\n## Cost (Final)\n| Item | Total |\n|---|---|\n| 4× RTX 5090 8× | $208,000 |\n| Network + Rack | $11,100 |\n| 12-Mo Managed Services | $54,000 |\n| **Total** | **$273,100** |\n\n## Outcome\nP95 latency: 74ms at 2,400 req/s peak. ARR: $54,000.',ts:'2026-03-20T14:30:00Z',current:true}],createdAt:'2026-03-18T09:00:00Z'},
   {id:'ZN-2026-0305-187',client:'Vertex Genomics',amount:'$94,000',date:'Mar 5, 2026',status:'success',confidence:{score:7.8,label:'Good Confidence'},text:'# Hardware Proposal — Genomics ML Training Node\n**Client:** Vertex Genomics\n**Reference:** ZN-2026-0305-187\n\n## Executive Summary\nVertex Genomics needed a single high-memory training node for fine-tuning protein structure prediction models. Co-location option selected — customer ships their existing A100 server to Zillion DC Dallas for managed hosting.\n\n## Configuration\nCustomer Hardware: 1× Dell PowerEdge XE9680 (8× A100 80GB)\nCo-located at: Zillion DC — Dallas, TX\nManaged Services: $3,200/mo\n\n## Cost Breakdown\n| Line Item | Total |\n|---|---|\n| Co-location setup fee | $2,400 |\n| 12-month managed services | $38,400 |\n| Network fabric upgrade | $4,200 |\n| **First Year Total** | **$45,000** |\n\n## Outcome\nHardware arrived Mar 12. Customer running daily training jobs. Net new ARR: $38,400.',notes:'Renewal coming up in March 2027. Client mentioned expanding to 3 nodes — schedule QBR in Jan.',versions:[{label:'v1 — AI Draft',text:'Co-location proposal. Customer A100 at Zillion DC Dallas.\nSetup: $2,400 | Managed: $38,400/yr | Network: $4,200 | Year 1: $45,000',ts:'2026-03-05T10:00:00Z',current:true}],createdAt:'2026-03-05T10:00:00Z'},
   {id:'ZN-2026-0228-093',client:'Meridian Robotics',amount:'$540,000',date:'Feb 28, 2026',status:'pending',followup:'2026-04-08',confidence:{score:7.2,label:'Moderate Confidence'},text:'# Hardware Proposal — Sim-to-Real Training Infrastructure\n**Client:** Meridian Robotics\n**Reference:** ZN-2026-0228-093\n\n## Executive Summary\nMeridian Robotics is building sim-to-real transfer learning infrastructure for their manipulation robotics line. Requires both training (large batch RL) and low-latency inference (real-time control policy). Hybrid workload demands a split cluster.\n\n## Proposed Configuration\nTraining Cluster: 6× RTX 4090 8× Cluster — $168,000\nInference Nodes: 4× RTX 5090 4× Node — $112,000 (pending restock)\nNetworking & Rack: $28,000\nTotal: $308,000\n\n## Status\nPending: 5090-4x nodes out of stock. Client willing to wait 6–8 weeks.\n\n## Risk\nCompetitor (Lambda Labs) submitted competing quote for $285,000 using A100 nodes. Client prefers Zillion managed services but price gap needs to close.\n\n## Zillion vs Lambda Labs\n| Factor | Zillion | Lambda |\n|---|---|---|\n| Hardware cost | $308,000 | $285,000 |\n| Managed services | ✓ Included | ✗ Not offered |\n| 24/7 on-call | ✓ 2-hr SLA | ✗ Business hours |\n| NVLink expertise | ✓ In-house | ✗ Customer-managed |',notes:'Need to check 5090-4x restock ETA with procurement. Price sensitivity is real — consider a managed services discount to close gap. Call scheduled Apr 8.',versions:[{label:'v1 — AI Draft',text:'Original draft — training + inference hybrid',ts:'2026-02-28T11:00:00Z',current:false},{label:'v2 — Competitor response',text:'Revised with Lambda Labs comparison table. Hardware: $308k + managed ($54k/yr) = $362k 12-mo total vs Lambda $285k + ops cost.',ts:'2026-03-10T09:00:00Z',current:true}],createdAt:'2026-02-28T11:00:00Z'},
   {id:'ZN-2026-0214-672',client:'CloudMind Systems',amount:'$76,000',date:'Feb 14, 2026',status:'lost',confidence:{score:5.9,label:'Low-Moderate Confidence'},text:'# Hardware Proposal — Edge Inference Deployment\n**Client:** CloudMind Systems\n**Reference:** ZN-2026-0214-672\n\n## Summary\nCloudMind requested 8× RTX 4090 4× nodes for distributed edge inference across regional data centers. Budget was $65k — below Zillion cost floor for this configuration.\n\n## Proposed Configuration\n8× RTX 4090 4× Node (SKU: 4090-4x) — $124,000\n\n## Outcome\nLost. Client went with refurbished A30 nodes from a secondary market vendor at $58,000. Budget mismatch was the primary disqualifier.\n\n## Lessons Learned\n- Qualify budget ceiling earlier in the process\n- Edge inference with self-managed ops = low-fit for Zillion model\n- Consider a hardware leasing product for budget-sensitive edge workloads',notes:'Post-mortem: need a lower-cost product tier for edge / self-managed customers. Flagged for product roadmap discussion.',versions:[{label:'v1 — AI Draft',text:'Original draft — budget mismatch identified too late. Proposed $124K vs client budget $65K.',ts:'2026-02-14T14:00:00Z',current:true}],createdAt:'2026-02-14T14:00:00Z'},
   {id:'ZN-2026-0122-331',client:'Helios Foundation Models',amount:'$892,000',date:'Jan 22, 2026',status:'success',confidence:{score:9.4,label:'Very High Confidence'},text:'# Hardware Proposal — Foundation Model Training Infrastructure\n**Client:** Helios Foundation Models\n**Reference:** ZN-2026-0122-331\n\n## Executive Summary\nHelios Foundation Models required a large-scale training cluster to pre-train a 140B parameter multimodal foundation model. Largest single deal in Zillion history. Full datacenter cage deployment at Zillion DC Ashburn.\n\n## Hardware Configuration\n| Item | Qty | Unit Cost | Total |\n|---|---|---|---|\n| A100-80G 8× Server | 1 | $180,000 | $180,000 |\n| RTX 4090 8× Cluster | 18 | $28,000 | $504,000 |\n| InfiniBand HDR200 Fabric | lot | $68,000 | $68,000 |\n| Dedicated Cage Build-Out | 1 | $78,000 | $78,000 |\n| 24-Month Managed Services | 24 mo | $6,000/mo | $144,000 |\n| **List Total** | | | **$974,000** |\n| **Negotiated Total** | | | **$892,000** |\n\n## Facility\nPower: 160 kW dedicated cage, dual-feed UPS, N+1 cooling\nLocation: Zillion DC — Ashburn, VA\nTotal VRAM: 4,096GB | 152 GPUs | ~97 PFLOPS FP16\n\n## Outcome\nCluster went live Feb 10. First 140B pre-training run completed March 3. Client signed LOI for second cage expansion in Q3.',notes:'Expansion LOI signed. Second cage proposal target: $1.1M. Schedule kickoff for Q3 cage design in May.',versions:[{label:'v1 — AI Draft',text:'Original: $974,000 list price. A100+4090 hybrid cluster.',ts:'2026-01-22T08:00:00Z',current:false},{label:'v2 — Pricing revision',text:'Reduced to $940,000 via managed services restructuring ($6K→$5.5K/mo for 24-mo commit).',ts:'2026-01-25T16:00:00Z',current:false},{label:'v3 — Final signed',text:'# Foundation Model Training — Final\n**Client:** Helios Foundation Models | **Ref:** ZN-2026-0122-331\n\nNegotiated from $974K to $892,000 with 24-month commit.\n152 GPUs (1× A100-8x + 18× 4090-8x), 4,096GB VRAM.\nDedicated cage at Ashburn, VA. Live Feb 10.\n\n## Cost\n| Item | Total |\n|---|---|\n| Hardware | $752,000 |\n| InfiniBand | $68,000 |\n| Cage | $78,000 |\n| 24-Mo Managed | $144,000 |\n| **Negotiated** | **$892,000** |\n\nQ3 expansion LOI signed — target $1.1M.',ts:'2026-01-29T11:00:00Z',current:true}],createdAt:'2026-01-22T08:00:00Z'},
-  {id:'ZN-2026-0414-ABL',client:'Ab Initia Labs (CX8)',amount:'$3,584,000',date:'Apr 14, 2026',status:'pending',followup:'2026-04-28',confidence:{score:9.1,label:'High Confidence'},
-  text:`# Hardware Proposal — 128-GPU MGX CX8 Cluster
-**Client:** Ab Initia Labs | **Reference:** ZN-2026-0414-ABL | **Date:** April 14, 2026
-**Contacts:** Jarren Qiao (DM) · Feizhi Ding (Technical Lead) · Jasmine Shao (Transformer Legal, Introducer)
-
----
-
-## Executive Summary
-
-Ab Initia Labs requires a 128-GPU cluster for large-scale multi-node AI training. Following architecture evaluation, the MGX CX8 Switch Board approach (Supermicro SYS-422GL-NR) is recommended over PCIe passthrough. The CX8 architecture delivers 400 Gbps per GPU versus 25 Gbps on passthrough — a 16× bandwidth advantage that is decisive at 16-node training scale.
-
----
-
-## Architecture Decision: CX8 vs PCIe Passthrough
-
-| Attribute | Option A — PCIe Passthrough | Option B — MGX CX8 (Recommended) |
-|---|---|---|
-| Server | Custom 7U, AMD EPYC 9J14 | Supermicro SYS-422GL-NR (4U) |
-| CPU | AMD EPYC 9J14, 96C/192T | Intel Xeon 6 6900P series |
-| GPU interconnect | PCIe Gen5, CPU in data path | PCIe Gen6 48-lane switch, CPU bypassed |
-| NIC | 1× CX6 Dx, dual-port 100GbE | 4× CX8 SuperNIC, 800GbE each (integrated) |
-| Bandwidth per GPU | ~25 Gbps | 400 Gbps (16× improvement) |
-| Cluster total BW | ~3.2 Tbps | ~51.2 Tbps |
-| Leaf switch | Mellanox SN2700 (32×100GbE, $12K ea) | NVIDIA SN5600 (64×800GbE, $35K ea) |
-| Network cost (16-node) | ~$78,800 | ~$211,000 |
-| Server cost | ~$128,014 | ~$200,000–220,000 |
-| Rack layout | 4 racks × 4 servers (7U × 4 = 28U/rack) | 2 racks × 8 servers (4U × 8 = 32U/rack) |
-| Best for | Inference / dev / small clusters | Multi-node training at scale ✓ |
-
-**Decision: CX8 selected.** At 16-node / 128-GPU scale with all-reduce-heavy training workloads, the 16× bandwidth advantage of CX8 directly translates to faster NCCL collective ops and higher GPU utilization. The $1.5M premium is justified.
-
----
-
-## Proposed Configuration — Option B (MGX CX8)
-
-**16× Supermicro SYS-422GL-NR | 8× RTX Pro 6000 SE (96GB GDDR7) per node**
-
-| Component | Per Node | Cluster Total |
-|---|---|---|
-| GPU | 8× RTX Pro 6000 Blackwell SE | 128 GPUs |
-| VRAM | 768 GB | 12,288 GB |
-| CPU | Intel Xeon 6 6900P (dual socket) | — |
-| NIC | 4× CX8 SuperNIC, 800GbE (MGX integrated) | 64 NICs |
-| Form factor | 4U | 2 racks |
-| Server unit cost | ~$200,000 | $3,200,000 |
-
-**Network Fabric**
-| Component | Qty | Unit | Total |
-|---|---|---|---|
-| NVIDIA SN5600 Leaf Switch (64×800GbE) | 4 | $35,000 | $140,000 |
-| NVIDIA SN5600 Spine Switch (64×800GbE) | 2 | $35,000 | $70,000 |
-| Mgmt switch (1GbE 48-port) | 1 | $800 | $800 |
-| Cabling (OSFP 800G AOC/DAC) | lot | — | ~$20,000 |
-| **Network Subtotal** | | | **~$230,800** |
-
-**Hardware Total: ~$3,430,800**
-
----
-
-## Colocation — Irvine, CA Datacenter
-
-| Item | Rate | Monthly |
-|---|---|---|
-| Power (5kW × 16 servers) | $448/kW/mo | $35,840 |
-| IP block (/29) | flat | $50 |
-| Managed services (24/7) | included | — |
-| **Total Monthly** | | **$35,890** |
-
-**SLA:** 99.95% network uptime · 99.99% power uptime · <15 min incident response · <4hr hardware replacement
-
----
-
-## Plan #2 Alternative — GPU Lease
-
-| Term | Rate | GPUs | Monthly Cost |
-|---|---|---|---|
-| 12-month | $1.25/GPU/hr | 128 | $116,800 |
-| 24-month | $1.15/GPU/hr | 128 | $107,456 |
-
----
-
-## Deployment Timeline (3-week target)
-
-| Week | Milestone |
-|---|---|
-| Week 1 | Hardware procurement; SYS-422GL-NR ships 3–5 biz days from Supermicro eStore |
-| Week 2 | Rack installation; SN5600 fabric commissioning; RDMA (RoCEv2) config |
-| Week 3 | NCCL allreduce benchmark validation; burn-in; handover to Ab Initia Labs |
-
----
-
-## Next Steps
-- [ ] Jarren Qiao: approve Plan #1 (buy) or Plan #2 (lease) decision by Apr 21
-- [ ] Feizhi Ding: confirm workload profile (training job type, NCCL topology preference)
-- [ ] Zillion: verify SYS-422GL-NR stock at Supermicro eStore before PO
-- [ ] Zillion: confirm CX8 MGX switch board inclusion in SYS-422GL-NR unit price`,
-  notes:'Architecture call with Feizhi Ding on Apr 14 confirmed CX8 is preferred for training scale. Jarren is comparing Plan #1 (CapEx ~$3.4M) vs Plan #2 (lease $116,800/mo). Decision call Apr 28. Jasmine Shao introduced the deal.',
-  versions:[
-    {label:'v1 — Passthrough Draft',text:`# Hardware Proposal — 128-GPU PCIe Passthrough Cluster
-**Client:** Ab Initia Labs | **Ref:** ZN-2026-0412-AIL | v1 — Apr 12, 2026
-
-## Initial Assessment
-16× Custom 7U servers, AMD EPYC 9J14, 8× RTX Pro 6000 SE (96GB GDDR7)
-NIC: 1× CX6 Dx dual-port 100GbE per server
-Network: 4× Mellanox SN2700 leaf + 2× spine | ~$78,800 network
-
-**Hardware total:** 16 × $128,014 = **$2,048,224**
-**Monthly colo:** 5kW × 16 servers × $448/kW = **$35,840/mo**
-
-*v1 draft — passthrough only. CX8 architecture TBD pending workload confirmation.*`,ts:'2026-04-12T10:00:00Z',current:false},
-    {label:'v2 — CX8 Recommended',text:`# Hardware Proposal — 128-GPU MGX CX8 Cluster
-**Client:** Ab Initia Labs | **Ref:** ZN-2026-0414-ABL | v2 — Apr 14, 2026
-
-Architecture upgraded to MGX CX8 following workload review with Feizhi Ding.
-16× SYS-422GL-NR | CX8 400Gbps/GPU vs 25Gbps passthrough (16× improvement)
-Hardware ~$3.43M | Network ~$231K | Monthly colo $35,890/mo
-
-See full proposal for architecture comparison table and deployment timeline.`,ts:'2026-04-14T09:30:00Z',current:true}
-  ],createdAt:'2026-04-12T10:00:00Z'},
-  {id:'ZN-2026-0301-CDV',client:'Cudo Ventures',amount:'$540,000',date:'Mar 1, 2026',status:'success',
-  confidence:{score:9.3,label:'Very High Confidence'},
-  text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support
-**Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Date:** March 1, 2026
-**Contract:** 24-month managed services | **Value:** $22,500/mo × 24 = **$540,000**
-
----
-
-## Executive Summary
-
-Cudo Ventures has deployed multiple H100 GPU clusters (1,024 to 4,096 GPU scale) across global regions to serve multinational AI training and GPU compute clients. Zillion provides 24/7 L3 technical support across all clusters — covering deep InfiniBand diagnostics, NCCL performance tuning, GPU health monitoring, and incident escalation — operating as the external L3 layer above Cudo's L1/L2 teams.
-
----
-
-## Cluster Specifications (4K GPU Reference Cluster)
-
-| Parameter | Specification |
-|---|---|
-| GPU nodes | 512× Dell H100 SXM5 8-GPU nodes (4,096 GPUs total) |
-| CPU per node | 2× Intel Xeon 8480+ |
-| RAM per node | 2TB |
-| NVMe per node | ~30TB U.2 (8× 4TB drives) |
-| GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
-| Storage fabric | 1× ConnectX-6, 100G LACP bonded |
-| Network storage | Vast Data NFS: 7PB total (2PB HPS + 5PB S3) |
-| Block storage | 10TB (VM datastores) + 2TB backup |
-| Management nodes | 2× UFM servers (IB mgmt) + 8× monitoring/mgmt nodes |
-| Orchestration | Proxmox cluster (5× PVE + 1× NFS backup) |
-
-**Cluster sizes in scope:** 1,024 GPU · 2,048 GPU · 4,096 GPU clusters across multiple regions
-
----
-
-## Scope of Work
-
-### 1. Daily Cluster Monitoring & Operations
-- GPU health monitoring via NVIDIA DCGM 3.3.7 (every 60s): ECC errors, power draw, temperature, throttling
-- InfiniBand fabric monitoring via NVIDIA UFM: port state, throughput, error rates, flapping detection
-- Node-level health: IPMI/BMC temps, fan speeds, PSU status, memory errors
-- Slurm job scheduler management: queue health, fairshare, partition config
-- Prometheus + Grafana alerting: email, SMS, Slack — all thresholds monitored 24/7
-
-### 2. L3 Technical Support & Troubleshooting (SLA-Backed)
-- Handles complex issues unresolved by Cudo L1/L2: multi-domain diagnostics, NCCL degradation, IB transceiver faults, storage I/O anomalies
-- Real-time Slack channel with L1/L2 for live escalation
-- Post-incident Root Cause Analysis (RCA) reports for all major incidents
-- **Reference case:** Zillion diagnosed 800G InfiniBand transceiver port flapping on H100 cluster — identified PD supplier fault in transceiver, resolved 1 month ahead of a leading hyperscaler who later reported the same issue
-
-### 3. Software Deployment & Updates
-- OS: Ubuntu 22.04 (kernel 5.15.0-113), GPU Driver: NVIDIA 535.161.08
-- NVIDIA DCGM 3.3.7 · UFM · MLNX_OFED 23.10-2.1.3.1 · Container Toolkit 1.16.1
-- Slurm job scheduler · Optional: Kubernetes + Volcano, Docker, PyTorch
-- Local Ubuntu + NVIDIA package mirror managed by Zillion
-- KVM/Proxmox VM management and provisioning per client requirements
-
----
-
-## SLA Commitments
-
-| Priority | Condition | Response Time |
-|---|---|---|
-| Urgent | >5% cluster offline or major perf degradation | Average <60 min (max 4hr) |
-| High | Service significantly disturbed, repeated instability | <4 hours |
-| Medium | Minor inconvenience, 95%+ service available | <6 hours |
-| Non-critical | Config requests, minor bugs | 24hrs / Next business day |
-
-**Backup node strategy:** Zillion recommends reserving 3 nodes per 128-node group as hot-standby during large training runs. Auto-kickin on primary node failure to prevent training interruption.
-
----
-
-## Deployment Timeline
-
-| Phase | Duration |
-|---|---|
-| Initial environment setup | 0.5 weeks |
-| Software deployment + integration testing | 1 week |
-| Burn-in + performance acceptance (NCCL, thermal, MLPerf) | 1 week |
-| Buffer (component fixes, re-tests) | 0.5 weeks |
-| **Total** | **3 weeks** |
-
----
-
-## Commercial Terms
-
-| Item | Rate | Duration | Total |
-|---|---|---|---|
-| 24/7 L3 Managed Support | $22,500/mo | 24 months | $540,000 |
-| Deployment & onboarding | included | — | — |
-| RCA reporting | included | — | — |
-
----
-
-## Next Steps
-- [ ] MSA counter-signature from Cudo executive team
-- [ ] Cluster access credentials provisioned for Zillion NOC
-- [ ] Slack NOC channel created (#cudo-zillion-l3)
-- [ ] Baseline NCCL allreduce benchmarks established within 48hrs of access`,
-  notes:'Contract signed Mar 1. 24-month L3 managed support across 1K–4K H100 clusters. Renewal window opens Jan 2028. Flag for upsell: Cudo is deploying H200 clusters — propose expanded SoW in Q3.',
-  versions:[
-    {label:'v1 — SoW Draft',text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support (Draft)
-**Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Date:** March 1, 2026
-**Prepared by:** Zillion Network
-
----
-
-## Overview
-
-Cudo Ventures has deployed multiple NVIDIA H100 GPU clusters (1,024 to 4,096 GPU scale) across North America, Europe, and the Middle East to serve AI training and GPU compute workloads for multinational clients. Zillion will provide 24/7 L3 technical support as the external escalation layer above Cudo's L1/L2 teams.
-
-**Contract Value:** $22,500/mo × 24 months = **$540,000**
-
----
-
-## Cluster Specifications (4K GPU Reference Cluster)
-
-| Parameter | Specification |
-|---|---|
-| GPU nodes | 512× Dell H100 SXM5 8-GPU nodes (4,088 GPUs + 8 spare) |
-| CPU per node | 2× Intel Xeon 8480+ |
-| RAM per node | 2TB |
-| NVMe per node | ~30TB U.2 (8× 4TB drives) |
-| GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
-| Storage fabric | 1× ConnectX-6, 100G LACP bonded |
-| Network storage | Vast Data NFS: 7PB total (2PB HPS + 5PB S3) |
-| Block storage | 10TB VM datastores + 2TB backup |
-| Management | 2× UFM servers (IB) + 8× monitoring/mgmt nodes |
-| Orchestration | Proxmox: 5× PVE + 1× NFS backup |
-
-*Cluster sizes in scope: 1,024 GPU · 2,048 GPU · 4,096 GPU — multiple regions*
-
----
-
-## Scope of Work
-
-### 1. Daily Cluster Monitoring & Operations
-- GPU health: DCGM 3.3.7 every 60s — ECC errors, thermal throttling, SM utilization, power draw
-- InfiniBand fabric: UFM port state, throughput, error rates, flapping detection
-- Node health: IPMI/BMC temps, fan speeds, PSU status, memory errors — 24/7, auto-ticket
-- Slurm: queue health, fairshare, partition configuration, job failure triage
-- Alerting: Prometheus + Grafana → email, SMS, Slack — all thresholds monitored continuously
-
-### 2. L3 Technical Support & Troubleshooting (SLA-Backed)
-- Complex issue escalation unresolvable by Cudo L1/L2 — multi-domain diagnostics
-- NCCL degradation, IB transceiver faults, storage I/O anomalies, GPU ECC failures
-- RCA reports within 48hr of major incident resolution
-- Real-time Slack channel with L1/L2 for live escalation
-
-**Reference case:** Zillion diagnosed 800G InfiniBand transceiver port flapping on H100 cluster — identified PD supplier fault, resolved 1 month ahead of a leading hyperscaler who later reported the same issue.
-
-### 3. Software Deployment & Updates
-- OS: Ubuntu 22.04 (kernel 5.15.0-113)
-- GPU Driver: NVIDIA 535.161.08 | DCGM 3.3.7 | UFM | MLNX_OFED 23.10-2.1.3.1
-- Container Toolkit 1.16.1 | Slurm | Proxmox KVM
-- Local Ubuntu + NVIDIA package mirror maintained by Zillion
-- Optional: Kubernetes + Volcano, Docker, PyTorch
-
----
-
-## SLA Commitments
-
-| Priority | Condition | Response |
-|---|---|---|
-| Urgent | >5% cluster offline or major perf degradation | Average <60 min (max 4hr) |
-| High | Service significantly disturbed, repeated instability | <4 hours |
-| Medium | Minor inconvenience, 95%+ service available | <6 hours |
-| Non-critical | Config requests, minor bugs | 24hrs / Next business day |
-
-**Backup node strategy:** Zillion recommends reserving 3 nodes per 128-node group as hot-standby during large training runs. Auto-kickin on primary node failure to prevent training interruption.
-
----
-
-## Commercial Terms
-
-| Item | Rate | Duration | Total |
-|---|---|---|---|
-| 24/7 L3 Managed Support | $22,500/mo | 24 months | $540,000 |
-| Deployment & onboarding | included | — | — |
-| RCA reporting | included | — | — |
-
-## Next Steps
-- [ ] MSA counter-signature from Cudo executive team
-- [ ] Cluster access credentials provisioned for Zillion NOC
-- [ ] Slack NOC channel created (#cudo-zillion-l3)
-- [ ] Baseline NCCL allreduce benchmarks established within 48hrs of access`,ts:'2026-03-01T09:00:00Z',current:false},
-    {label:'v2 — Signed',text:`# Statement of Work — 24/7 L3 HPC/AI Cluster Support (SIGNED)
-**Client:** Cudo Ventures Ltd | **Reference:** ZN-2026-0301-CDV | **Signed:** March 5, 2026
-**Prepared by:** Zillion Network
-
----
-
-## Contract Executed
-
-24-month managed L3 support contract signed March 5, 2026. Coverage went live March 8, 2026.
-Total contract value: **$540,000** ($22,500/mo × 24 months)
-
----
-
-## Cluster Specifications (4K GPU Reference Cluster)
-
-| Parameter | Specification |
-|---|---|
-| GPU nodes | 512× Dell H100 SXM5 8-GPU nodes (4,088 GPUs + 8 spare) |
-| CPU per node | 2× Intel Xeon 8480+ |
-| RAM per node | 2TB |
-| NVMe per node | ~30TB U.2 (8× 4TB drives) |
-| GPU fabric | 8× ConnectX-7, 3.2 Tbps InfiniBand Non-Blocking Fat Tree |
-| Network storage | Vast Data NFS: 7PB (2PB HPS + 5PB S3) |
-
-*Cluster sizes: 1,024 · 2,048 · 4,096 GPU across multiple global regions*
-
----
-
-## Deployed Software Stack
-
-| Component | Version |
-|---|---|
-| OS | Ubuntu 22.04 (kernel 5.15.0-113) |
-| GPU Driver | NVIDIA 535.161.08 |
-| DCGM | 3.3.7 |
-| UFM | Latest stable |
-| MLNX_OFED | 23.10-2.1.3.1 |
-| Container Toolkit | 1.16.1 |
-| Job Scheduler | Slurm |
-| VM Management | Proxmox (5× PVE + 1× NFS backup) |
-| Monitoring | Prometheus + Grafana, alerting via Slack/email/SMS |
-
----
-
-## Go-Live Milestones
-
-| Milestone | Date |
-|---|---|
-| Contract signed | March 5, 2026 |
-| Coverage live | March 8, 2026 |
-| Baseline NCCL benchmarks | March 10, 2026 |
-| NOC Slack channel active (#cudo-zillion-l3) | March 8, 2026 |
-
----
-
-## SLA (As Executed)
-
-| Priority | Response |
-|---|---|
-| Urgent (>5% offline) | Avg <60 min, max 4hr |
-| High | <4 hours |
-| Medium | <6 hours |
-| Non-critical | <24 hours |
-
----
-
-## Renewal & Upsell
-
-Renewal window opens: **January 2028**
-
-Cudo is expanding to H200 clusters in Q3 2026. Zillion to propose expanded SoW covering H200 fleet — target contract value: $720,000 (32-month term, $22,500/mo).
-
----
-
-## Active Monitoring Summary
-
-- DCGM polling every 60s across all GPU nodes
-- IB fabric monitored via UFM — port flapping alerts wired to Slack
-- Baseline NCCL allreduce busBW established March 10 — used as degradation threshold
-- Proxmox KVM environment deployed and stable`,ts:'2026-03-05T14:00:00Z',current:true}
-  ],createdAt:'2026-03-01T09:00:00Z'}
+  {id:'ZN-2025-1208-CUD',client:'Cudo Ventures',amount:'$4,200,000',date:'Dec 8, 2025',status:'success',confidence:{score:9.6,label:'Very High Confidence'},text:'# Managed Services Proposal — 4,096-GPU H100 SXM5 HPC/AI Cluster\n**Client:** Cudo Ventures\n**Date:** December 8, 2025\n**Reference:** ZN-2025-1208-CUD\n\n## Executive Summary\nCudo Ventures requires 24/7 L3 managed support for a worldwide fleet of H100 SXM5 GPU clusters totaling 4,096 GPUs. Zillion provides full-stack deployment, proactive monitoring, and tiered incident response across North America, Europe, Middle East, and Southeast Asia. Hardware provided by Cudo — Zillion handles deployment, monitoring, and operations.\n\n## Scope of Services\n| Service | Description | Coverage |\n|---|---|---|\n| Hardware Deployment | Rack, cable, power validation | Worldwide |\n| Software Deployment | Ansible: Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL | All clusters |\n| GPU Monitoring | nvidia-smi, ECC errors, thermal — every 60s | 24/7/365 |\n| Network Monitoring | InfiniBand fabric, UFM, port-flapping detection | 24/7/365 |\n| Incident Response | L1 auto-ticket, L2 engineer, L3 escalation | <15 min |\n| Hardware Replacement | On-site spares, coordinated with Cudo | <4 hours |\n\n## SLA Commitments\n| Priority | Response | Resolution |\n|---|---|---|\n| Urgent (cluster down) | <4 hours | Immediate |\n| High (degraded) | 4 hours | 24 hours |\n| Medium | 6 hours | 48 hours |\n| Low (change request) | 24 hours | Next window |\n\n## Deployment: 3 weeks per cluster\n\n## Outcome\nAll clusters operational. Zillion identified 800G IB transceiver port-flapping issue one month before a leading hyperscaler reported the same problem to the vendor.',notes:'Largest managed services engagement. Multi-continent. Recurring revenue. IB transceiver case study is a key differentiator.',versions:[{label:'v1 — SoW Final',text:'# Managed Services — Cudo Ventures\n4,096 H100 SXM5 GPUs worldwide.\nL1/L2/L3 support. Ubuntu 22.04, DCGM, UFM, Slurm.\n3-week deployment per cluster.\nIdentified 800G IB transceiver port-flapping issue ahead of hyperscalers.',ts:'2025-12-08T10:00:00Z',current:true}],createdAt:'2025-12-08T10:00:00Z'}
 ];
 
 /* ═══ INIT ═══ */
@@ -2319,6 +1970,15 @@ document.addEventListener('DOMContentLoaded',function(){
   storageLoad();
   if(proposals.length===0){proposals=SEED_PROPOSALS.slice();storageSave();}
   updateTrackerCount();renderHomeRecent();
+  // Init API status
+  updateApiIndicator();
+  // Auto-enable live mode if API key exists
+  if(ZN_API_KEY&&getApiMode()!=='mock'){
+    var chk=document.getElementById('apiMode');
+    if(chk){chk.checked=true;useApi=true;var badge=document.getElementById('apiBadge');if(badge){badge.textContent='LIVE API';badge.className='api-badge live';}}
+  }
+  // Restore in-progress draft if available
+  restoreDraft();
   // Warn before navigating away with unsaved proposal edits
   window.addEventListener('beforeunload',function(e){
     var bars=document.querySelectorAll('.edit-bar.visible');
@@ -2326,174 +1986,145 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 
-/* ═══ HELPERS ═══ */
-function busy(dot,stat,btn,label){document.getElementById(dot).className='sdot running';document.getElementById(stat).textContent=label;var b=document.getElementById(btn);b.disabled=true;b.innerHTML='<span class="spin"></span> '+label;}
-function done(dot,stat,btn,btnTxt,statTxt){document.getElementById(dot).className='sdot done';document.getElementById(stat).textContent=statTxt;var b=document.getElementById(btn);b.disabled=false;b.innerHTML=btnTxt;}
-
-/* ─── Summary helpers ─── */
-function getCurrentVersionSummary(p){
-  if(!p.versions||!p.versions.length)return '';
-  var cur=p.versions.find(function(v){return v.current;});
-  return (cur&&cur.summary)||'';
-}
-function autoSummary(text,label){
-  var lines=(text||'').split('\n').filter(function(l){return l.trim()&&!l.match(/^[|#\-]/);});
-  var first=lines[0]||'',second=lines[1]||'';
-  var amt=(text.match(/\$[\d,]+/g)||[])[0]||'';
-  var gpu=(text.match(/RTX [\w ]+|A100|H100/)||[])[0]||'';
-  var s=first.replace(/[*#]/g,'').trim();
-  if(s.length>120)s=s.slice(0,120)+'…';
-  if(second&&second.replace(/[*#|]/g,'').trim())s+=' '+second.replace(/[*#|]/g,'').trim().slice(0,80);
-  if(amt&&gpu)s+=' Key figures: '+gpu+' at '+amt+'.';
-  return s.trim()||('Snapshot: '+label+'.');
-}
-
-/* ─── Inventory tab ─── */
-var _invData=null,_invSource=null,_invRefreshTimer=null;
-var INV_KEY='zn_inventory_v1',INV_SRC_KEY='zn_inv_source_v1';
-
-function invLoad(){
-  try{var r=localStorage.getItem(INV_KEY);_invData=r?JSON.parse(r):null;}catch(e){_invData=null;}
-  if(!_invData||!_invData.length){
-    _invData=INVENTORY.map(function(i){return{sku:i.sku,name:i.name,gpu:i.gpu,vram:i.vram,
-      price:i.price,stock:i.stock,rackU:i.rackU,power:i.power,arch:i.arch,
-      lease12:i.lease12!=null?i.lease12:''};});
-    invSave();
-  }
-  try{var s=localStorage.getItem(INV_SRC_KEY);_invSource=s?JSON.parse(s):null;}catch(e){_invSource=null;}
-}
-function invSave(){try{localStorage.setItem(INV_KEY,JSON.stringify(_invData));}catch(e){}}
-function invSaveSource(){try{localStorage.setItem(INV_SRC_KEY,JSON.stringify(_invSource));}catch(e){}}
-
-function goInventory(){
-  document.getElementById('screenHome').style.display='none';
-  ['screen1','screen2','screen3','screenTracker'].forEach(function(id){document.getElementById(id).classList.remove('active');});
-  document.getElementById('screenInventory').classList.add('active');
-  invLoad();invRender();invUpdateSourceBar();window.scrollTo(0,0);
-}
+/* ═══ INVENTORY MANAGEMENT PAGE ═══ */
+var _invData=null;
+function invLoad(){try{var raw=localStorage.getItem('zn_inventory');if(raw)_invData=JSON.parse(raw);}catch(e){}if(!_invData)_invData=INVENTORY.map(function(i){return Object.assign({},i);});}
+function invSave(){try{localStorage.setItem('zn_inventory',JSON.stringify(_invData));}catch(e){}}
 function invRender(){
-  var tbody=document.getElementById('invTableBody');if(!tbody)return;
-  var total=0,inStock=0,low=0,out=0;
-  tbody.innerHTML=(_invData||[]).map(function(item,idx){
-    total++;var sn=parseInt(item.stock)||0;
-    if(sn===0)out++;else if(sn<=3)low++;else inStock++;
-    var sc=sn===0?'inv-stock-out':sn<=3?'inv-stock-low':'inv-stock-ok';
+  if(!_invData)invLoad();
+  var tb=document.getElementById('invTableBody');if(!tb)return;
+  // Stats
+  var total=_invData.length;var inStock=_invData.filter(function(i){return i.stock>3;}).length;
+  var low=_invData.filter(function(i){return i.stock>0&&i.stock<=3;}).length;
+  var out=_invData.filter(function(i){return i.stock===0;}).length;
+  var els={invStatTotal:total,invStatInStock:inStock,invStatLow:low,invStatOut:out};
+  Object.keys(els).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=els[id];});
+  // Table
+  tb.innerHTML=_invData.map(function(item,idx){
+    var sc=item.stock===0?'s-out':item.stock<=3?'s-low':'s-ok';
     return '<tr data-idx="'+idx+'">'
       +'<td contenteditable="true" data-field="sku" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.sku||''))+'</td>'
       +'<td contenteditable="true" data-field="name" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.name||''))+'</td>'
       +'<td contenteditable="true" data-field="gpu" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.gpu||''))+'</td>'
-      +'<td contenteditable="true" data-field="vram" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.vram||''))+'</td>'
-      +'<td contenteditable="true" data-field="price" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.price||''))+'</td>'
-      +'<td contenteditable="true" data-field="stock" onblur="invCellEdit(this)" spellcheck="false" class="'+sc+'">'+escHtml(String(item.stock||''))+'</td>'
-      +'<td contenteditable="true" data-field="rackU" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.rackU||''))+'</td>'
-      +'<td contenteditable="true" data-field="power" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.power||''))+'</td>'
+      +'<td contenteditable="true" data-field="vram" onblur="invCellEdit(this)" spellcheck="false">'+item.vram+'</td>'
+      +'<td contenteditable="true" data-field="price" onblur="invCellEdit(this)" spellcheck="false">$'+(item.price||0).toLocaleString()+'</td>'
+      +'<td class="'+sc+'" contenteditable="true" data-field="stock" onblur="invCellEdit(this)" spellcheck="false">'+item.stock+'</td>'
+      +'<td contenteditable="true" data-field="rackU" onblur="invCellEdit(this)" spellcheck="false">'+item.rackU+'</td>'
+      +'<td contenteditable="true" data-field="power" onblur="invCellEdit(this)" spellcheck="false">'+item.power+'</td>'
       +'<td contenteditable="true" data-field="arch" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.arch||''))+'</td>'
-      +'<td contenteditable="true" data-field="lease12" onblur="invCellEdit(this)" spellcheck="false">'+(item.lease12!==''&&item.lease12!=null?escHtml(String(item.lease12)):'—')+'</td>'
-      +'<td><button class="inv-row-del" onclick="invDeleteRow('+idx+')" title="Remove">✕</button></td>'
+      +'<td><button onclick="invDeleteRow('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;" title="Delete">✕</button></td>'
       +'</tr>';
   }).join('');
-  function _s(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
-  _s('invStatTotal',total);_s('invStatInStock',inStock);_s('invStatLow',low);_s('invStatOut',out);
 }
 function invCellEdit(el){
   var row=el.closest('tr');if(!row)return;
   var idx=parseInt(row.dataset.idx),field=el.dataset.field;
   if(!_invData||!_invData[idx])return;
-  var val=(el.innerText||'').trim();
-  if(field==='stock'){var n=parseInt(val)||0;el.className=n===0?'inv-stock-out':n<=3?'inv-stock-low':'inv-stock-ok';}
-  if(['vram','price','stock','rackU','power','lease12'].indexOf(field)>=0){var num=parseFloat(val);_invData[idx][field]=isNaN(num)?val:num;}
+  var val=(el.innerText||'').trim().replace(/^\$/,'').replace(/,/g,'');
+  if(['vram','price','stock','rackU','power'].indexOf(field)>=0){var num=parseFloat(val);_invData[idx][field]=isNaN(num)?0:num;}
   else _invData[idx][field]=val;
+  if(field==='stock'){var n=parseInt(val)||0;el.className=n===0?'s-out':n<=3?'s-low':'s-ok';}
   invSave();
 }
 function invAddRow(){
   if(!_invData)_invData=[];
-  _invData.push({sku:'NEW-SKU',name:'New Hardware',gpu:'',vram:0,price:0,stock:0,rackU:1,power:0,arch:'passthrough',lease12:''});
+  _invData.push({sku:'NEW-SKU',name:'New Hardware',gpu:'',gpuMem:0,vram:0,price:0,stock:0,rackU:1,power:0,nvlink:'',fp16:0,colo:0,arch:'passthrough'});
   invSave();invRender();
-  var tb=document.getElementById('invTableBody');
-  if(tb&&tb.lastElementChild){var r=tb.lastElementChild;r.scrollIntoView({behavior:'smooth',block:'nearest'});var c=r.querySelector('[contenteditable]');if(c){c.focus();document.execCommand('selectAll',false,null);}}
 }
 function invDeleteRow(idx){
   if(!_invData||!confirm('Remove "'+(_invData[idx].name||_invData[idx].sku)+'"?'))return;
   _invData.splice(idx,1);invSave();invRender();
 }
-function handleInvCsv(input){
-  var file=input.files&&input.files[0];if(!file)return;
+function invImportCsv(input){
+  var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
-    var p=parseCsvToInventory(e.target.result);
-    if(!p||!p.length){alert('Could not parse CSV.');return;}
-    if(confirm('Replace inventory with '+p.length+' rows from "'+file.name+'"?')){
-      _invData=p;invSave();_invSource={type:'csv_file',name:file.name,lastSync:new Date().toISOString()};
-      invSaveSource();invUpdateSourceBar();invRender();
+    var rows=e.target.result.split('\n').map(function(r){return r.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});
+    if(rows.length<2){alert('CSV must have a header row and at least one data row.');return;}
+    var header=rows[0].map(function(h){return h.toLowerCase().replace(/[^a-z0-9]/g,'');});
+    var data=[];
+    for(var i=1;i<rows.length;i++){
+      if(rows[i].length<3)continue;
+      var obj={sku:'',name:'',gpu:'',gpuMem:0,vram:0,price:0,stock:0,rackU:1,power:0,nvlink:'',fp16:0,colo:0,arch:'passthrough'};
+      header.forEach(function(h,j){
+        var val=rows[i][j]||'';
+        if(h==='sku')obj.sku=val;
+        else if(h==='name')obj.name=val;
+        else if(h==='gpu')obj.gpu=val;
+        else if(h==='vram')obj.vram=parseInt(val)||0;
+        else if(h==='price')obj.price=parseFloat(val.replace(/[$,]/g,''))||0;
+        else if(h==='stock')obj.stock=parseInt(val)||0;
+        else if(h==='racku'||h==='rack')obj.rackU=parseInt(val)||1;
+        else if(h==='power')obj.power=parseFloat(val)||0;
+        else if(h==='arch'||h==='architecture')obj.arch=val;
+      });
+      if(obj.sku||obj.name)data.push(obj);
     }
-    input.value='';
+    if(data.length===0){alert('No valid rows found. Ensure CSV has columns: sku, name, gpu, vram, price, stock');return;}
+    _invData=data;invSave();invRender();
+    alert('Imported '+data.length+' SKUs from CSV.');
   };
   reader.readAsText(file);
+  input.value='';
 }
-function parseCsvToInventory(text){
-  var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
-  if(lines.length<2)return null;
-  var hdr=lines[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'').toLowerCase();});
-  return lines.slice(1).map(function(line){
-    var cols=line.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
-    var r={};hdr.forEach(function(h,i){r[h]=cols[i]||'';});
-    return{sku:r.sku||r.id||'',name:r.name||r.model||'',gpu:r.gpu||'',
-      vram:parseFloat(r.vram||0)||0,price:parseFloat(String(r.price||0).replace(/[$,]/g,''))||0,
-      stock:parseInt(r.stock||r.quantity||0)||0,rackU:parseFloat(r.racku||r.rackU||1)||1,
-      power:parseFloat(r.power||0)||0,arch:r.arch||'passthrough',
-      lease12:parseFloat(r.lease12||'')||''};
-  }).filter(function(r){return r.sku||r.name;});
+function invPromptUrl(){
+  var url=prompt('Enter a public CSV URL:','https://docs.google.com/spreadsheets/d/.../export?format=csv');
+  if(!url)return;
+  fetch(url).then(function(r){if(!r.ok)throw new Error(r.status);return r.text();}).then(function(text){
+    var fakeInput={files:[new Blob([text],{type:'text/csv'})],value:''};
+    var reader=new FileReader();
+    reader.onload=function(e){
+      // Reuse CSV parser
+      var tempInput=document.createElement('input');
+      tempInput.files=fakeInput.files;
+      // Parse directly
+      var rows=e.target.result.split('\n').map(function(r){return r.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});
+      if(rows.length<2)return alert('No data found at URL.');
+      var header=rows[0].map(function(h){return h.toLowerCase().replace(/[^a-z0-9]/g,'');});
+      var data=[];
+      for(var i=1;i<rows.length;i++){
+        if(rows[i].length<3)continue;
+        var obj={sku:'',name:'',gpu:'',vram:0,price:0,stock:0,rackU:1,power:0,arch:'passthrough'};
+        header.forEach(function(h,j){var val=rows[i][j]||'';if(h==='sku')obj.sku=val;else if(h==='name')obj.name=val;else if(h==='gpu')obj.gpu=val;else if(h==='vram')obj.vram=parseInt(val)||0;else if(h==='price')obj.price=parseFloat(val.replace(/[$,]/g,''))||0;else if(h==='stock')obj.stock=parseInt(val)||0;else if(h==='racku'||h==='rack')obj.rackU=parseInt(val)||1;else if(h==='power')obj.power=parseFloat(val)||0;else if(h==='arch')obj.arch=val;});
+        if(obj.sku||obj.name)data.push(obj);
+      }
+      if(data.length===0)return alert('No valid rows found.');
+      _invData=data;invSave();invRender();alert('Imported '+data.length+' SKUs from URL.');
+    };
+    reader.readAsText(fakeInput.files[0]);
+  }).catch(function(e){alert('Failed to fetch URL: '+e.message);});
 }
-function openInvSourceModal(){
-  if(_invSource){
-    var t=_invSource.type||'url',tid=t==='sheets'?'sheets':t==='airtable'?'airtable':'url';
-    document.querySelectorAll('.inv-src-tab').forEach(function(b,i){b.classList.toggle('active',['url','sheets','airtable'][i]===tid);});
-    ['invTabUrl','invTabSheets','invTabAirtable'].forEach(function(id){document.getElementById(id).style.display='none';});
-    var el=document.getElementById('invTab'+tid.charAt(0).toUpperCase()+tid.slice(1));if(el)el.style.display='';
-    if(_invSource.url)try{document.getElementById('invUrlInput').value=_invSource.url;}catch(e){}
-  }
-  document.getElementById('invSourceModal').classList.remove('hidden');
+function invPromptSheets(){
+  var url=prompt('Paste your Google Sheets URL:\n(Make sure the sheet is shared as "Anyone with the link")','');
+  if(!url)return;
+  // Extract spreadsheet ID and convert to CSV export URL
+  var match=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(!match){alert('Could not parse spreadsheet ID from URL.');return;}
+  var csvUrl='https://docs.google.com/spreadsheets/d/'+match[1]+'/export?format=csv';
+  fetch(csvUrl).then(function(r){if(!r.ok)throw new Error('Sheet not accessible ('+r.status+'). Make sure it is shared publicly.');return r.text();}).then(function(text){
+    var rows=text.split('\n').map(function(r){return r.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});
+    if(rows.length<2)return alert('No data found in sheet.');
+    var header=rows[0].map(function(h){return h.toLowerCase().replace(/[^a-z0-9]/g,'');});
+    var data=[];
+    for(var i=1;i<rows.length;i++){
+      if(rows[i].length<3)continue;
+      var obj={sku:'',name:'',gpu:'',vram:0,price:0,stock:0,rackU:1,power:0,arch:'passthrough'};
+      header.forEach(function(h,j){var val=rows[i][j]||'';if(h==='sku')obj.sku=val;else if(h==='name')obj.name=val;else if(h==='gpu')obj.gpu=val;else if(h==='vram')obj.vram=parseInt(val)||0;else if(h==='price')obj.price=parseFloat(val.replace(/[$,]/g,''))||0;else if(h==='stock')obj.stock=parseInt(val)||0;else if(h==='racku'||h==='rack')obj.rackU=parseInt(val)||1;else if(h==='power')obj.power=parseFloat(val)||0;else if(h==='arch')obj.arch=val;});
+      if(obj.sku||obj.name)data.push(obj);
+    }
+    if(data.length===0)return alert('No valid rows. Expected columns: sku, name, gpu, vram, price, stock');
+    _invData=data;invSave();invRender();alert('Imported '+data.length+' SKUs from Google Sheets.');
+  }).catch(function(e){alert('Google Sheets import failed: '+e.message);});
 }
-function closeInvSourceModal(){document.getElementById('invSourceModal').classList.add('hidden');}
-function switchInvTab(tab,btn){
-  document.querySelectorAll('.inv-src-tab').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');
-  ['invTabUrl','invTabSheets','invTabAirtable'].forEach(function(id){document.getElementById(id).style.display='none';});
-  var el=document.getElementById('invTab'+tab.charAt(0).toUpperCase()+tab.slice(1));if(el)el.style.display='';
-}
-function saveInvSource(){
-  var act=null;document.querySelectorAll('.inv-src-tab').forEach(function(b,i){if(b.classList.contains('active'))act=['url','sheets','airtable'][i];});
-  var interval=parseInt(document.getElementById('invRefreshInterval').value)||0;
-  if(act==='url'){var url=(document.getElementById('invUrlInput').value||'').trim();if(!url){alert('Enter a URL.');return;}_invSource={type:'url',url:url,interval:interval,lastSync:null};}
-  else if(act==='sheets'){var su=(document.getElementById('invSheetsUrl').value||'').trim(),sheet=(document.getElementById('invSheetsSheet').value||'').trim()||'Sheet1';if(!su){alert('Enter Sheets URL.');return;};var m=su.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);var sid=m?m[1]:'';_invSource={type:'sheets',url:sid?'https://docs.google.com/spreadsheets/d/'+sid+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(sheet):su,rawUrl:su,sheet:sheet,interval:interval,lastSync:null};}
-  else if(act==='airtable'){var b=(document.getElementById('invAirtableBase').value||'').trim(),tb=(document.getElementById('invAirtableTable').value||'').trim(),tk=(document.getElementById('invAirtableToken').value||'').trim();if(!b||!tb||!tk){alert('Fill all fields.');return;}_invSource={type:'airtable',base:b,table:tb,token:tk,interval:interval,lastSync:null};}
-  invSaveSource();closeInvSourceModal();invUpdateSourceBar();refreshInvSource();
-  if(_invRefreshTimer)clearInterval(_invRefreshTimer);
-  if(interval>0)_invRefreshTimer=setInterval(refreshInvSource,interval*1000);
-}
-async function refreshInvSource(){
-  if(!_invSource||!_invSource.type)return;
-  var dot=document.getElementById('invSourceDot'),meta=document.getElementById('invSourceMeta');
-  if(dot)dot.className='inv-source-dot manual';if(meta)meta.textContent='Fetching…';
-  try{
-    var fetched=null;
-    if(_invSource.type==='url'||_invSource.type==='sheets'){var resp=await fetch(_invSource.url);if(!resp.ok)throw new Error('HTTP '+resp.status);fetched=parseCsvToInventory(await resp.text());}
-    else if(_invSource.type==='airtable'){var resp=await fetch('https://api.airtable.com/v0/'+_invSource.base+'/'+encodeURIComponent(_invSource.table)+'?maxRecords=200',{headers:{Authorization:'Bearer '+_invSource.token}});if(!resp.ok)throw new Error('Airtable '+resp.status);var data=await resp.json();fetched=(data.records||[]).map(function(rec){var f=rec.fields||{};return{sku:f.sku||f.SKU||'',name:f.name||f.Name||'',gpu:f.gpu||'',vram:parseFloat(f.vram||0)||0,price:parseFloat(f.price||0)||0,stock:parseInt(f.stock||0)||0,rackU:parseFloat(f.rackU||1)||1,power:parseFloat(f.power||0)||0,arch:f.arch||'passthrough',lease12:f.lease12||''};}).filter(function(r){return r.sku||r.name;});}
-    if(!fetched||!fetched.length)throw new Error('No rows');
-    _invData=fetched;_invSource.lastSync=new Date().toISOString();invSave();invSaveSource();invRender();
-    if(dot)dot.className='inv-source-dot live';if(meta)meta.textContent='Last synced: '+new Date().toLocaleTimeString();
-  }catch(err){if(dot)dot.className='inv-source-dot manual';if(meta)meta.textContent='Sync failed: '+err.message;}
-}
-function invUpdateSourceBar(){
-  var dot=document.getElementById('invSourceDot'),name=document.getElementById('invSourceName');
-  var meta=document.getElementById('invSourceMeta'),btn=document.getElementById('invRefreshBtn');
-  if(!_invSource||!_invSource.type){if(dot)dot.className='inv-source-dot manual';if(name)name.textContent='Manual (in-app)';if(meta)meta.textContent='Edit cells directly or connect a live source';if(btn)btn.style.display='none';return;}
-  var labels={url:'CSV URL',sheets:'Google Sheets',airtable:'Airtable',csv_file:'Uploaded CSV'};
-  if(dot)dot.className='inv-source-dot '+(_invSource.lastSync?'live':'manual');
-  if(name)name.textContent=labels[_invSource.type]||_invSource.type;
-  if(meta)meta.textContent=_invSource.type==='csv_file'?'Loaded: '+(_invSource.name||'file'):(_invSource.lastSync?'Last synced: '+new Date(_invSource.lastSync).toLocaleTimeString():'Not synced — click Refresh');
-  if(btn)btn.style.display=_invSource.type!=='csv_file'?'':'none';
+function invResetToDefault(){
+  if(!confirm('Reset inventory to default Zillion hardware? This will overwrite any changes.'))return;
+  _invData=INVENTORY.map(function(i){return Object.assign({},i);});
+  invSave();invRender();
 }
 
+/* ═══ HELPERS ═══ */
+function busy(dot,stat,btn,label){document.getElementById(dot).className='sdot running';document.getElementById(stat).textContent=label;var b=document.getElementById(btn);b.disabled=true;b.innerHTML='<span class="spin"></span> '+label;}
+function done(dot,stat,btn,btnTxt,statTxt){document.getElementById(dot).className='sdot done';document.getElementById(stat).textContent=statTxt;var b=document.getElementById(btn);b.disabled=false;b.innerHTML=btnTxt;}
 function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sdot';document.getElementById(stat).textContent='Error: '+msg;var b=document.getElementById(btn);b.disabled=false;b.innerHTML=btnTxt;}
 </script>
 
@@ -2521,77 +2152,48 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
     </div>
   </div>
 </div>
-
-<!-- ════════ INVENTORY RESOURCE TAB ════════ -->
-<div id="screenInventory" class="inv-tab-page">
-  <nav class="topbar">
-    <div class="tl">
-      <div class="zn-logo" onclick="goHome()" title="Home" style="cursor:pointer;"><svg class="zn-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="6" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="6" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="26" cy="24" r="3" stroke="#00C47A" stroke-width="1.8"/><circle cx="16" cy="17" r="2.5" stroke="#00C47A" stroke-width="1.6"/><line x1="16" y1="9" x2="16" y2="14.5" stroke="#00C47A" stroke-width="1.5"/><line x1="14.3" y1="18.8" x2="8.2" y2="22.2" stroke="#00C47A" stroke-width="1.5"/><line x1="17.7" y1="18.8" x2="23.8" y2="22.2" stroke="#00C47A" stroke-width="1.5"/></svg><span class="zn-wordmark" style="color:var(--accent);">Zillion Network</span></div>
-      <div class="tl-sep"></div><span class="tl-sub">Hardware Inventory</span>
-    </div>
-    <div class="topbar-right">
-      <button class="nav-btn accent" onclick="goTracker()">📁 Proposals <span class="tracker-count" id="tcInv">0</span></button>
-      <button class="nav-btn" onclick="goHome()">⌂ Home</button>
-    </div>
-  </nav>
-  <div class="inv-tab-body">
-    <div style="margin-bottom:28px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--ink);letter-spacing:-.5px;margin-bottom:6px;">Hardware <em style="font-style:italic;color:var(--accent);">Inventory</em></h2>
-      <p style="font-size:14px;color:var(--muted);line-height:1.6;">Live view of Zillion's available GPU hardware. Connect a live source, upload a CSV, or edit cells directly.</p>
-    </div>
-    <div class="inv-source-bar">
-      <div class="inv-source-info">
-        <div class="inv-source-dot manual" id="invSourceDot"></div>
-        <div class="inv-source-text"><strong id="invSourceName">Manual (in-app)</strong> &nbsp;·&nbsp; <span id="invSourceMeta">Edit cells directly or connect a live source</span></div>
-      </div>
-      <div class="inv-source-actions">
-        <button class="inv-source-btn" onclick="openInvSourceModal()">🔗 Connect Source</button>
-        <label class="inv-source-btn" style="cursor:pointer;">📎 Upload CSV<input type="file" id="invCsvInput" accept=".csv" style="display:none;" onchange="handleInvCsv(this)"/></label>
-        <button class="inv-source-btn" id="invRefreshBtn" onclick="refreshInvSource()" style="display:none;">↻ Refresh</button>
-      </div>
-    </div>
-    <div class="inv-stats">
-      <div class="inv-stat"><div class="inv-stat-num" id="invStatTotal">—</div><div class="inv-stat-label">Total SKUs</div></div>
-      <div class="inv-stat"><div class="inv-stat-num" id="invStatInStock" style="color:var(--green);">—</div><div class="inv-stat-label">In Stock</div></div>
-      <div class="inv-stat"><div class="inv-stat-num" id="invStatLow" style="color:var(--amber);">—</div><div class="inv-stat-label">Low Stock (≤3)</div></div>
-      <div class="inv-stat"><div class="inv-stat-num" id="invStatOut" style="color:var(--red);">—</div><div class="inv-stat-label">Out of Stock</div></div>
-    </div>
-    <div class="inv-table-wrap">
-      <div class="inv-table-header">
-        <div class="inv-table-title">SKU Catalogue <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">Click any cell to edit inline</span></div>
-        <button class="inv-add-row-btn" onclick="invAddRow()">+ Add SKU</button>
-      </div>
-      <div class="inv-table-scroll">
-        <table class="inv-table"><thead><tr>
-          <th>SKU</th><th>Name</th><th>GPU</th><th>VRAM (GB)</th><th>Price ($)</th>
-          <th>Stock</th><th>Rack U</th><th>Power (kW)</th><th>Arch</th><th>Lease 12mo</th><th></th>
-        </tr></thead><tbody id="invTableBody"></tbody></table>
-      </div>
-    </div>
-    <p style="margin-top:12px;font-size:12px;color:var(--muted);">Connect a live source (Google Sheets, Airtable, CSV URL) to sync on refresh. Changes persist in browser storage.</p>
-  </div>
+<!-- ════════ BETA BANNER ════════ -->
+<div id="betaBanner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#1A56DB 0%,#00C47A 100%);color:#fff;text-align:center;padding:6px 16px;font-size:12px;font-weight:600;letter-spacing:0.3px;font-family:'Inter',sans-serif;">
+  🚀 Beta — proposals are AI-generated and require human review before sharing with clients
+  <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:16px;margin-left:12px;cursor:pointer;vertical-align:middle;">✕</button>
 </div>
 
-<!-- ════════ INVENTORY SOURCE MODAL ════════ -->
-<div id="invSourceModal" class="inv-modal-overlay hidden">
-  <div class="inv-modal-box">
-    <div class="inv-modal-title">Connect Live Source</div>
-    <div class="inv-modal-sub">Link inventory data to keep the Architect Agent in sync. Supports Google Sheets, Airtable, or any public CSV URL.</div>
-    <div class="inv-src-tabs">
-      <button class="inv-src-tab active" onclick="switchInvTab('url',this)">🔗 CSV URL</button>
-      <button class="inv-src-tab" onclick="switchInvTab('sheets',this)">📊 Google Sheets</button>
-      <button class="inv-src-tab" onclick="switchInvTab('airtable',this)">🗂 Airtable</button>
+<!-- ════════ SETTINGS MODAL ════════ -->
+<div id="settingsModal" class="hidden" role="dialog" aria-label="Settings" style="position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);">
+  <div style="background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:28px 32px;width:480px;max-width:90vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:18px;font-weight:700;color:var(--ink);">⚙ Settings</div>
+      <button onclick="closeSettings()" style="background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;">✕</button>
     </div>
-    <div id="invTabUrl"><div class="inv-field"><label>CSV or JSON URL</label><input type="text" id="invUrlInput" placeholder="https://example.com/inventory.csv"/></div><p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Public CSV with columns: sku, name, gpu, vram, price, stock</p></div>
-    <div id="invTabSheets" style="display:none;"><div class="inv-field"><label>Spreadsheet URL</label><input type="text" id="invSheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/..."/></div><div class="inv-field"><label>Sheet Name</label><input type="text" id="invSheetsSheet" placeholder="Sheet1"/></div></div>
-    <div id="invTabAirtable" style="display:none;"><div class="inv-field"><label>Base ID</label><input type="text" id="invAirtableBase" placeholder="appXXXXXXXXXXXXXX"/></div><div class="inv-field"><label>Table Name</label><input type="text" id="invAirtableTable" placeholder="Inventory"/></div><div class="inv-field"><label>Personal Access Token</label><input type="password" id="invAirtableToken" placeholder="patXXXXX..."/></div></div>
-    <div class="inv-field"><label>Refresh Interval</label><select id="invRefreshInterval"><option value="0">Manual only</option><option value="300">Every 5 min</option><option value="900">Every 15 min</option><option value="3600">Every hour</option></select></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
-      <button class="btn-secondary" onclick="closeInvSourceModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveInvSource()">Save &amp; Connect</button>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Anthropic API Key</div>
+      <input type="password" id="settingsApiKey" placeholder="sk-ant-api03-..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;">Stored in this browser only. Never leaves your machine except to call Anthropic. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue);">Get a key →</a></div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">API Mode</div>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:6px;cursor:pointer;background:var(--bg);">
+        <input type="radio" name="apiModeRadio" value="direct" onchange="document.getElementById('settingsProxySection').style.display='none'" style="margin-top:3px;"/>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink);">Direct (Browser → Anthropic)</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Best for beta testing on GitHub Pages. Key stays in your browser.</div></div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:6px;cursor:pointer;background:var(--bg);">
+        <input type="radio" name="apiModeRadio" value="proxy" onchange="document.getElementById('settingsProxySection').style.display='block'" style="margin-top:3px;"/>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink);">Proxy (Browser → Backend → Anthropic)</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px;">For production. Requires a deployed backend server.</div></div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;background:var(--bg);">
+        <input type="radio" name="apiModeRadio" value="mock" onchange="document.getElementById('settingsProxySection').style.display='none'" style="margin-top:3px;"/>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink);">Mock Mode (No API)</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Uses sample data. Good for demos.</div></div>
+      </label>
+    </div>
+    <div id="settingsProxySection" style="display:none;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Backend URL</div>
+      <input type="text" id="settingsApiBase" placeholder="https://your-backend.railway.app" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;background:var(--bg);color:var(--ink);"/>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--border);">
+      <button onclick="closeSettings()" style="padding:8px 18px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--white);color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;">Cancel</button>
+      <button onclick="saveSettings()" style="padding:8px 22px;border:none;border-radius:var(--r-md);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Save Settings</button>
     </div>
   </div>
 </div>
 
 </body>
-</html>
