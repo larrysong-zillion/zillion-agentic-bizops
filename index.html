@@ -1122,10 +1122,10 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <button onclick="invResetToDefault()" style="padding:6px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);">↺ Reset to Default</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
-      <div class="stat-card"><div class="stat-num" id="invStatTotal">—</div><div class="stat-label">Total SKUs</div></div>
-      <div class="stat-card success"><div class="stat-num" id="invStatInStock">—</div><div class="stat-label">In Stock</div></div>
-      <div class="stat-card pending"><div class="stat-num" id="invStatLow">—</div><div class="stat-label">Low Stock (≤3)</div></div>
-      <div class="stat-card lost"><div class="stat-num" id="invStatOut">—</div><div class="stat-label">Out of Stock</div></div>
+      <div class="stat-card"><div class="stat-num" id="invStatTotal">—</div><div class="stat-label">Total Servers</div></div>
+      <div class="stat-card success"><div class="stat-num" id="invStatInStock">—</div><div class="stat-label">Available</div></div>
+      <div class="stat-card pending"><div class="stat-num" id="invStatLow">—</div><div class="stat-label">Rental</div></div>
+      <div class="stat-card lost"><div class="stat-num" id="invStatOut">—</div><div class="stat-label">Owned</div></div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div style="font-size:14px;font-weight:600;color:var(--ink);">SKU Catalogue <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">Click any cell to edit inline</span></div>
@@ -1133,8 +1133,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     </div>
     <div class="inv-wrap">
       <table class="inv-table"><thead><tr>
-        <th>SKU</th><th>Name</th><th>GPU</th><th>VRAM</th><th>Price</th>
-        <th>Stock</th><th>Rack U</th><th>Power</th><th>Arch</th><th></th>
+        <th>Label/SKU</th><th>Model</th><th>DC</th><th>Status</th><th>Assigned To</th>
+        <th>CPU</th><th>Memory</th><th>IP</th><th>Notes</th><th></th>
       </tr></thead><tbody id="invTableBody"></tbody></table>
     </div>
   </div>
@@ -1274,8 +1274,12 @@ function toggleApiMode(){
   }
   useApi=checked;
   const badge=document.getElementById('apiBadge');
-  badge.textContent=useApi?'LIVE API':'MOCK MODE';
-  badge.className='api-badge '+(useApi?'live':'mock');
+  if(ZN_API_KEY&&getApiMode()!=='mock'){
+    badge.textContent='LIVE API';badge.className='api-badge live';
+    document.getElementById('apiMode').checked=true;useApi=true;
+  } else {
+    badge.textContent='MOCK MODE';badge.className='api-badge mock';
+  }
 }
 
 /* ═══ VALIDATION ═══ */
@@ -1466,30 +1470,68 @@ function generateToTPaths(c){
   const gpuPref=(c.gpu_preference||'').toLowerCase();
   const wantsTrain=/train/i.test(c.workflow||'');
   const paths=[];
-  // Evaluate SKUs: 8-GPU for training, include 4-GPU for inference
+  // Evaluate SKUs: build candidate list from catalog + fleet inventory
   var isInference=/inference|serving|api|latency/i.test(c.workflow||'');
   var liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
-  var candidates=liveInv.filter(function(i){
-    if(!i.sku)return false;
-    if(i.sku.indexOf('-8x')>=0)return true;
-    if(isInference&&i.sku.indexOf('-4x')>=0)return true;
-    // Also include fleet inventory items that have stock
-    if(i.stock>0&&!i.sku.match(/-\dx$/))return true;
-    return false;
-  });
+  var isFleet=liveInv.length>0&&(liveInv[0].dc||liveInv[0].status||liveInv[0].assignedTo);
+  var candidates=[];
+  if(isFleet){
+    // Aggregate fleet servers by model, counting available (unassigned) as "stock"
+    var fleetGroups={};
+    liveInv.forEach(function(s){
+      var m=s.model||s.label||'Unknown';
+      if(!fleetGroups[m])fleetGroups[m]={model:m,total:0,available:0,dcs:[],cpus:[],status:[]};
+      fleetGroups[m].total++;
+      if(!(s.assignedTo||'').trim())fleetGroups[m].available++;
+      if(s.dc&&fleetGroups[m].dcs.indexOf(s.dc)<0)fleetGroups[m].dcs.push(s.dc);
+      if(s.cpu&&fleetGroups[m].cpus.indexOf(s.cpu)<0)fleetGroups[m].cpus.push(s.cpu);
+      if(s.status&&fleetGroups[m].status.indexOf(s.status)<0)fleetGroups[m].status.push(s.status);
+    });
+    // Create pseudo-SKU entries from fleet groups for scoring
+    Object.values(fleetGroups).forEach(function(g){
+      candidates.push({
+        sku:'fleet-'+g.model,name:g.model+' Fleet ('+g.dcs.join('/')+')',
+        gpu:g.cpus[0]||g.model,vram:0,price:0,stock:g.available,
+        rackU:4,power:5,colo:2240,nvlink:'Fleet — existing infrastructure',
+        arch:'fleet',_fleetTotal:g.total,_fleetAssigned:g.total-g.available,
+        _fleetDcs:g.dcs,_fleetStatus:g.status
+      });
+    });
+    // ALSO include the catalog SKUs for new-purchase recommendations
+    INVENTORY.forEach(function(inv){
+      if(inv.sku.indexOf('-8x')>=0)candidates.push(inv);
+      if(isInference&&inv.sku.indexOf('-4x')>=0)candidates.push(inv);
+    });
+  } else {
+    candidates=liveInv.filter(function(i){
+      if(!i.sku)return false;
+      if(i.sku.indexOf('-8x')>=0)return true;
+      if(isInference&&i.sku.indexOf('-4x')>=0)return true;
+      if(i.stock>0&&!i.sku.match(/-\dx$/))return true;
+      return false;
+    });
+  }
   candidates.forEach(function(sku,idx){
-    var maxN=Math.min(Math.floor(bMax/sku.price),sku.stock||0);
-    if(maxN<1&&sku.stock>0)maxN=1;
-    if(maxN<1)maxN=Math.ceil(bMax*0.8/sku.price); // hypothetical even if out of stock
-    // For high budgets, try to use more of the budget
+    var isFleetItem=sku.arch==='fleet';
+    var effectivePrice=sku.price||0;
+    var maxN;
+    if(isFleetItem){
+      // Fleet: available servers can be reallocated at zero hardware cost
+      maxN=sku.stock||0;
+    } else {
+      maxN=Math.min(Math.floor(bMax/(effectivePrice||1)),sku.stock||0);
+      if(maxN<1&&sku.stock>0)maxN=1;
+      if(maxN<1)maxN=Math.ceil(bMax*0.8/(effectivePrice||1));
+    }
+    // For high budgets, try to use more of the budget (only for purchasable SKUs)
     var targetSpend=bMax*0.85;
-    var idealN=Math.max(1,Math.round(targetSpend/sku.price));
+    var idealN=effectivePrice>0?Math.max(1,Math.round(targetSpend/effectivePrice)):maxN;
     var n=Math.max(1,Math.min(maxN,idealN));
-    if(n*sku.price>bMax)n=Math.floor(bMax/sku.price);
+    if(effectivePrice>0&&n*effectivePrice>bMax)n=Math.floor(bMax/effectivePrice);
     if(n<1)n=1;
-    var cost=n*sku.price;var vram=n*sku.vram;var power=n*sku.power;var rack=n*sku.rackU;
+    var cost=n*effectivePrice;var vram=n*(sku.vram||0);var power=n*(sku.power||5);var rack=n*(sku.rackU||4);
     var coloMo=n*(sku.colo||2240);
-    var inStock=n<=sku.stock;var inBudget=cost<=bMax;var vramOk=vram>=minVram;
+    var inStock=n<=(sku.stock||0);var inBudget=effectivePrice===0||cost<=bMax;var vramOk=sku.vram===0||vram>=minVram;
     var issues=[];
     // Stock: only hard-eliminate if stock is 0 AND no lead time option
     if(!inStock&&sku.stock>0)issues.push('Only '+sku.stock+' in stock, need '+n+' — partial delivery risk');
@@ -1510,11 +1552,18 @@ function generateToTPaths(c){
     if(wantsTrain&&(sku.arch==='nvlink'||sku.arch==='nvswitch'||sku.arch==='cx8'))score+=0.3;
     // GPU preference match — specificity-weighted bonus
     if(gpuPref){
-      var prefWords=gpuPref.toLowerCase().replace(/[,\/]/g,' ').replace(/preferred|acceptable|ideal|if possible/gi,'').split(/\s+/).filter(function(w){return w.length>2&&w!=='rtx'&&w!=='nvidia';});
-      var gpuLow=sku.gpu.toLowerCase()+' '+sku.name.toLowerCase();
-      var matchCount=prefWords.filter(function(w){return gpuLow.indexOf(w)>=0;}).length;
-      if(matchCount>=2)score+=2.0;
-      else if(matchCount===1)score+=0.5;
+      // Handle "X or Y" alternatives — split by "or" and match ANY alternative
+      var prefAlts=gpuPref.toLowerCase().split(/\s+or\s+/).map(function(alt){
+        return alt.replace(/[,\/]/g,' ').replace(/preferred|acceptable|ideal|if possible/gi,'').split(/\s+/).filter(function(w){return w.length>2&&w!=='rtx'&&w!=='nvidia';});
+      });
+      var gpuLow=sku.gpu.toLowerCase()+' '+sku.name.toLowerCase()+' '+sku.sku.toLowerCase();
+      var bestMatch=0;
+      prefAlts.forEach(function(words){
+        var mc=words.filter(function(w){return gpuLow.indexOf(w)>=0;}).length;
+        if(mc>bestMatch)bestMatch=mc;
+      });
+      if(bestMatch>=2)score+=2.0;
+      else if(bestMatch===1)score+=1.2;
     }
     // Budget utilization — reward 50-95%, penalize severe under-spend on large budgets
     var utilization=cost/bMax;
@@ -1529,10 +1578,20 @@ function generateToTPaths(c){
     score=Math.round(score*10)/10;
     var win=issues.length===0;
     var letter=String.fromCharCode(65+idx);
+    var contentStr;
+    if(isFleetItem){
+      contentStr=n+'× '+sku.name+' — reallocate from existing fleet (zero hardware cost)\n'
+        +'Fleet total: '+(sku._fleetTotal||0)+' servers | Available: '+(sku.stock||0)+' | Assigned: '+(sku._fleetAssigned||0)+'\n'
+        +'DCs: '+(sku._fleetDcs||[]).join(', ')+' | Status: '+(sku._fleetStatus||[]).join(', ')+'\n'
+        +'Colo: $'+coloMo.toLocaleString()+'/mo | Interconnect: '+sku.nvlink+'\n'
+        +(win?'Viable: existing hardware — fastest deployment, colo cost only.':'Eliminated: '+issues.join('. '));
+    } else {
+      contentStr=n+'× '+sku.sku+' @ $'+(effectivePrice||0).toLocaleString()+' = $'+cost.toLocaleString()+' | '+vram+'GB VRAM | '+(sku.stock>0?sku.stock+' in stock':'out of stock')+'\nRack: '+rack+'U, ~'+power.toFixed(1)+'kW | Colo: $'+coloMo.toLocaleString()+'/mo | Interconnect: '+sku.nvlink+'\n'+(win?'Viable: meets all constraints.':'Eliminated: '+issues.join('. '))+(sku.arch==='passthrough'&&wantsTrain&&n>4?'\nNote: PCIe passthrough at '+n+' nodes — NCCL performance may be limited vs NVLink/CX8. Consider CX8 architecture for maximum training throughput.':'')+(!inStock&&sku.stock===0?'\nNote: Requires pre-order — confirm lead time.':'');
+    }
     paths.push({
       label:'Path '+letter+' — '+sku.name+(win?' (Candidate)':''),
       status:win?'candidate':'eliminated',
-      content:n+'× '+sku.sku+' @ $'+sku.price.toLocaleString()+' = $'+cost.toLocaleString()+' | '+vram+'GB VRAM | '+(sku.stock>0?sku.stock+' in stock':'out of stock')+'\nRack: '+rack+'U, ~'+power.toFixed(1)+'kW | Colo: $'+coloMo.toLocaleString()+'/mo | Interconnect: '+sku.nvlink+'\n'+(win?'Viable: meets all constraints.':'Eliminated: '+issues.join('. '))+(sku.arch==='passthrough'&&wantsTrain&&n>4?'\nNote: PCIe passthrough at '+n+' nodes — NCCL performance may be limited vs NVLink/CX8. Consider CX8 architecture for maximum training throughput.':'')+(!inStock&&sku.stock===0?'\nNote: Requires pre-order — confirm lead time.':''),
+      content:contentStr,
       score:'Score: '+score+'/10',
       cost:cost,eliminated:!win,_score:score
     });
@@ -1544,29 +1603,23 @@ function generateToTPaths(c){
     // Preference lock: if client named a specific GPU (2+ word match) AND a candidate
     // using that GPU utilizes >=40% of budget, prefer it over cheaper under-utilizers
     if(gpuPref&&cands.length>0){
-      var lockWords=gpuPref.toLowerCase().replace(/[,\/]/g,' ').replace(/preferred|acceptable|ideal|if possible/gi,'').split(/\s+/).filter(function(w){return w.length>2&&w!=='rtx'&&w!=='nvidia';});
-      if(lockWords.length>=1){
-        // First check candidates
-        var prefCand=cands.find(function(cd){
-          var lbl=(cd.label||'').toLowerCase();
-          var mc=lockWords.filter(function(w){return lbl.indexOf(w)>=0;}).length;
-          return mc>=Math.min(2,lockWords.length)&&(cd.cost/bMax)>=0.4;
-        });
-        if(prefCand&&prefCand!==cands[0]&&(cands[0].cost/bMax)<0.3){
+      var prefAlts=gpuPref.toLowerCase().split(/\s+or\s+/).map(function(alt){
+        return alt.replace(/[,\/]/g,' ').replace(/preferred|acceptable|ideal|if possible/gi,'').split(/\s+/).filter(function(w){return w.length>2&&w!=='rtx'&&w!=='nvidia';});
+      });
+      function prefMatchScore(lbl){var best=0;prefAlts.forEach(function(words){var mc=words.filter(function(w){return lbl.indexOf(w)>=0;}).length;if(mc>best)best=mc;});return best;}
+      if(prefAlts.some(function(a){return a.length>=1;})){
+        var prefCand=cands.find(function(cd){return prefMatchScore((cd.label||'').toLowerCase())>=1&&(cd.cost/bMax)>=0.15;});
+        if(prefCand&&prefCand!==cands[0]){
           cands.splice(cands.indexOf(prefCand),1);cands.unshift(prefCand);
         }
-        // If no candidate matches preference, check eliminated paths (e.g. out-of-stock but orderable)
         if(!prefCand){
           var prefElim=paths.filter(function(p){return p.status==='eliminated';}).find(function(p){
-            var lbl=(p.label||'').toLowerCase();
-            var mc=lockWords.filter(function(w){return lbl.indexOf(w)>=0;}).length;
-            return mc>=Math.min(2,lockWords.length)&&p._score>=cands[0]._score;
+            return prefMatchScore((p.label||'').toLowerCase())>=1&&p._score>=cands[0]._score*0.85;
           });
           if(prefElim){
-            // Promote the preferred eliminated path to winner instead
             prefElim.status='winning';prefElim.label=prefElim.label.replace(/\(.*?\)/,'(Recommended — Pre-order ✓)');
             cands.forEach(function(cd){cd.status='eliminated';cd.content+='\nNot selected: client preference for '+gpuPref+' — recommended SKU requires pre-order.';});
-            cands=[];// skip normal candidate winner logic below
+            cands=[];
           }
         }
       }
@@ -1708,11 +1761,12 @@ async function runAgent1(){
   document.getElementById('confCard').style.display='none';document.getElementById('out1').style.display='none';
   try{
     let p;
-    if(useApi){
+    var canUseApi=ZN_API_KEY&&getApiMode()!=='mock';
+    if(canUseApi){
       const sys='You are the Discovery Agent for Zillion Network, a GPU infrastructure company. Your job is to extract actionable deal intelligence from meeting notes, transcripts, or Granola summaries.\n\nZILLION BUSINESS:\n- Sells GPU servers (RTX 4090, 5090, Pro 6000 SE, A100, H100)\n- Colocation hosting at Irvine CA, Dallas TX, Ashburn VA ($448/kW/mo, $2,240/mo per 8-GPU server)\n- 24/7 L3 managed support (<15min incident, <4hr HW replacement)\n- GPU-as-a-Service leasing ($1.25-1.42/GPU/hr 12-mo)\n- Cluster architectures: PCIe passthrough (CX6 100GbE) vs MGX CX8 (800GbE, training-optimized)\n\nBUSINESS WORKFLOW STAGES (identify which stage this deal is in):\n1. Demand Discovery — initial contact, understanding the client need\n2. Tech Discussion — architecture alignment, workload profiling, GPU selection\n3. POC/Evaluation — proof-of-concept, benchmark testing\n4. Contract Negotiation — pricing, terms, SLA commitments\n5. Deal Closing — PO, MSA signing\n6. Service Delivery — deployment, monitoring, ongoing ops\n\nPAST DEAL PATTERNS:\n- Pharma/biomedical AI: $150-220K, VRAM-sensitive, NVLink critical (Ab Initia Labs $2M, Vertex Genomics $94K)\n- Foundation model training: $500K-1M+, cage deployment (Helios $892K)\n- Inference: $100-300K, latency-sensitive (NovaStar AI $312K)\n- Managed services: multi-cluster worldwide ops (Cudo Ventures 4,096 GPUs)\n- Lost deals: budget mismatch, edge/self-managed low-fit (CloudMind $76K lost)\n\nINPUT HANDLING:\n- The input may be raw meeting notes, Granola AI summaries, email chains, Slack threads, or mixed sources\n- EMAIL CHAINS: Reconstruct the deal timeline chronologically. Extract every pricing proposal and counter-offer with exact numbers. Identify stakeholders by email domain (e.g., @abinitialabs.com = client, @zillion.network = Zillion team). Track how requirements evolved across messages (e.g., started with 1 server, expanded to 8-node cluster). Flag outstanding action items that have not been addressed in later messages. Look for competitor mentions (Exxact, Lambda, CoreWeave, etc.) and the client price expectations.\n- Granola summaries often miss granular technical details — infer from context where possible\n- Flag anything ambiguous as a follow-up question for the sales team\n\nReturn ONLY valid JSON (no markdown, no backticks):\n{"client_name":"","budget":"$X – $Y or Unknown","gpu_preference":"specific GPU or Best fit","workflow":"Training/Inference/Hybrid/Managed Services","timeline":"","deal_stage":"Discovery/Tech Discussion/POC/Negotiation/Closing/Delivery","business_model":"2-3 sentences about the client business and why they need compute","rag_classification":"workload type — matched against Zillion past deals","key_requirements":["req1","req2","req3"],"follow_up_questions":["question the sales team should ask next"],"competitive_intel":"any competitors mentioned or implied","confidence":{"score":7.5,"label":"High/Moderate/Low Confidence","reasoning":"explain your confidence level, reference similar past Zillion deals","matched_deals":["Ab Initia Labs — $2M ✓","similar deal — $XK status"]}}\n\nBe precise. Extract everything you can. Flag what you cannot determine as follow-up questions.';
       const usr='Extract constraints from:\n\n'+inp+(fb?'\n\nReviewer feedback: '+fb:'');
       const raw=await callClaude(sys,usr,"discovery");p=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    } else {await mockDelay(fb?1800:1400);p=MOCK_R1;}
+    } else {await mockDelay(fb?1800:1400);p=MOCK_R1;showValidation('val1','info','Using sample data — configure your API key in ⚙ Settings for real extraction.');}
     r1=p;
     document.getElementById('cBudget').textContent=p.budget;document.getElementById('cGpu').textContent=p.gpu_preference;
     document.getElementById('cWorkflow').textContent=p.workflow;document.getElementById('cTimeline').textContent=p.timeline;
@@ -1759,9 +1813,36 @@ async function runAgent2(){
   document.getElementById('totPaths').innerHTML='';document.getElementById('out2').style.display='none';document.getElementById('out2body').textContent='';document.getElementById('recBar').classList.remove('visible');
   try{
     let totPaths,recommendation;
-    if(useApi){
+    var canUseApi=ZN_API_KEY&&getApiMode()!=='mock';
+    if(canUseApi){
       const liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
-      const invStr=liveInv.map(i=>i.sku+': '+(i.name||'')+' | '+(i.gpu||'')+' | '+(i.vram||0)+'GB VRAM | $'+(i.price||0).toLocaleString()+' | Stock: '+(i.stock||0)+' | '+(i.rackU||1)+'U | '+(i.power||0)+'kW | Arch: '+(i.arch||'unknown')).join('\n');
+      var invStr;
+      if(liveInv.length>0&&(liveInv[0].dc||liveInv[0].status||liveInv[0].assignedTo)){
+        // Fleet format — detailed summary with reallocation opportunities
+        var models={};liveInv.forEach(function(s){
+          var m=s.model||s.label||'Unknown';
+          if(!models[m])models[m]={total:0,available:0,assigned:0,dcs:{},cpus:[],types:[]};
+          models[m].total++;
+          var isAvail=!(s.assignedTo||'').trim();
+          if(isAvail)models[m].available++;else models[m].assigned++;
+          var dc=s.dc||'unknown';if(!models[m].dcs[dc])models[m].dcs[dc]={total:0,avail:0};
+          models[m].dcs[dc].total++;if(isAvail)models[m].dcs[dc].avail++;
+          if(s.cpu&&models[m].cpus.indexOf(s.cpu)<0)models[m].cpus.push(s.cpu);
+          var typ=s.status||'Unknown';if(models[m].types.indexOf(typ)<0)models[m].types.push(typ);
+        });
+        var totalAvail=Object.values(models).reduce(function(s,m){return s+m.available;},0);
+        invStr='FLEET INVENTORY ('+liveInv.length+' servers, '+totalAvail+' available for reallocation):\n';
+        invStr+=Object.keys(models).map(function(m){
+          var g=models[m];
+          var dcBreak=Object.keys(g.dcs).map(function(dc){return dc+': '+g.dcs[dc].avail+'/'+g.dcs[dc].total+' avail';}).join(', ');
+          return m+': '+g.total+' total ('+g.available+' available, '+g.assigned+' assigned) | Type: '+g.types.join('/')+' | CPU: '+(g.cpus[0]||'N/A')+' | DCs: '+dcBreak;
+        }).join('\n');
+        invStr+='\n\nNOTE: Available fleet servers can be reallocated to new clients immediately (colo cost only, no hardware purchase). Always consider fleet reallocation before recommending new hardware purchases.';
+        // Also append catalog for new purchases
+        invStr+='\n\nNEW PURCHASE CATALOG:\n'+INVENTORY.map(function(i){return i.sku+': '+i.name+' | '+i.vram+'GB VRAM | $'+i.price.toLocaleString()+' | Stock: '+i.stock;}).join('\n');
+      } else {
+        invStr=liveInv.map(i=>i.sku+': '+(i.name||'')+' | '+(i.gpu||'')+' | '+(i.vram||0)+'GB VRAM | $'+(i.price||0).toLocaleString()+' | Stock: '+(i.stock||0)+' | '+(i.rackU||1)+'U | '+(i.power||0)+'kW | Arch: '+(i.arch||'unknown')).join('\n');
+      }
       const pastStr=PAST_DEALS.map(d=>d.client+': $'+(d.amount?d.amount.toLocaleString():'N/A')+', '+d.gpus+' GPUs ('+d.gpu+'), '+d.status+', '+d.type).join('\n');
       const compStr='COMPETITIVE LANDSCAPE (reference if client mentions competitors):\n'+Object.keys(COMPETITIVE_INTEL.competitors).map(k=>{var c=COMPETITIVE_INTEL.competitors[k];return '- '+k+' ('+c.tier+'): Weaknesses: '+c.weaknesses;}).join('\n')+'\nZillion differentiators: '+COMPETITIVE_INTEL.zillionEdge.join('; ');
       const sys='You are the Architect Agent for Zillion Network. Evaluate hardware paths using Tree-of-Thought reasoning.\n\nZILLION ARCHITECTURE KNOWLEDGE:\n- PCIe Passthrough: GPU->CPU PCIe root->NIC. Budget-friendly. CX6 100GbE. 25Gbps/GPU effective. Best for inference/dev, small clusters.\n- MGX CX8 Switch Board: GPU->PCIe Gen6 switch->CX8 SuperNIC 800GbE. CPU bypassed. 400Gbps/GPU. Best for multi-node training at scale.\n- Leaf-Spine fabric options:\n  * Passthrough: Mellanox SN2700 32×100GbE leaf ($12K) + SN2700/SN3700 spine ($15K) + 1GbE mgmt ($800). Total ~$79K for 16 nodes.\n  * CX8: NVIDIA SN5600 64×800GbE leaf ($35K) + SN5600 spine ($35K) + 1GbE mgmt ($800). Total ~$211K for 16 nodes.\n- Colo: $448/kW/month metered power. DCs: Irvine CA, Dallas TX, Ashburn VA.\n- SLA: '+COLO_DATA.sla.network+' network, '+COLO_DATA.sla.power+' power, '+COLO_DATA.sla.incidentResponse+' incident, '+COLO_DATA.sla.hwReplacement+' HW swap\n- Deployment: '+COLO_DATA.deploymentTimeline+'\n- Software: '+COLO_DATA.softwareStack.slice(0,6).join(', ')+'\n- Bulk discount: 5% for multi-node orders. Lease tiers: 8 GPU $1.42/hr, 64 GPU $1.35/hr, 128 GPU $1.25/hr (12-mo)\n\n'+compStr+'\n\nPAST DEALS:\n'+pastStr+'\n\nINVENTORY:\n'+invStr+'\n\nReturn ONLY valid JSON (no markdown, no backticks):\n{"paths":[{"label":"Path A — Desc","status":"eliminated|winning","content":"multi-line: nodes, cost, VRAM, rack U, power, colo $/mo, interconnect, stock risk","score":"Score: X.X/10"}],"recommendation":"FINAL RECOMMENDATION with: hardware, quantity, cost, rack & facility plan, colo monthly, SLA summary, justification, risks. If client mentioned a competitor, include a brief comparison highlighting Zillion advantages."}\n\nRules:\n- Evaluate 4-8 paths covering different SKUs. Exactly ONE must be "winning".\n- For each path: total cost, VRAM, rack U, power kW, colo $/mo ($448×kW), stock availability.\n- If client mentions Lambda/CoreWeave/AWS/etc, reference competitive intel in recommendation.\n- No AI fluff. Technical precision.';
@@ -1791,7 +1872,8 @@ async function runAgent3(){
   const b=document.getElementById('out3body');b.classList.remove('out-empty');b.contentEditable='false';b.textContent='Drafting client-facing proposal…';document.getElementById('proposalBar').classList.remove('visible');
   try{
     let text;
-    if(useApi){
+    var canUseApi=ZN_API_KEY&&getApiMode()!=='mock';
+    if(canUseApi){
       const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.\n\nBRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n9. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n10. ## Deployment Timeline (table using 3-week Zillion pipeline)\n11. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n12. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
       const usr='Generate a complete proposal from:\n\nClient Constraints:\n'+JSON.stringify(r1,null,2)+'\n\nHardware Recommendation:\n'+r2;
       text=await callClaude(sys,usr,"writer");
@@ -2081,27 +2163,53 @@ function invSave(){try{localStorage.setItem('zn_inventory',JSON.stringify(_invDa
 function invRender(){
   if(!_invData)invLoad();
   var tb=document.getElementById('invTableBody');if(!tb)return;
-  // Stats
-  var total=_invData.length;var inStock=_invData.filter(function(i){return i.stock>3;}).length;
-  var low=_invData.filter(function(i){return i.stock>0&&i.stock<=3;}).length;
-  var out=_invData.filter(function(i){return i.stock===0;}).length;
-  var els={invStatTotal:total,invStatInStock:inStock,invStatLow:low,invStatOut:out};
+  var total=_invData.length;
+  var rented=_invData.filter(function(i){return(i.status||'').match(/rental|租用/i);}).length;
+  var owned=_invData.filter(function(i){return(i.status||'').match(/owned|自用/i);}).length;
+  var assigned=_invData.filter(function(i){return(i.assignedTo||'').trim().length>0;}).length;
+  var available=total-assigned;
+  var els={invStatTotal:total,invStatInStock:available+' avail',invStatLow:rented+' rental',invStatOut:owned+' owned'};
   Object.keys(els).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=els[id];});
-  // Table
+  // Detect format: fleet (has dc/status/assignedTo) vs catalog (has price/stock/vram)
+  var isFleet=_invData.length>0&&(_invData[0].dc||_invData[0].status||_invData[0].assignedTo);
+  // Update table headers dynamically
+  var thead=tb.closest('table').querySelector('thead tr');
+  if(isFleet){
+    thead.innerHTML='<th>Label</th><th>Model</th><th>DC</th><th>Status</th><th>Assigned To</th><th>CPU</th><th>Memory</th><th>IP</th><th>Notes</th><th></th>';
+  } else {
+    thead.innerHTML='<th>SKU</th><th>Name</th><th>GPU</th><th>VRAM</th><th>Price</th><th>Stock</th><th>Rack U</th><th>Power</th><th>Arch</th><th></th>';
+  }
   tb.innerHTML=_invData.map(function(item,idx){
-    var sc=item.stock===0?'s-out':item.stock<=3?'s-low':'s-ok';
-    return '<tr data-idx="'+idx+'">'
-      +'<td contenteditable="true" data-field="sku" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.sku||''))+'</td>'
-      +'<td contenteditable="true" data-field="name" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.name||''))+'</td>'
-      +'<td contenteditable="true" data-field="gpu" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.gpu||''))+'</td>'
-      +'<td contenteditable="true" data-field="vram" onblur="invCellEdit(this)" spellcheck="false">'+item.vram+'</td>'
-      +'<td contenteditable="true" data-field="price" onblur="invCellEdit(this)" spellcheck="false">$'+(item.price||0).toLocaleString()+'</td>'
-      +'<td class="'+sc+'" contenteditable="true" data-field="stock" onblur="invCellEdit(this)" spellcheck="false">'+item.stock+'</td>'
-      +'<td contenteditable="true" data-field="rackU" onblur="invCellEdit(this)" spellcheck="false">'+item.rackU+'</td>'
-      +'<td contenteditable="true" data-field="power" onblur="invCellEdit(this)" spellcheck="false">'+item.power+'</td>'
-      +'<td contenteditable="true" data-field="arch" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.arch||''))+'</td>'
-      +'<td><button onclick="invDeleteRow('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;" title="Delete">✕</button></td>'
-      +'</tr>';
+    if(isFleet){
+      var sc=(item.assignedTo||'').trim()?'s-low':'s-ok';
+      var statusClass=(item.status||'').match(/owned|自用/)?'s-out':(item.status||'').match(/rental|租用/)?'s-low':'s-ok';
+      return '<tr data-idx="'+idx+'">'
+        +'<td contenteditable="true" data-field="label" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.label||item.sku||''))+'</td>'
+        +'<td contenteditable="true" data-field="model" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.model||item.name||''))+'</td>'
+        +'<td contenteditable="true" data-field="dc" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.dc||''))+'</td>'
+        +'<td class="'+statusClass+'" contenteditable="true" data-field="status" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.status||''))+'</td>'
+        +'<td class="'+sc+'" contenteditable="true" data-field="assignedTo" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.assignedTo||''))+'</td>'
+        +'<td contenteditable="true" data-field="cpu" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.cpu||''))+'</td>'
+        +'<td contenteditable="true" data-field="memory" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.memory||''))+'</td>'
+        +'<td contenteditable="true" data-field="ip" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.ip||''))+'</td>'
+        +'<td contenteditable="true" data-field="notes" onblur="invCellEdit(this)" spellcheck="false" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(String(item.notes||'').substring(0,80))+'</td>'
+        +'<td><button onclick="invDeleteRow('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;" title="Delete">✕</button></td>'
+        +'</tr>';
+    } else {
+      var sc=item.stock===0?'s-out':item.stock<=3?'s-low':'s-ok';
+      return '<tr data-idx="'+idx+'">'
+        +'<td contenteditable="true" data-field="sku" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.sku||''))+'</td>'
+        +'<td contenteditable="true" data-field="name" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.name||''))+'</td>'
+        +'<td contenteditable="true" data-field="gpu" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.gpu||''))+'</td>'
+        +'<td contenteditable="true" data-field="vram" onblur="invCellEdit(this)" spellcheck="false">'+item.vram+'</td>'
+        +'<td contenteditable="true" data-field="price" onblur="invCellEdit(this)" spellcheck="false">$'+(item.price||0).toLocaleString()+'</td>'
+        +'<td class="'+sc+'" contenteditable="true" data-field="stock" onblur="invCellEdit(this)" spellcheck="false">'+item.stock+'</td>'
+        +'<td contenteditable="true" data-field="rackU" onblur="invCellEdit(this)" spellcheck="false">'+item.rackU+'</td>'
+        +'<td contenteditable="true" data-field="power" onblur="invCellEdit(this)" spellcheck="false">'+item.power+'</td>'
+        +'<td contenteditable="true" data-field="arch" onblur="invCellEdit(this)" spellcheck="false">'+escHtml(String(item.arch||''))+'</td>'
+        +'<td><button onclick="invDeleteRow('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;" title="Delete">✕</button></td>'
+        +'</tr>';
+    }
   }).join('');
 }
 function invCellEdit(el){
@@ -2219,32 +2327,33 @@ function invImportExcel(input){
         var ws=wb.Sheets[wb.SheetNames[0]];
         var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
         if(rows.length===0){alert('No data found in Excel file.');return;}
-        var headerMap={'标签':'label','主机名':'hostname','分配用户':'user','类型':'type','机房':'datacenter','机柜':'rack','硬件型号':'model','内存大小':'memory','硬盘':'disk','操作系统':'os','备注':'notes','名称':'name','型号':'model','价格':'price','单价':'price','数量':'stock','库存':'stock','显存':'vram','功率':'power','架构':'arch','显卡':'gpu','处理器':'cpu','服务器':'name'};
+        var typeMap={'租用':'Rental','租用 (预装)':'Rental (Pre-installed)','自用':'Owned'};
         var firstRowKeys=Object.keys(rows[0]);
         var isFleet=firstRowKeys.some(function(k){return k.match(/机房|机柜|主机名|分配用户|datacenter|hostname/i);});
         var data=[];
         if(isFleet){
-          var groups={};
           rows.forEach(function(row){
-            var model='',dc='',cpu='',mem='',typ='';
+            var obj={label:'',model:'',dc:'',rack:'',status:'',assignedTo:'',cpu:'',memory:'',ip:'',os:'',notes:''};
             Object.keys(row).forEach(function(key){
-              var val=String(row[key]||'').trim();
-              if(key.match(/硬件型号|model/i))model=val;
-              else if(key.match(/机房|datacenter/i))dc=val;
-              else if(key.match(/CPU|处理器/i))cpu=val.replace(/^采集:\s*/,'').substring(0,40);
-              else if(key.match(/内存|memory/i))mem=val.replace(/^采集:\s*/,'').substring(0,30);
-              else if(key.match(/类型|type/i))typ=val;
+              var val=String(row[key]||'').trim().replace(/\n+/g,' ').substring(0,120);
+              if(key.match(/^标签$|^label$/i))obj.label=val;
+              else if(key.match(/硬件型号|^model$/i))obj.model=val;
+              else if(key.match(/机房|datacenter/i))obj.dc=val;
+              else if(key.match(/机柜|^rack$/i))obj.rack=val;
+              else if(key.match(/类型|^type$/i))obj.status=typeMap[val]||val;
+              else if(key.match(/分配用户|assigned|user/i)){var u=val.replace(/\n.*/,'').trim();obj.assignedTo=u.replace(/\(独享\)/,'(Exclusive)').replace(/\(share\)/,'(Shared)');}
+              else if(key.match(/^CPU$/i))obj.cpu=val.replace(/^采集:\s*/,'').replace(/ x \d+$/,'').substring(0,50);
+              else if(key.match(/内存|memory/i))obj.memory=val.replace(/^采集:\s*/,'').substring(0,40);
+              else if(key.match(/IP/i))obj.ip=val.replace(/ \(主\)/,'').split(' ')[0];
+              else if(key.match(/操作系统|^os$/i))obj.os=val;
+              else if(key.match(/备注|notes/i))obj.notes=val.substring(0,80);
             });
-            if(!model)return;
-            var gk=model+'@'+dc;
-            if(!groups[gk])groups[gk]={model:model,dc:dc,cpu:cpu,mem:mem,count:0,types:[]};
-            groups[gk].count++;
-            if(typ&&groups[gk].types.indexOf(typ)<0)groups[gk].types.push(typ);
+            if(obj.label||obj.model)data.push(obj);
           });
-          Object.values(groups).forEach(function(g){
-            data.push({sku:g.model+'-'+g.dc,name:g.model+' ('+g.dc+')',gpu:g.cpu||g.model,vram:0,price:0,stock:g.count,rackU:1,power:0,arch:g.types.join(', ')||g.dc});
-          });
-          alert('Fleet inventory: '+rows.length+' servers imported as '+data.length+' SKU groups.');
+          var rented=data.filter(function(d){return d.status==='Rental';}).length;
+          var owned=data.filter(function(d){return d.status==='Owned';}).length;
+          var assigned=data.filter(function(d){return d.assignedTo;}).length;
+          alert('Imported '+data.length+' servers ('+rented+' rental, '+owned+' owned, '+assigned+' assigned to customers).');
         } else {
           rows.forEach(function(row){
             var obj={sku:'',name:'',gpu:'',vram:0,price:0,stock:0,rackU:1,power:0,arch:'passthrough'};
