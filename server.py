@@ -33,11 +33,13 @@ DB_PATH = Path("zillion.db")
 # Simple auth token — set ZN_AUTH_TOKEN env var, or defaults to hash of API key
 AUTH_TOKEN = os.getenv("ZN_AUTH_TOKEN", hashlib.sha256((ANTHROPIC_API_KEY or "zillion").encode()).hexdigest()[:32])
  
-app = FastAPI(title="Zillion Proposal Engine API", version="1.0")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+ 
+app = FastAPI(title="Zillion Proposal Engine API", version="1.1")
  
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tighten to your Netlify domain in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -136,6 +138,33 @@ def get_db():
     finally:
         conn.close()
  
+# ═══ RATE LIMITING ═══
+_rate_store = {}  # ip -> [timestamp, timestamp, ...]
+RATE_LIMIT = 20  # requests per minute
+RATE_WINDOW = 60  # seconds
+ 
+def check_rate_limit(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    if ip not in _rate_store:
+        _rate_store[ip] = []
+    _rate_store[ip] = [t for t in _rate_store[ip] if now - t < RATE_WINDOW]
+    if len(_rate_store[ip]) >= RATE_LIMIT:
+        raise HTTPException(429, f"Rate limit exceeded. Max {RATE_LIMIT} requests per minute.")
+    _rate_store[ip].append(now)
+ 
+# ═══ INPUT SANITIZATION ═══
+MAX_PROMPT_LENGTH = 50000  # 50KB max per prompt field
+BLOCKED_PATTERNS = ["ignore above", "forget instructions", "system prompt", "you are now"]
+ 
+def sanitize_prompt(text: str) -> str:
+    if len(text) > MAX_PROMPT_LENGTH:
+        text = text[:MAX_PROMPT_LENGTH]
+    for pattern in BLOCKED_PATTERNS:
+        if pattern.lower() in text.lower():
+            text = text.replace(pattern, "[filtered]")
+    return text
+ 
 # ═══ MODELS ═══
 class AgentRequest(BaseModel):
     system_prompt: str
@@ -184,13 +213,19 @@ class InventoryItem(BaseModel):
  
 # ═══ CLAUDE API PROXY ═══
 @app.post("/api/agent/{agent_name}")
-async def run_agent(agent_name: str, req: AgentRequest, _=Depends(verify_token)):
+async def run_agent(agent_name: str, req: AgentRequest, request: Request, _=Depends(verify_token)):
+    check_rate_limit(request)
     if not ANTHROPIC_API_KEY:
         raise HTTPException(500, "ANTHROPIC_API_KEY not configured")
     if agent_name not in ("discovery", "architect", "writer"):
         raise HTTPException(400, f"Unknown agent: {agent_name}")
  
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    # Sanitize inputs
+    system = sanitize_prompt(req.system_prompt)
+    user_msg = sanitize_prompt(req.user_message)
+    max_tok = min(req.max_tokens, 8000)  # Cap tokens
+ 
+    async with httpx.AsyncClient(timeout=120.0) as client:
         try:
             resp = await client.post(
                 ANTHROPIC_URL,
@@ -201,9 +236,9 @@ async def run_agent(agent_name: str, req: AgentRequest, _=Depends(verify_token))
                 },
                 json={
                     "model": MODEL,
-                    "max_tokens": req.max_tokens,
-                    "system": req.system_prompt,
-                    "messages": [{"role": "user", "content": req.user_message}],
+                    "max_tokens": max_tok,
+                    "system": system,
+                    "messages": [{"role": "user", "content": user_msg}],
                 },
             )
             resp.raise_for_status()
