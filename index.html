@@ -1345,7 +1345,7 @@ function updateApiIndicator(){
 }
 
 /* ═══ SETTINGS MODAL ═══ */
-function openSettings(){document.getElementById('settingsModal').classList.remove('hidden');}
+function openSettings(){document.getElementById('settingsModal').classList.remove('hidden');setTimeout(function(){if(!ZN_API_KEY){var f=document.getElementById('settingsApiKey');if(f)f.focus();}},100);}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden');}
 function saveSettings(){
   var key=document.getElementById('settingsApiKey').value.trim();
@@ -1370,49 +1370,54 @@ function loadSettingsIntoModal(){
 /* ═══ CLAUDE API — Direct or Proxy with timeout + retry ═══ */
 async function callClaude(sys,usr,agentName){
   agentName=agentName||'discovery';
+  
+  if(!ZN_API_KEY&&!(API_BASE&&getApiMode()==='proxy')){
+    throw new Error('NEEDS_API_KEY');
+  }
+  
   var body=JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:sys,messages:[{role:'user',content:usr}]});
   
-  // Build ordered list of API paths to try
-  var apiPaths=[];
+  // Determine which path to use
+  var url,headers,reqBody;
   if(API_BASE&&getApiMode()==='proxy'){
-    apiPaths.push({name:'proxy',url:API_BASE+'/api/agent/'+agentName,headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('zn_auth_token')||'')},body:JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:4000})});
+    url=API_BASE+'/api/agent/'+agentName;
+    headers={'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('zn_auth_token')||'')};
+    reqBody=JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:4000});
+  } else {
+    url='https://api.anthropic.com/v1/messages';
+    headers={'Content-Type':'application/json','x-api-key':ZN_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+    reqBody=body;
   }
-  if(ZN_API_KEY){
-    apiPaths.push({name:'direct',url:'https://api.anthropic.com/v1/messages',headers:{'Content-Type':'application/json','x-api-key':ZN_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:body});
-  }
-  // Built-in artifact API — always try as last resort
-  apiPaths.push({name:'artifact',url:'https://api.anthropic.com/v1/messages',headers:{'Content-Type':'application/json'},body:body});
-
-  var errors=[];
-  for(var pi=0;pi<apiPaths.length;pi++){
-    var p=apiPaths[pi];
+  
+  var maxRetries=2;
+  for(var attempt=0;attempt<=maxRetries;attempt++){
     try{
-      console.log('[callClaude] Trying path: '+p.name+' for agent: '+agentName);
+      console.log('[callClaude] '+agentName+' attempt '+(attempt+1)+'/3');
       var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('Timed out after 120s'));},120000);});
-      var r=await Promise.race([fetch(p.url,{method:'POST',headers:p.headers,body:p.body}),timeout]);
-      console.log('[callClaude] '+p.name+' responded: '+r.status);
+      var r=await Promise.race([fetch(url,{method:'POST',headers:headers,body:reqBody}),timeout]);
+      console.log('[callClaude] '+agentName+' status: '+r.status);
       if(!r.ok){
         var errText=await r.text().catch(function(){return '';});
-        var errMsg=p.name+' returned '+r.status;
-        if(errText){try{var ej=JSON.parse(errText);errMsg+=': '+(ej.error&&ej.error.message?ej.error.message:errText.substring(0,100));}catch(x){errMsg+=': '+errText.substring(0,100);}}
-        errors.push(errMsg);
-        if(r.status>=500){await new Promise(function(ok){setTimeout(ok,2000);});} // brief wait before next path
-        continue;
+        if(r.status===401)throw new Error('Invalid API key. Check your key in ⚙ Settings.');
+        if(r.status===429&&attempt<maxRetries){await new Promise(function(ok){setTimeout(ok,3000);});continue;}
+        if(r.status>=500&&attempt<maxRetries){await new Promise(function(ok){setTimeout(ok,2000);});continue;}
+        var errMsg='API error '+r.status;
+        if(errText){try{var ej=JSON.parse(errText);if(ej.error&&ej.error.message)errMsg+=': '+ej.error.message;}catch(x){errMsg+=': '+errText.substring(0,100);}}
+        throw new Error(errMsg);
       }
       var d=await r.json();
       if(d.content&&Array.isArray(d.content)){var txt=d.content.map(function(b){return b.text||'';}).join('');if(txt)return txt;}
       if(d.text)return d.text;
-      errors.push(p.name+': empty response');
+      throw new Error('Empty response from API');
     }catch(err){
-      console.log('[callClaude] '+p.name+' error: '+err.message);
-      errors.push(p.name+': '+err.message);
+      console.log('[callClaude] '+agentName+' error: '+err.message);
+      if(err.message&&err.message.indexOf('Failed to fetch')>=0&&attempt<maxRetries){
+        await new Promise(function(ok){setTimeout(ok,2000);});continue;
+      }
+      if(attempt>=maxRetries)throw err;
     }
   }
-  // All paths failed — build helpful error message
-  var helpMsg='API call failed.';
-  if(errors.length>0)helpMsg+='\n'+errors.join('\n');
-  if(!ZN_API_KEY)helpMsg+='\nTip: Click ⚙ Settings and add your Anthropic API key for reliable access.';
-  throw new Error(helpMsg);
+  throw new Error('All retry attempts failed for '+agentName);
 }
 
 /* ═══ EDIT DELTA LOGGING (RLHF signal — stores locally when no backend) ═══ */
@@ -1756,6 +1761,12 @@ async function runAgent1(){
     }catch(apiErr){
       agentRunning=false;stopProgress(prog1);
       var msg=apiErr.message||'Unknown error';
+      if(msg==='NEEDS_API_KEY'){
+        loadSettingsIntoModal();openSettings();
+        showValidation('val1','info','One-time setup: paste your Anthropic API key in Settings (the modal just opened) and click Save. Get a key at console.anthropic.com/settings/keys');
+        err('s1d','s1s','btn1','Run Discovery Agent →','API key needed — see Settings');
+        return;
+      }
       showValidation('val1','error','Agent failed: '+msg);
       err('s1d','s1s','btn1','Run Discovery Agent →',msg);
       return;
