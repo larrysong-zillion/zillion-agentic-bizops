@@ -1,3 +1,6 @@
+
+Copy
+
 """
 Zillion Network — AI Proposal Engine Backend
 =============================================
@@ -32,6 +35,7 @@ MODEL = "claude-sonnet-4-20250514"
 DB_PATH = Path("zillion.db")
 # Simple auth token — set ZN_AUTH_TOKEN env var, or defaults to hash of API key
 AUTH_TOKEN = os.getenv("ZN_AUTH_TOKEN", hashlib.sha256((ANTHROPIC_API_KEY or "zillion").encode()).hexdigest()[:32])
+BACKUP_AUTH_TOKEN = os.getenv("ZN_BACKUP_AUTH_TOKEN", "")  # for rotation without downtime
  
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
  
@@ -51,7 +55,8 @@ async def verify_token(authorization: Optional[str] = Header(None)):
         return True
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(401, "Missing or invalid Authorization header")
-    if authorization.split(" ", 1)[1] != AUTH_TOKEN:
+    token = authorization.split(" ", 1)[1]
+    if token != AUTH_TOKEN and (not BACKUP_AUTH_TOKEN or token != BACKUP_AUTH_TOKEN):
         raise HTTPException(403, "Invalid token")
     return True
  
@@ -124,6 +129,20 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS call_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts TEXT DEFAULT CURRENT_TIMESTAMP,
+            agent TEXT,
+            input_chars INTEGER,
+            output_chars INTEGER,
+            input_tokens INTEGER,
+            output_tokens INTEGER,
+            ip TEXT,
+            key_source TEXT,
+            success INTEGER,
+            error TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_call_log_ts ON call_log(ts);
         """)
  
 @contextmanager
@@ -138,20 +157,20 @@ def get_db():
     finally:
         conn.close()
  
-# ═══ RATE LIMITING ═══
-_rate_store = {}  # ip -> [timestamp, timestamp, ...]
-RATE_LIMIT = 20  # requests per minute
+# ═══ RATE LIMITING (per-key when user-provided, per-IP for shared key) ═══
+_rate_store = {}  # key -> [timestamp, ...]
+RATE_LIMIT = int(os.getenv("RATE_LIMIT", "20"))  # requests per minute
 RATE_WINDOW = 60  # seconds
  
-def check_rate_limit(request: Request):
-    ip = request.client.host if request.client else "unknown"
+def check_rate_limit(request: Request, key_id: str):
+    """key_id is hash of user key OR 'shared' OR IP."""
     now = time.time()
-    if ip not in _rate_store:
-        _rate_store[ip] = []
-    _rate_store[ip] = [t for t in _rate_store[ip] if now - t < RATE_WINDOW]
-    if len(_rate_store[ip]) >= RATE_LIMIT:
-        raise HTTPException(429, f"Rate limit exceeded. Max {RATE_LIMIT} requests per minute.")
-    _rate_store[ip].append(now)
+    if key_id not in _rate_store:
+        _rate_store[key_id] = []
+    _rate_store[key_id] = [t for t in _rate_store[key_id] if now - t < RATE_WINDOW]
+    if len(_rate_store[key_id]) >= RATE_LIMIT:
+        raise HTTPException(429, f"Rate limit exceeded. Max {RATE_LIMIT} requests per minute per key.")
+    _rate_store[key_id].append(now)
  
 # ═══ INPUT SANITIZATION ═══
 MAX_PROMPT_LENGTH = 50000  # 50KB max per prompt field
@@ -211,19 +230,45 @@ class InventoryItem(BaseModel):
     colo: float
     arch: str
  
-# ═══ CLAUDE API PROXY ═══
+# ═══ CLAUDE API PROXY (supports both shared key and per-user keys) ═══
 @app.post("/api/agent/{agent_name}")
-async def run_agent(agent_name: str, req: AgentRequest, request: Request, _=Depends(verify_token)):
-    check_rate_limit(request)
-    if not ANTHROPIC_API_KEY:
-        raise HTTPException(500, "ANTHROPIC_API_KEY not configured")
+async def run_agent(
+    agent_name: str,
+    req: AgentRequest,
+    request: Request,
+    x_user_api_key: Optional[str] = Header(None, alias="X-User-Api-Key"),
+    _=Depends(verify_token),
+):
     if agent_name not in ("discovery", "architect", "writer"):
         raise HTTPException(400, f"Unknown agent: {agent_name}")
+ 
+    # Determine which key to use: user-provided overrides shared
+    api_key = x_user_api_key.strip() if x_user_api_key else ANTHROPIC_API_KEY
+    key_source = "user" if x_user_api_key else "shared"
+    if not api_key:
+        raise HTTPException(400, "No API key available. Provide X-User-Api-Key header or set ANTHROPIC_API_KEY.")
+ 
+    # Validate key shape (basic guard against accidental empty/garbage values)
+    if not api_key.startswith("sk-ant-"):
+        raise HTTPException(400, "Invalid API key format.")
+ 
+    # Rate limit per-key (user keys self-limit, shared key falls back to IP)
+    if key_source == "user":
+        rate_id = "u_" + hashlib.sha256(api_key.encode()).hexdigest()[:16]
+    else:
+        rate_id = "shared_" + (request.client.host if request.client else "unknown")
+    check_rate_limit(request, rate_id)
  
     # Sanitize inputs
     system = sanitize_prompt(req.system_prompt)
     user_msg = sanitize_prompt(req.user_message)
-    max_tok = min(req.max_tokens, 8000)  # Cap tokens
+    max_tok = min(req.max_tokens, 8000)
+ 
+    ip = request.client.host if request.client else "unknown"
+    success = 0
+    error_msg = None
+    out_text = ""
+    in_tok = out_tok = 0
  
     async with httpx.AsyncClient(timeout=120.0) as client:
         try:
@@ -231,7 +276,7 @@ async def run_agent(agent_name: str, req: AgentRequest, request: Request, _=Depe
                 ANTHROPIC_URL,
                 headers={
                     "Content-Type": "application/json",
-                    "x-api-key": ANTHROPIC_API_KEY,
+                    "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
                 },
                 json={
@@ -243,12 +288,28 @@ async def run_agent(agent_name: str, req: AgentRequest, request: Request, _=Depe
             )
             resp.raise_for_status()
             data = resp.json()
-            text = "".join(b.get("text", "") for b in data.get("content", []))
-            return {"text": text, "model": MODEL, "agent": agent_name}
+            out_text = "".join(b.get("text", "") for b in data.get("content", []))
+            usage = data.get("usage", {})
+            in_tok = usage.get("input_tokens", 0)
+            out_tok = usage.get("output_tokens", 0)
+            success = 1
+            return {"text": out_text, "model": MODEL, "agent": agent_name, "key_source": key_source}
         except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP {e.response.status_code}: {e.response.text[:200]}"
             raise HTTPException(e.response.status_code, f"Anthropic API error: {e.response.text[:500]}")
         except Exception as e:
+            error_msg = str(e)[:200]
             raise HTTPException(500, f"Agent call failed: {str(e)}")
+        finally:
+            # Audit log every call
+            try:
+                with get_db() as db:
+                    db.execute(
+                        "INSERT INTO call_log (agent, input_chars, output_chars, input_tokens, output_tokens, ip, key_source, success, error) VALUES (?,?,?,?,?,?,?,?,?)",
+                        (agent_name, len(system) + len(user_msg), len(out_text), in_tok, out_tok, ip, key_source, success, error_msg)
+                    )
+            except Exception:
+                pass
  
 # ═══ PROPOSALS CRUD ═══
 @app.get("/api/proposals")
@@ -376,6 +437,42 @@ async def seed_inventory(_=Depends(verify_token)):
     return {"status": "seeded", "count": len(default_inventory)}
  
 # ═══ DEAL INTELLIGENCE ═══
+ 
+@app.get("/api/usage/stats")
+async def usage_stats(_=Depends(verify_token)):
+    """Audit summary — last 24h calls, costs, errors, top users."""
+    with get_db() as db:
+        last_24h = db.execute("""
+            SELECT
+                COUNT(*) as total_calls,
+                SUM(CASE WHEN success=1 THEN 1 ELSE 0 END) as successful,
+                SUM(CASE WHEN success=0 THEN 1 ELSE 0 END) as failed,
+                SUM(input_tokens) as total_input_tokens,
+                SUM(output_tokens) as total_output_tokens,
+                SUM(CASE WHEN key_source='shared' THEN 1 ELSE 0 END) as shared_key_calls,
+                SUM(CASE WHEN key_source='user' THEN 1 ELSE 0 END) as user_key_calls
+            FROM call_log WHERE ts >= datetime('now', '-1 day')
+        """).fetchone()
+        by_agent = db.execute("""
+            SELECT agent, COUNT(*) as calls, AVG(output_tokens) as avg_out_tokens
+            FROM call_log WHERE ts >= datetime('now', '-1 day')
+            GROUP BY agent
+        """).fetchall()
+        recent_errors = db.execute("""
+            SELECT ts, agent, error FROM call_log
+            WHERE success=0 AND ts >= datetime('now', '-1 day')
+            ORDER BY ts DESC LIMIT 10
+        """).fetchall()
+    # Rough cost estimate using Sonnet 4 pricing: $3/M input, $15/M output
+    total_in = (last_24h["total_input_tokens"] or 0)
+    total_out = (last_24h["total_output_tokens"] or 0)
+    est_cost_usd = (total_in * 3.0 / 1_000_000) + (total_out * 15.0 / 1_000_000)
+    return {
+        "last_24h": dict(last_24h),
+        "by_agent": [dict(r) for r in by_agent],
+        "recent_errors": [dict(r) for r in recent_errors],
+        "estimated_cost_usd_24h": round(est_cost_usd, 3),
+    }
  
 # ═══ FLEET INVENTORY ═══
 class FleetServer(BaseModel):
