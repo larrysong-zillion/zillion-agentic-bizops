@@ -25,7 +25,7 @@ The **Discovery Agent** ("The Listener") extracts client constraints: budget, GP
  
 ### Who built this
  
-Engineering by **Larry Song** with sponsorship from CEO **Xander Wu**. Operations review by **Yuhan Ma**. Built using Claude (Anthropic Sonnet 4) as the LLM backbone — model-agnostic by design so we can A/B test Qwen and Gemini once we have baseline metrics from real customer transcripts.
+Engineering by **Larry Song** with sponsorship from CEO **Xander Wu**. Operations review by **Yuhan Ma**. Built using Claude (Anthropic Sonnet 4) as the LLM backbone — model-agnostic by design.
  
 ### Where it fits in the Zillion stack
  
