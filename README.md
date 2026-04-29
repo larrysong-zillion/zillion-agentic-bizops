@@ -92,9 +92,9 @@ A 50-word vague summary like "customer wants GPUs for AI." The agent will produc
  
 ## Feedback Form
  
-After every test session, please fill out the **Bizops Feedback Form** (link pinned in Slack #bizops channel). Takes about 2 minutes. Your input directly shapes prompt tuning and UX priorities.
+After every test session, please fill out the **Bizops Feedback Form** (https://docs.google.com/forms/d/e/1FAIpQLSdDzTonEVcnqT1si6dSmoCEYNycbtcM38-I50eKGQugX_Rn1w/viewform?usp=publish-editor). Takes about 5 minutes. Your input directly shapes prompt tuning and UX priorities.
  
 Especially helpful: specific failure modes ("the agent kept missing budget when it was mentioned in dollars-per-month form"), not generic "extraction was bad" complaints. The more specific the feedback, the faster we can fix it.
  
-For bugs blocking your work, Slack Larry directly. For billing or workspace issues, Slack Xander.
+For bugs blocking your work, slack Larry directly. 
  
