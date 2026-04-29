@@ -634,7 +634,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <span class="zn-wordmark" style="color:#00C47A;">Zillion Network</span>
       </div>
       <div class="home-bar-right">
-        <div style="display:flex;align-items:center;gap:6px;margin-right:12px;"><div id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);"></div><span id="apiStatusText" style="font-size:11px;color:var(--muted);">Mock Mode</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-right:12px;"><div id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);"></div><span id="apiStatusText" style="font-size:11px;color:var(--muted);">Mock Mode</span><span style="font-size:10px;color:rgba(255,255,255,0.25);margin-left:8px;font-family:monospace;" title="Build version — hard refresh (Cmd+Shift+R) if older than today">v2026.04.27</span></div>
         <button onclick="loadSettingsIntoModal();openSettings()" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;margin-right:8px;" title="Settings" aria-label="Open Settings">⚙</button>
         <button class="home-proposals-btn" onclick="goTracker()">
           All Proposals <span class="home-count" id="homeCount">0</span>
@@ -776,6 +776,10 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <div class="edit-bar" id="constraintBar">
         <div class="edit-bar-msg">✏️ Unsaved constraint edits</div>
         <div class="edit-bar-actions"><button class="btn-revert" onclick="revertConstraints()">↺ Revert</button><button class="btn-save" onclick="saveConstraints()">✓ Save</button></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="rerunDiscovery()" id="rerunDiscoveryBtn" style="font-size:11.5px;font-weight:600;padding:6px 12px;border:1px solid var(--border);background:var(--bg);color:var(--ink2);border-radius:var(--r-sm);cursor:pointer;">↺ Re-run Discovery Agent</button>
+        <span style="font-size:11px;color:var(--muted);">Got nonsense? Re-run the agent on your input without resetting the pipeline.</span>
       </div>
 
       <!-- Confidence score -->
@@ -1259,6 +1263,25 @@ function showStorageBadge(state,text){
 /* ═══ VALIDATION ═══ */
 function showValidation(id,type,msg){const el=document.getElementById(id);el.className='validation-msg visible '+type;el.innerHTML='<span class="validation-ico">'+(type==='error'?'⚠️':type==='warn'?'⚡':'ℹ️')+'</span><span>'+msg+'</span>';}
 function hideValidation(id){const el=document.getElementById(id);if(el){el.className='validation-msg';el.innerHTML='';}}
+
+/* ═══ RE-RUN DISCOVERY AGENT — preserves input, clears stale extraction ═══ */
+function rerunDiscovery(){
+  if(agentRunning)return;
+  // Clear the visible extraction but keep the input intact
+  r1=null;
+  document.getElementById('out1').style.display='none';
+  document.getElementById('cBudget').textContent='—';
+  document.getElementById('cGpu').textContent='—';
+  document.getElementById('cWorkflow').textContent='—';
+  document.getElementById('cTimeline').textContent='—';
+  document.getElementById('cDealStage').textContent='—';
+  document.getElementById('cBizModel').textContent='—';
+  var conf=document.getElementById('confCard');if(conf)conf.style.display='none';
+  var di=document.getElementById('dealIntelCard');if(di)di.style.display='none';
+  var gaps=document.getElementById('gapsBanner');if(gaps)gaps.style.display='none';
+  // Re-run with current input
+  runAgent1();
+}
 
 /* ═══ SEND FOR REVIEW ═══ */
 function sendForReview(){
@@ -1987,6 +2010,21 @@ async function runAgent3(){
       b.style.border='';
       if(lowConfBanner)lowConfBanner.style.display='none';
     }
+    // Detect placeholder text that needs filling in before sending
+    var placeholderRegex=/\[(INSERT|TODO|XXX|TBD|PLACEHOLDER|FILL[ _-]?IN|YOUR[ _-]?\w+|\.{3,})[^\]]*\]|\bTBD\b|\bTODO\b|\bXXX\b/gi;
+    var placeholders=text.match(placeholderRegex)||[];
+    var placeholderBanner=document.getElementById('placeholderBanner');
+    if(placeholders.length>0){
+      var unique=[];placeholders.forEach(function(p){if(unique.indexOf(p)<0)unique.push(p);});
+      b.style.border='2px solid var(--red)';
+      if(!placeholderBanner){
+        placeholderBanner=document.createElement('div');placeholderBanner.id='placeholderBanner';
+        placeholderBanner.style.cssText='margin:0 0 12px 0;padding:10px 14px;background:#FEF2F2;border:1px solid #DC2626;border-radius:8px;font-size:12.5px;color:#7F1D1D;font-weight:500;';
+        b.parentNode.insertBefore(placeholderBanner,b);
+      }
+      placeholderBanner.innerHTML='⚠️ Proposal contains placeholder text — review before sending: <span style="font-family:monospace;font-size:11.5px;color:#991B1B;">'+unique.slice(0,5).map(escHtml).join(', ')+(unique.length>5?', +'+(unique.length-5)+' more':'')+'</span>';
+      placeholderBanner.style.display='block';
+    } else if(placeholderBanner){placeholderBanner.style.display='none';}
     document.getElementById('s3d').className='sdot done';document.getElementById('s3s').textContent='Proposal ready — click to edit ✓';document.getElementById('propActions').style.display='block';document.getElementById('splitToggle').style.display='inline-block';agentRunning=false;clearDraft();
   }catch(e){console.error(e);document.getElementById('s3d').className='sdot';document.getElementById('s3s').textContent='Error: '+e.message;b.textContent='Error: '+e.message;agentRunning=false;}
 }
