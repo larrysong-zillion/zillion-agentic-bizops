@@ -1879,9 +1879,14 @@ async function runAgent1(){
   else if(tabName.indexOf('slack')>=0)inp=(document.getElementById('slackInput').value||'').trim();
   else inp=(document.getElementById('txInput').value||'').trim(); // fallback
   hideValidation('val1');
-  const v=validateTranscript(inp);
-  if(!v.valid){showValidation('val1',v.type,v.msg);return;}
-  if(v.msg)showValidation('val1',v.type,v.msg);
+  // Skip transcript validation in mock mode — input is ignored, MOCK_R1 always returns
+  if(getApiMode()!=='mock'){
+    const v=validateTranscript(inp);
+    if(!v.valid){showValidation('val1',v.type,v.msg);agentRunning=false;return;}
+    if(v.msg)showValidation('val1',v.type,v.msg);
+  } else {
+    showValidation('val1','info','⚙ Mock Mode — running on sample data (Acme Research Labs). Switch to Direct mode in Settings to use real input.');
+  }
   const fb=document.getElementById('reprompt1').value.trim();
   busy('s1d','s1s','btn1','Extracting constraints…'+(fb?' (with feedback)':''));
   var prog1=startProgress('s1s',['Analyzing input…','Extracting budget and GPU requirements…','Identifying deal stage and stakeholders…','Generating follow-up questions…','Almost done…']);
