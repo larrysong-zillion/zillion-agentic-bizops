@@ -1180,10 +1180,14 @@ document.addEventListener('keydown',function(e){
 
 /* ═══ STORAGE (localStorage) ═══ */
 const SK='zn_proposals_v5';
+var _snapshotCounter=0;
 function storageSave(){
   showStorageBadge('saving','Saving…');
   // Always save to localStorage as fallback
   try{localStorage.setItem(SK,JSON.stringify(proposals));}catch(e){console.warn('localStorage save failed:',e);}
+  // Auto-snapshot every 5 saves to a redundant key (recovery if main key gets corrupted)
+  _snapshotCounter++;
+  if(_snapshotCounter>=5){_snapshotCounter=0;if(typeof autoSnapshot==='function')autoSnapshot();}
   // Also sync to backend if proxy mode with a real API_BASE
   if(API_BASE&&ZN_API_MODE==='proxy'){
     syncToBackend().then(function(){showStorageBadge('saved','Synced ✓');}).catch(function(){showStorageBadge('saved','Saved locally ✓');});
@@ -1427,8 +1431,11 @@ function updateApiIndicator(){
   var dot=document.getElementById('apiStatusDot');
   var txt=document.getElementById('apiStatusText');
   if(!dot||!txt)return;
-  if(ZN_API_KEY){dot.style.background='var(--green)';txt.textContent='API Connected';}
-  else{dot.style.background='var(--green)';txt.textContent='Ready';}
+  var mode=getApiMode();
+  if(mode==='mock'){dot.style.background='var(--amber)';txt.textContent='Mock Mode (sample data)';}
+  else if(mode==='proxy'){dot.style.background='var(--green)';txt.textContent='Backend Proxy';}
+  else if(ZN_API_KEY){dot.style.background='var(--green)';txt.textContent='API Connected';}
+  else{dot.style.background='var(--amber)';txt.textContent='Setup needed — click ⚙';}
 }
 
 /* ═══ SETTINGS MODAL ═══ */
@@ -1881,6 +1888,12 @@ async function runAgent1(){
   document.getElementById('confCard').style.display='none';document.getElementById('out1').style.display='none';
   try{
     let p;
+    // Mock mode — bypass API entirely, return MOCK_R1 sample
+    if(getApiMode()==='mock'){
+      await mockDelay(1500);
+      p=validateR1(JSON.parse(JSON.stringify(MOCK_R1))); // deep clone so mutations don't pollute
+      stopProgress(prog1);
+    } else {
     try{
       const sys='You are the Discovery Agent for Zillion Network, a GPU infrastructure company. Your job is to extract actionable deal intelligence from meeting notes, transcripts, or Granola summaries.\n\nEXTRACTION PRINCIPLE — extract first, infer second, mark third:\n1. EXTRACT: anything explicitly stated in the input — exact numbers, specific GPU names, named timelines\n2. INFER: obvious implications from context (e.g., "pharma client" → "biomedical AI workload likely") — but never invent specifics like budget numbers or GPU models if not mentioned\n3. MARK: anything you cannot determine confidently goes in the gaps array with a brief reason\n\nDo NOT hallucinate. If budget is not mentioned, set budget="Unknown" and add it to gaps. If no GPU is named, leave gpu_preference empty rather than guessing.\n\nZILLION BUSINESS:\n- Sells GPU servers (RTX 4090, 5090, Pro 6000 SE, A100, H100)\n- Colocation hosting at Irvine CA, Dallas TX, Ashburn VA ($448/kW/mo)\n- 24/7 L3 managed support (<15min incident, <4hr HW replacement)\n- GPU-as-a-Service leasing ($1.25-1.42/GPU/hr 12-mo)\n- Cluster architectures: PCIe passthrough vs MGX CX8 (training-optimized)\n\nBUSINESS WORKFLOW STAGES (identify which stage this deal is in):\n1. Demand Discovery — initial contact, understanding the client need\n2. Tech Discussion — architecture alignment, GPU selection\n3. POC/Evaluation — proof-of-concept, benchmark testing\n4. Contract Negotiation — pricing, terms, SLA commitments\n5. Deal Closing — PO, MSA signing\n6. Service Delivery — deployment, monitoring, ongoing ops\n\nPAST DEAL PATTERNS:\n- Pharma/biomedical AI: $150-220K, VRAM-sensitive, NVLink critical (Ab Initia $2M, Vertex $94K)\n- Foundation model training: $500K-1M+ (Helios $892K)\n- Inference: $100-300K, latency-sensitive (NovaStar $312K)\n- Lost deals: budget mismatch (CloudMind $76K)\n\nINPUT HANDLING:\n- Input may be raw notes, Granola summaries, email chains, or Slack threads\n- EMAIL CHAINS: Reconstruct timeline. Extract every pricing proposal with exact numbers. Identify stakeholders by email domain. Track requirement evolution. Flag competitor mentions (Lambda, CoreWeave, Exxact).\n- Granola summaries may miss technical details — infer carefully, mark gaps\n\nReturn ONLY valid JSON (no markdown, no backticks):\n{"client_name":"","budget":"$X – $Y or Unknown","gpu_preference":"specific GPU or empty","workflow":"Training/Inference/Hybrid/Managed Services","timeline":"","deal_stage":"Discovery/Tech Discussion/POC/Negotiation/Closing/Delivery","business_model":"2-3 sentences about the client business","rag_classification":"workload type matched to Zillion past deals","key_requirements":["explicitly stated requirements"],"follow_up_questions":["specific questions sales team should ask next meeting"],"gaps":[{"field":"budget","reason":"not mentioned in input"}],"low_fit_flags":["budget below $50K floor","self-managed edge deployment","cloud-only billing preference"],"competitive_intel":"competitors mentioned or implied","confidence":{"score":7.5,"label":"High/Moderate/Low Confidence","reasoning":"explain confidence","matched_deals":["similar deal — $XK status"]}}\n\nThe gaps array is REQUIRED. List every field you could not extract or had to infer. Empty gaps array means you extracted everything explicitly.\n\nThe low_fit_flags array signals when a deal is a poor fit for Zillion. Add a flag if ANY of these are true:\n- Budget below $50K (Zillion cost floor for managed services)\n- Edge / self-managed deployment with no colocation\n- Client wants cloud-style hourly billing only (no commitment, no managed)\n- One-off / hobbyist project (no recurring engagement)\n- Workload requires hardware Zillion does not stock (TPUs, AMD MI300, custom ASICs)\nEmpty array = good fit. Non-empty = sales should consider disqualifying or pivoting to colo-only.';
       // Sanitize input to prevent prompt injection
@@ -1908,6 +1921,7 @@ async function runAgent1(){
       err('s1d','s1s','btn1','Run Discovery Agent →',msg);
       return;
     } // end agent 1 API call
+    } // end if(getApiMode()==='mock') else block
     r1=p;
     document.getElementById('cBudget').textContent=p.budget;document.getElementById('cGpu').textContent=p.gpu_preference;
     document.getElementById('cWorkflow').textContent=p.workflow;document.getElementById('cTimeline').textContent=p.timeline;
@@ -1981,6 +1995,12 @@ async function runAgent2(){
     // Detect vague input — if budget AND gpu_preference are both unknown, generate needs assessment
     var isVague=(!r1.budget||r1.budget.match(/unknown|tbd|not sure|exploring/i))&&(!r1.gpu_preference||r1.gpu_preference.match(/^$|unknown|best fit|not sure|tbd/i));
     try{
+      // Mock mode — skip API, use local engine directly with no wasted call attempts
+      if(getApiMode()==='mock'){
+        await mockDelay(800);
+        totPaths=generateToTPaths(r1);
+        recommendation=generateRec(r1,totPaths);
+      } else {
       const liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
       var invStr;
       // Build compact inventory summary (limit to available items to reduce prompt size)
@@ -2014,6 +2034,7 @@ async function runAgent2(){
       const usr='Constraints:\n'+JSON.stringify(r1,null,2)+(fb?'\n\nFeedback: '+fb:'');
       const raw=await callClaude(sys,usr,"architect");const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
       totPaths=parsed.paths||[];recommendation=parsed.recommendation||generateRec(r1,totPaths);
+      } // end if(getApiMode()==='mock') else block
     }catch(apiErr){console.warn('Architect API fallback to local engine:',apiErr.message);totPaths=generateToTPaths(r1);recommendation=generateRec(r1,totPaths);}
     const track=document.getElementById('totPaths');
     for(let i=0;i<totPaths.length;i++){await mockDelay(380);const path=totPaths[i];const el=document.createElement('div');el.className='tot-path '+(path.status==='winning'?'winning':'eliminated');var vramPill=path._vram?'<span style="font-size:11px;font-weight:600;margin-left:8px;padding:2px 7px;border-radius:999px;background:rgba(26,86,219,0.08);color:var(--blue);border:1px solid rgba(26,86,219,0.2);">'+path._vram+'GB VRAM total</span>':'';var nodesPill=path._nodes?'<span style="font-size:11px;font-weight:500;margin-left:6px;color:var(--muted);">'+path._nodes+' nodes</span>':'';el.innerHTML='<div class="tot-path-label">'+(path.status==='winning'?'✓':'✗')+' '+path.label+vramPill+nodesPill+'<span style="font-size:11px;font-weight:500;margin-left:auto;">'+path.score+'</span></div><div class="tot-path-body">'+path.content+(fb?'\n\n[Feedback: '+fb+']':'')+'</div>';track.appendChild(el);}
@@ -2039,11 +2060,18 @@ async function runAgent3(){
   const b=document.getElementById('out3body');b.classList.remove('out-empty');b.contentEditable='false';b.textContent='Drafting client-facing proposal…';document.getElementById('proposalBar').classList.remove('visible');
   try{
     let text;
+    // Mock mode — skip API entirely, use local generator
+    if(getApiMode()==='mock'){
+      await mockDelay(1200);
+      const paths=generateToTPaths(r1);
+      text=generateProposal(r1,r2,paths);
+    } else {
     try{
       const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.\n\nBRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n9. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n10. ## Deployment Timeline (table using 3-week Zillion pipeline)\n11. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n12. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
       const usr='Generate a complete proposal from:\n\nClient Constraints:\n'+JSON.stringify(r1,null,2)+'\n\nHardware Recommendation:\n'+r2;
       text=await callClaude(sys,usr,"writer",7000);
     }catch(apiErr){console.warn('Writer API fallback to local generator:',apiErr.message);const paths=generateToTPaths(r1);text=generateProposal(r1,r2,paths);}
+    } // end if(getApiMode()==='mock') else block
     origProposal=text;savedProposal=text;
     proposalVersions=[{label:'v1 — AI Draft',text:text,ts:new Date().toISOString(),current:true}];currentVersionIndex=0;
     b.textContent=text;b.contentEditable='true';renderVersionBtns();watchEdits(['out3body'],'proposalBar');
@@ -2415,6 +2443,8 @@ document.addEventListener('DOMContentLoaded',function(){
     var bars=document.querySelectorAll('.edit-bar.visible');
     if(bars.length>0){e.preventDefault();e.returnValue='You have unsaved proposal edits.';}
   });
+  // Check for backup reminder 3s after load (so banner appears as a second-impression)
+  setTimeout(maybeShowBackupReminder,3000);
 });
 
 /* ═══ INVENTORY MANAGEMENT PAGE ═══ */
@@ -2664,7 +2694,80 @@ function exportAllData(){
     a.href=URL.createObjectURL(blob);
     a.download='zillion_backup_'+new Date().toISOString().slice(0,10)+'.json';
     a.click();
+    // Track successful export so we can hide the backup-reminder banner
+    localStorage.setItem('zn_last_export',new Date().toISOString());
+    hideBackupReminder();
   }catch(e){alert('Export failed: '+e.message);}
+}
+
+/* ═══ AUTO-SNAPSHOT — periodic redundant copy in localStorage so a half-broken save still has yesterday's data ═══ */
+function autoSnapshot(){
+  try{
+    if(proposals.length===0)return;
+    var snapshot={
+      ts:new Date().toISOString(),
+      proposalCount:proposals.length,
+      proposals:proposals,
+      inventory:_invData
+    };
+    localStorage.setItem('zn_auto_snapshot',JSON.stringify(snapshot));
+  }catch(e){
+    // QuotaExceededError — older snapshot will remain, that's fine
+    console.warn('Auto-snapshot failed:',e.message);
+  }
+}
+function getLastAutoSnapshot(){
+  try{
+    var raw=localStorage.getItem('zn_auto_snapshot');
+    if(!raw)return null;
+    return JSON.parse(raw);
+  }catch(e){return null;}
+}
+function restoreAutoSnapshot(){
+  var snap=getLastAutoSnapshot();
+  if(!snap){alert('No auto-snapshot found.');return;}
+  var ts=new Date(snap.ts).toLocaleString();
+  if(!confirm('Restore auto-snapshot from '+ts+' ('+snap.proposalCount+' proposals)?\n\nThis will REPLACE current proposals.'))return;
+  proposals=snap.proposals||[];
+  if(snap.inventory)_invData=snap.inventory;
+  storageSave();
+  if(_invData)try{localStorage.setItem('zn_inventory',JSON.stringify(_invData));}catch(e){}
+  updateTrackerCount();renderHomeRecent();renderInvSnapshot();
+  alert('Restored '+snap.proposalCount+' proposals from '+ts);
+}
+/* ═══ AUTO-BACKUP REMINDER ═══ */
+function daysSinceLastExport(){
+  var last=localStorage.getItem('zn_last_export');
+  if(!last)return null; // never exported
+  var diff=(new Date()-new Date(last))/86400000;
+  return Math.floor(diff);
+}
+function checkBackupReminder(){
+  if(proposals.length===0)return; // nothing worth backing up yet
+  var days=daysSinceLastExport();
+  // Show banner if: never exported AND have ≥3 proposals, OR last export ≥7 days ago
+  if(days===null&&proposals.length>=3){showBackupReminder('You have '+proposals.length+' proposals saved but no backup. Export now to avoid data loss if your browser is cleared.');}
+  else if(days!==null&&days>=7){showBackupReminder('Last backup was '+days+' day'+(days>1?'s':'')+' ago. '+proposals.length+' proposal'+(proposals.length>1?'s':'')+' to back up.');}
+}
+function showBackupReminder(msg){
+  var existing=document.getElementById('backupReminder');
+  if(existing)existing.remove();
+  var banner=document.createElement('div');
+  banner.id='backupReminder';
+  banner.style.cssText='position:fixed;bottom:16px;right:16px;z-index:9998;max-width:380px;padding:14px 16px;background:#FFF8E1;border:1px solid #FFC107;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-size:12.5px;color:#5C4500;';
+  banner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;"><div style="font-weight:600;">⚠ Backup reminder</div><button onclick="dismissBackupReminder()" style="background:none;border:none;color:#5C4500;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button></div><div style="margin-bottom:10px;line-height:1.5;">'+escHtml(msg)+'</div><div style="display:flex;gap:8px;"><button onclick="exportAllData()" style="padding:5px 12px;background:#FFC107;border:none;border-radius:6px;font-size:11.5px;font-weight:600;color:#5C4500;cursor:pointer;">⬇ Export Now</button><button onclick="dismissBackupReminder()" style="padding:5px 12px;background:transparent;border:1px solid #FFC107;border-radius:6px;font-size:11.5px;font-weight:500;color:#5C4500;cursor:pointer;">Remind Tomorrow</button></div>';
+  document.body.appendChild(banner);
+}
+function dismissBackupReminder(){
+  var b=document.getElementById('backupReminder');if(b)b.remove();
+  // Snooze for 24h
+  localStorage.setItem('zn_backup_snoozed',new Date().toISOString());
+}
+function hideBackupReminder(){var b=document.getElementById('backupReminder');if(b)b.remove();}
+function maybeShowBackupReminder(){
+  var snoozed=localStorage.getItem('zn_backup_snoozed');
+  if(snoozed){var hrs=(new Date()-new Date(snoozed))/3600000;if(hrs<24)return;}
+  checkBackupReminder();
 }
 function importAllData(input){
   var file=input.files[0];if(!file)return;
@@ -2819,13 +2922,15 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
     </div>
     <div style="margin-bottom:20px;padding-top:16px;border-top:1px solid var(--border);">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">Data Backup</div>
-      <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:12px;">All data lives in this browser's localStorage. Export regularly to avoid data loss.</div>
+      <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:8px;">All data lives in this browser's localStorage. <strong>Export weekly</strong> to avoid loss if browser data is cleared.</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;">An auto-snapshot is saved every 5 changes as a fallback. The bizops site also reminds you to export every 7 days.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button onclick="exportAllData()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;">⬇ Export All Data (.json)</button>
         <label style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;">
           ⬆ Import Data
           <input type="file" accept=".json" style="display:none;" onchange="importAllData(this)"/>
         </label>
+        <button onclick="restoreAutoSnapshot()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink2);font-size:12px;font-weight:500;cursor:pointer;" title="Restore from the redundant auto-snapshot saved every few changes">↻ Restore Auto-Snapshot</button>
         <button onclick="exportEditLog()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;">📊 Export Edit Log (RLHF)</button>
       </div>
     </div>
