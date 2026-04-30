@@ -1,6 +1,3 @@
-
-Copy
-
 """
 Zillion Network — AI Proposal Engine Backend
 =============================================
@@ -37,7 +34,9 @@ DB_PATH = Path("zillion.db")
 AUTH_TOKEN = os.getenv("ZN_AUTH_TOKEN", hashlib.sha256((ANTHROPIC_API_KEY or "zillion").encode()).hexdigest()[:32])
 BACKUP_AUTH_TOKEN = os.getenv("ZN_BACKUP_AUTH_TOKEN", "")  # for rotation without downtime
  
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+ENV = os.getenv("ENV", "production")
+_default_origins = "*" if ENV == "development" else "https://larrysong-zillion.github.io"
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
  
 app = FastAPI(title="Zillion Proposal Engine API", version="1.1")
  
@@ -207,6 +206,7 @@ class ProposalUpdate(BaseModel):
     text: Optional[str] = None
     notes: Optional[str] = None
     followup: Optional[str] = None
+    versions: Optional[list] = None
  
 class EditLogEntry(BaseModel):
     proposal_id: str
@@ -362,6 +362,14 @@ async def update_proposal(proposal_id: str, req: ProposalUpdate, _=Depends(verif
             updates.append("updated_at=?"); params.append(datetime.now(timezone.utc).isoformat())
             params.append(proposal_id)
             db.execute(f"UPDATE proposals SET {','.join(updates)} WHERE id=?", params)
+        # Sync versions array if provided — replace existing versions for this proposal
+        if req.versions is not None:
+            db.execute("DELETE FROM versions WHERE proposal_id=?", (proposal_id,))
+            for v in req.versions:
+                db.execute(
+                    "INSERT INTO versions (proposal_id, label, text, is_current) VALUES (?,?,?,?)",
+                    (proposal_id, v.get("label","v"), v.get("text",""), 1 if v.get("current") else 0)
+                )
     return {"status": "updated"}
  
 @app.delete("/api/proposals/{proposal_id}")
@@ -390,9 +398,43 @@ async def get_edit_logs(_=Depends(verify_token)):
 async def edit_log_stats(_=Depends(verify_token)):
     with get_db() as db:
         total = db.execute("SELECT COUNT(*) as c FROM edit_log").fetchone()["c"]
-        by_agent = db.execute("SELECT agent, COUNT(*) as c FROM edit_log GROUP BY agent").fetchall()
-        by_outcome = db.execute("SELECT deal_outcome, COUNT(*) as c FROM edit_log WHERE deal_outcome IS NOT NULL GROUP BY deal_outcome").fetchall()
-    return {"total_edits": total, "by_agent": {r["agent"]: r["c"] for r in by_agent}, "by_outcome": {r["deal_outcome"]: r["c"] for r in by_outcome}}
+        by_agent_rows = db.execute("SELECT agent, COUNT(*) as c FROM edit_log GROUP BY agent").fetchall()
+        by_outcome_rows = db.execute("SELECT deal_outcome, COUNT(*) as c FROM edit_log WHERE deal_outcome IS NOT NULL GROUP BY deal_outcome").fetchall()
+        # Average edit distance (length difference between original and edited)
+        avg_dist_row = db.execute(
+            "SELECT AVG(ABS(LENGTH(edited_text) - LENGTH(original_text))) as avg_dist FROM edit_log"
+        ).fetchone()
+        avg_edit_distance = round(avg_dist_row["avg_dist"] or 0, 1)
+        # Distinct proposals that received edits
+        proposals_edited = db.execute("SELECT COUNT(DISTINCT proposal_id) as c FROM edit_log").fetchone()["c"]
+        # Avg edit distance grouped by agent
+        by_agent_dist_rows = db.execute("""
+            SELECT agent, AVG(ABS(LENGTH(edited_text) - LENGTH(original_text))) as avg_dist
+            FROM edit_log GROUP BY agent
+        """).fetchall()
+        # Edit behavior correlated with deal outcome
+        by_outcome_agent_rows = db.execute("""
+            SELECT deal_outcome, agent, COUNT(*) as c, AVG(ABS(LENGTH(edited_text) - LENGTH(original_text))) as avg_dist
+            FROM edit_log
+            WHERE deal_outcome IS NOT NULL
+            GROUP BY deal_outcome, agent
+        """).fetchall()
+    # Default zero counts for all three agents so frontend has stable shape
+    by_agent = {"discovery": 0, "architect": 0, "writer": 0}
+    for r in by_agent_rows:
+        if r["agent"] in by_agent:
+            by_agent[r["agent"]] = r["c"]
+        else:
+            by_agent[r["agent"]] = r["c"]
+    return {
+        "total_edits": total,
+        "by_agent": by_agent,
+        "by_outcome": {r["deal_outcome"]: r["c"] for r in by_outcome_rows},
+        "avg_edit_distance": avg_edit_distance,
+        "proposals_edited": proposals_edited,
+        "avg_edit_distance_by_agent": {r["agent"]: round(r["avg_dist"] or 0, 1) for r in by_agent_dist_rows},
+        "edits_by_outcome_agent": [dict(r) for r in by_outcome_agent_rows],
+    }
  
 # ═══ INVENTORY API ═══
 @app.get("/api/inventory")
