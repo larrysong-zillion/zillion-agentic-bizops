@@ -708,6 +708,18 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
   </nav>
 
   <div class="sbody">
+    <div id="step1SetupBar" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);font-size:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:7px;font-weight:600;color:var(--ink2);">
+        <span id="step1SetupDot" style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></span>
+        <span id="step1SetupLabel">Setup needed</span>
+      </div>
+      <span style="color:var(--muted);font-size:11.5px;" id="step1SetupHelp">Configure an API key or switch to Mock Mode before running the agent.</span>
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="testApiSetup()" id="step1TestBtn" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;">⚡ Test Setup</button>
+        <button onclick="loadSettingsIntoModal();openSettings();" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;">⚙ Settings</button>
+        <button onclick="quickEnableMockMode()" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;" title="Switch to Mock Mode for demo / no API key required">🧪 Mock Mode</button>
+      </div>
+    </div>
     <div class="step-kicker"><div class="kicker-num">1</div><span class="kicker-label">Discovery Agent</span><span class="kicker-agent">— The Listener</span></div>
     <h2 class="step-title">Drop in your<br><em>meeting notes.</em></h2>
     <p class="step-desc">Paste a transcript, notes, or Slack thread. The agent extracts constraints, profiles the client's business model, and classifies the workload against past Zillion deployments.</p>
@@ -1436,6 +1448,42 @@ function updateApiIndicator(){
   else if(mode==='proxy'){dot.style.background='var(--green)';txt.textContent='Backend Proxy';}
   else if(ZN_API_KEY){dot.style.background='var(--green)';txt.textContent='API Connected';}
   else{dot.style.background='var(--amber)';txt.textContent='Setup needed — click ⚙';}
+  // Also refresh the Step 1 setup bar
+  refreshStep1SetupBar();
+}
+
+/* ═══ STEP 1 SETUP BAR — quick status + actions on Discovery page ═══ */
+function refreshStep1SetupBar(){
+  var dot=document.getElementById('step1SetupDot');
+  var label=document.getElementById('step1SetupLabel');
+  var help=document.getElementById('step1SetupHelp');
+  if(!dot||!label||!help)return;
+  var mode=getApiMode();
+  if(mode==='mock'){
+    dot.style.background='var(--amber)';
+    label.textContent='Mock Mode active';
+    help.textContent='Sample data only — input is ignored. Add an API key in Settings to use real input.';
+  } else if(mode==='proxy'){
+    dot.style.background='var(--green)';
+    label.textContent='Backend Proxy';
+    help.textContent='Connected to backend — usage bills server-side.';
+  } else if(ZN_API_KEY){
+    dot.style.background='var(--green)';
+    label.textContent='API Connected';
+    help.textContent='Direct mode — your key, your machine. Click Test Setup to verify.';
+  } else {
+    dot.style.background='var(--amber)';
+    label.textContent='Setup needed';
+    help.textContent='Configure an API key or switch to Mock Mode before running the agent.';
+  }
+}
+function quickEnableMockMode(){
+  ZN_API_MODE='mock';
+  localStorage.setItem('zn_api_mode','mock');
+  updateApiIndicator();
+  // Brief confirmation
+  var label=document.getElementById('step1SetupLabel');
+  if(label){var orig=label.textContent;label.textContent='✓ Mock Mode enabled';setTimeout(function(){refreshStep1SetupBar();},2000);}
 }
 
 /* ═══ SETTINGS MODAL ═══ */
@@ -1828,7 +1876,7 @@ Action Items:
 
 /* ═══ NAV ═══ */
 function goHome(){document.getElementById('screenHome').style.display='flex';['screen1','screen2','screen3','screenTracker','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});renderHomeRecent();window.scrollTo(0,0);}
-function goStep(n){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screen'+n).classList.add('active');if(n===2)renderInvSnapshot();window.scrollTo(0,0);}
+function goStep(n){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screen'+n).classList.add('active');if(n===1)refreshStep1SetupBar();if(n===2)renderInvSnapshot();window.scrollTo(0,0);}
 function goTracker(){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenInventory'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screenTracker').classList.add('active');renderTracker();window.scrollTo(0,0);}
 function goInventory(){document.getElementById('screenHome').style.display='none';['screen1','screen2','screen3','screenTracker'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});document.getElementById('screenInventory').classList.add('active');invRender();window.scrollTo(0,0);}
 function startNewAssessment(){resetAll();goStep(1);}
