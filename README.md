@@ -14,7 +14,7 @@ AI-driven proposal engine that turns customer meeting notes, email chains, and S
 - **Built-in version history** — every proposal edit is tracked and revertible
 - **Confidence scoring** — low-confidence extractions surface yellow warnings before clients see them
 - **No build step** — single HTML file, deploys to GitHub Pages in 5 minutes
-- **Per-user API keys** for trial, **shared backend** ready when team scales
+- **Shared team API key** for trial, **backend proxy** ready when team scales
 ---
  
 ## Overview
@@ -31,8 +31,12 @@ Engineering by **Larry Song** with sponsorship from CEO **Xander Wu**. Operation
  
 Bizops sits between the early-stage CRM/notes layer (Granola, Slack, email) and the proposal/SOW layer (Google Docs, signed contracts). It does not replace those tools — it eliminates the writing labor between them. The team continues to capture customer context however they prefer, then runs that context through bizops to produce a draft, reviews it, and exports the final version to wherever proposals live today.
  
-The current architecture is a single HTML frontend deployed to GitHub Pages, with an optional FastAPI backend (`server.py`) that becomes useful once the team grows beyond ~5 active users. Both the per-user-key and shared-backend deployment modes are supported by the same codebase — switching between them is a configuration change, not a rewrite.
- 
+The current architecture is a single HTML frontend deployed to GitHub Pages, with an optional FastAPI backend (`server.py`) that becomes useful once the team grows beyond ~5 active users or bizops is exposed externally. Both deployment modes are supported by the same codebase — switching between them is a configuration change, not a rewrite.
+
+### A note on this repo being public
+
+This repo is public so GitHub Pages can host the site without paid plans. **No API key is ever committed to this repo**. The Zillion team API key is distributed out-of-band (via Slack #bizops) and pasted into the Settings modal by each team member. The browser stores it in localStorage and never transmits it anywhere except directly to Anthropic's API.
+
 ---
  
 ## Usage Instructions
@@ -40,11 +44,16 @@ The current architecture is a single HTML frontend deployed to GitHub Pages, wit
 ### Setup (2 minutes, one-time)
  
 ```
-1. Get an API key from console.anthropic.com (Zillion Network workspace, ask Xander for invite)
-2. Open the bizops site → click ⚙ → paste key → Save
-3. Click ⚡ Test Setup → wait for ✓ API Working
+1. Open the bizops site (URL pinned in Slack #bizops)
+2. Click ⚙ in the top-right corner
+3. Paste the Zillion team API key (pinned in Slack #bizops)
+4. Click Save
+5. Click ⚡ Test Setup → wait for ✓ API Working
 ```
- 
+That's it. You're now using bizops.
+
+If you don't have access to Slack #bizops or the team key, ping Larry directly. 
+
 ### Generate a proposal (5–10 minutes)
  
 ```
@@ -70,6 +79,7 @@ Step 3 (Writer)     → Edit proposal inline → 💾 Save / 📋 Copy / 📄 Ex
 | Restore from backup | ⚙ Settings → ⬆ Import Data |
 | Import fleet inventory from Excel | Hardware Inventory page → 📊 Upload Excel |
 | Verify API works without burning a real transcript | Home page → ⚡ Test Setup |
+| Try the tool without any API key | ⚙ Settings → Mock Mode → Save |
  
 ### What good input looks like
  
