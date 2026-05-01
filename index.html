@@ -1430,13 +1430,91 @@ const COMPETITIVE_INTEL={
   zillionEdge:['Customer-owned hardware (CapEx) — unique vs cloud-only','Managed services included in colo (not add-on)','24/7 L3 support <15min response','3-week deployment with MLPerf benchmarks','GPU lease (Plan #2) for OpEx clients','Architecture consulting (passthrough vs CX8)','Proactive DCGM monitoring every 60s']
 };
 
-/* ═══ API CONFIG — Direct mode for GitHub Pages (no backend needed) ═══ */
+/* ═══ API CONFIG ═══
+ * Three options for API key:
+ *  1. SHARED_KEY constant below (set once, deploy, whole team uses it — easiest for ≤5 internal users)
+ *  2. User pastes their own key in ⚙ Settings (overrides shared, useful for testing)
+ *  3. Backend proxy mode (production — backend holds the key)
+ * For team rollout: replace SHARED_KEY with the actual key, push to GitHub, share URL with team. Done.
+ */
+var SHARED_KEY='';  // ← Larry: paste the team key here before deploying. Leave empty to require per-user setup.
 var ZN_API_KEY=localStorage.getItem('zn_api_key')||'';
-var ZN_API_MODE=localStorage.getItem('zn_api_mode')||'direct'; // 'direct' (browser→Anthropic), 'proxy' (browser→backend→Anthropic), 'mock'
+var ZN_API_MODE=localStorage.getItem('zn_api_mode')||'direct'; // 'direct' | 'proxy' | 'mock'
 var API_BASE=localStorage.getItem('zn_api_base')||''; // only used in proxy mode
 
+/* Returns the effective API key to use: user override first, then shared team key. */
+function getEffectiveApiKey(){return ZN_API_KEY||SHARED_KEY||'';}
+function hasAnyKey(){return !!getEffectiveApiKey();}
+
+/* (Legacy — preserved for backwards compatibility, not used in current build) */
+var ZN_SHARED_KEY_BLOB=localStorage.getItem('zn_shared_blob')||'';
+
+async function unlockSharedKey(passphrase){
+  if(!ZN_SHARED_KEY_BLOB)return null;
+  try{
+    var parts=ZN_SHARED_KEY_BLOB.split('.');
+    if(parts.length!==3)throw new Error('Bad blob format');
+    var saltB64=parts[0],ivB64=parts[1],ctB64=parts[2];
+    var salt=Uint8Array.from(atob(saltB64),function(c){return c.charCodeAt(0);});
+    var iv=Uint8Array.from(atob(ivB64),function(c){return c.charCodeAt(0);});
+    var ct=Uint8Array.from(atob(ctB64),function(c){return c.charCodeAt(0);});
+    var passKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(passphrase),'PBKDF2',false,['deriveKey']);
+    var aesKey=await crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:100000,hash:'SHA-256'},passKey,{name:'AES-GCM',length:256},false,['decrypt']);
+    var decrypted=await crypto.subtle.decrypt({name:'AES-GCM',iv:iv},aesKey,ct);
+    return new TextDecoder().decode(decrypted);
+  }catch(e){throw new Error('Wrong passphrase or corrupted blob');}
+}
+
+async function encryptSharedKey(apiKey,passphrase){
+  // Helper for admin to generate a new blob. Usage in browser console:
+  //   await encryptSharedKey('sk-ant-api03-...', 'team-passphrase')
+  // Then update ZN_SHARED_KEY_BLOB above with the returned string and redeploy.
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var passKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(passphrase),'PBKDF2',false,['deriveKey']);
+  var aesKey=await crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:100000,hash:'SHA-256'},passKey,{name:'AES-GCM',length:256},false,['encrypt']);
+  var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},aesKey,new TextEncoder().encode(apiKey));
+  function b64(buf){return btoa(String.fromCharCode.apply(null,new Uint8Array(buf)));}
+  var blob=b64(salt)+'.'+b64(iv)+'.'+b64(ct);
+  console.log('Paste this into ZN_SHARED_KEY_BLOB:\n'+blob);
+  return blob;
+}
+
+async function applyTeamPassphrase(passphrase){
+  try{
+    var key=await unlockSharedKey(passphrase);
+    if(!key)throw new Error('No shared key blob is bundled. Ask Larry to set one up.');
+    if(!key.startsWith('sk-ant-'))throw new Error('Decrypted value is not a valid API key (wrong passphrase?)');
+    localStorage.setItem('zn_api_key',key);
+    ZN_API_KEY=key;
+    ZN_API_MODE='direct';localStorage.setItem('zn_api_mode','direct');
+    updateApiIndicator();
+    return true;
+  }catch(e){
+    return e.message;
+  }
+}
+
+async function handleApplyTeamPassphrase(){
+  var input=document.getElementById('settingsTeamPassphrase');
+  var result=document.getElementById('passphraseResult');
+  var passphrase=(input.value||'').trim();
+  if(!passphrase){result.textContent='Enter the passphrase first.';result.style.color='var(--red)';return;}
+  result.textContent='⏳ Unlocking…';result.style.color='var(--muted)';
+  if(!ZN_SHARED_KEY_BLOB){result.textContent='No team blob configured yet. Ask Larry to set one up.';result.style.color='var(--amber)';return;}
+  var ok=await applyTeamPassphrase(passphrase);
+  if(ok===true){
+    result.innerHTML='✓ Team key unlocked. You can close Settings.';result.style.color='var(--green)';
+    input.value='';
+    var apiField=document.getElementById('settingsApiKey');
+    if(apiField)apiField.value=ZN_API_KEY;
+  } else {
+    result.textContent='✗ '+ok;result.style.color='var(--red)';
+  }
+}
+
 function getApiMode(){
-  if(!ZN_API_KEY&&ZN_API_MODE!=='mock')return 'mock';
+  if(!hasAnyKey()&&ZN_API_MODE!=='mock')return 'mock';
   return ZN_API_MODE;
 }
 function updateApiIndicator(){
@@ -1446,7 +1524,8 @@ function updateApiIndicator(){
   var mode=getApiMode();
   if(mode==='mock'){dot.style.background='var(--amber)';txt.textContent='Mock Mode (sample data)';}
   else if(mode==='proxy'){dot.style.background='var(--green)';txt.textContent='Backend Proxy';}
-  else if(ZN_API_KEY){dot.style.background='var(--green)';txt.textContent='API Connected';}
+  else if(ZN_API_KEY){dot.style.background='var(--green)';txt.textContent='API Connected (your key)';}
+  else if(SHARED_KEY){dot.style.background='var(--green)';txt.textContent='API Connected (Zillion team key)';}
   else{dot.style.background='var(--amber)';txt.textContent='Setup needed — click ⚙';}
   // Also refresh the Step 1 setup bar
   refreshStep1SetupBar();
@@ -1469,8 +1548,12 @@ function refreshStep1SetupBar(){
     help.textContent='Connected to backend — usage bills server-side.';
   } else if(ZN_API_KEY){
     dot.style.background='var(--green)';
-    label.textContent='API Connected';
-    help.textContent='Direct mode — your key, your machine. Click Test Setup to verify.';
+    label.textContent='API Connected (your key)';
+    help.textContent='Direct mode — your personal key overrides the team key. Click Test Setup to verify.';
+  } else if(SHARED_KEY){
+    dot.style.background='var(--green)';
+    label.textContent='Zillion team key';
+    help.textContent='Using the shared team key. All usage bills to Zillion. Click Test Setup to verify.';
   } else {
     dot.style.background='var(--amber)';
     label.textContent='Setup needed';
@@ -1514,9 +1597,10 @@ async function callClaude(sys,usr,agentName,maxTokens){
   agentName=agentName||'discovery';
   maxTokens=maxTokens||4000;
   
-  // In proxy mode, backend may have shared key (user key optional). In direct mode, user key required.
+  var effectiveKey=getEffectiveApiKey();
+  // In proxy mode, backend may have shared key (frontend key optional). In direct mode, a key is required.
   var proxyMode=API_BASE&&getApiMode()==='proxy';
-  if(!ZN_API_KEY&&!proxyMode){
+  if(!effectiveKey&&!proxyMode){
     throw new Error('NEEDS_API_KEY');
   }
   
@@ -1527,12 +1611,12 @@ async function callClaude(sys,usr,agentName,maxTokens){
   if(API_BASE&&getApiMode()==='proxy'){
     url=API_BASE+'/api/agent/'+agentName;
     headers={'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('zn_auth_token')||'')};
-    // If user has their own key, pass it through to the backend (backend will use it instead of shared key)
+    // If user has their own personal key, pass it through to the backend (backend will use it instead of shared key)
     if(ZN_API_KEY)headers['X-User-Api-Key']=ZN_API_KEY;
     reqBody=JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:maxTokens});
   } else {
     url='https://api.anthropic.com/v1/messages';
-    headers={'Content-Type':'application/json','x-api-key':ZN_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+    headers={'Content-Type':'application/json','x-api-key':effectiveKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
     reqBody=body;
   }
   
@@ -2999,13 +3083,22 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
       <div style="font-size:18px;font-weight:700;color:var(--ink);">⚙ Settings</div>
       <button onclick="closeSettings()" style="background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;">✕</button>
     </div>
+    <div style="margin-bottom:20px;padding:14px;background:var(--bg);border:1px dashed var(--border);border-radius:var(--r-md);">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">⚡ Quick Setup — Team Passphrase</div>
+      <div style="font-size:11.5px;color:var(--ink2);line-height:1.5;margin-bottom:10px;">If Larry shared a team passphrase, paste it here to unlock the shared API key. <strong>This is the easiest way to get started</strong> — no Anthropic console access needed.</div>
+      <div style="display:flex;gap:8px;">
+        <input type="password" id="settingsTeamPassphrase" placeholder="Team passphrase" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;background:var(--white);color:var(--ink);"/>
+        <button onclick="handleApplyTeamPassphrase()" style="padding:9px 14px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-size:12px;font-weight:600;border-radius:var(--r-md);cursor:pointer;">Unlock</button>
+      </div>
+      <div id="passphraseResult" style="font-size:11px;margin-top:6px;color:var(--muted);"></div>
+    </div>
     <div style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Anthropic API Key</div>
       <div style="margin-bottom:10px;padding:10px 12px;background:var(--blue-light);border:1px solid rgba(26,86,219,0.2);border-radius:var(--r-sm);font-size:11.5px;color:var(--ink2);line-height:1.5;">
-        <strong style="color:var(--blue);">📌 Bill to Zillion:</strong> Use a key from the <strong>Zillion Network workspace</strong> on console.anthropic.com (not a personal account). Ask Xander for an invitation if you don't have access.
+        <strong style="color:var(--blue);">📌 Optional:</strong> The Zillion team key is built in — you usually don't need to do anything here. Only paste your own key if you want to override (e.g. testing with a personal account). All usage on the team key bills to Zillion automatically.
       </div>
-      <input type="password" id="settingsApiKey" placeholder="sk-ant-api03-..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;">Stored in this browser only. Never leaves your machine except to call Anthropic. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue);">Get a key →</a></div>
+      <input type="password" id="settingsApiKey" placeholder="sk-ant-api03-... (leave empty to use team key)" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;">If set, your personal key overrides the team key. Stored in this browser only. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue);">Get a personal key →</a></div>
     </div>
     <div style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">API Mode</div>
