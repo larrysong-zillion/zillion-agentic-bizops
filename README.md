@@ -1,4 +1,4 @@
-# Zillion Bizops
+# Zillion Agentic Bizops
  
 AI-driven proposal engine that turns customer meeting notes, email chains, and Slack threads into client-ready hardware proposals.
  
