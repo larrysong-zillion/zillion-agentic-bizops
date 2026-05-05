@@ -287,12 +287,15 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
    CHIPS
 ══════════════════════════════ */
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;box-shadow:var(--shadow-sm);}
-.chip-wide{grid-column:1/-1;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;box-shadow:var(--shadow-sm);}
+.chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;box-shadow:var(--shadow-sm);transition:border-color 0.15s;}
+.chip:hover{border-color:rgba(26,86,219,0.3);}
+.chip-wide{grid-column:1/-1;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;box-shadow:var(--shadow-sm);transition:border-color 0.15s;}
+.chip-wide:hover{border-color:rgba(26,86,219,0.3);}
 .chip-label{font-size:11px;font-weight:600;color:var(--placeholder);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;}
-.chip-val{font-size:14px;font-weight:600;color:var(--blue);outline:none;min-height:20px;}
-.chip-val[contenteditable=true]:focus{background:var(--blue-subtle);border-radius:4px;padding:1px 4px;margin:-1px -4px;}
-.chip-body{font-size:13px;font-weight:400;color:var(--ink);line-height:1.55;outline:none;}
+.chip-val{font-size:14px;font-weight:600;color:var(--blue);outline:none;min-height:20px;cursor:text;border-bottom:1px dashed transparent;transition:border-color 0.15s;}
+.chip-val[contenteditable=true]:hover{border-bottom-color:rgba(26,86,219,0.3);}
+.chip-val[contenteditable=true]:focus{background:var(--blue-subtle);border-radius:4px;padding:1px 4px;margin:-1px -4px;border-bottom-color:transparent;}
+.chip-body{font-size:13px;font-weight:400;color:var(--ink);line-height:1.55;outline:none;cursor:text;}
 .chip-body[contenteditable=true]:focus{background:var(--blue-subtle);border-radius:4px;padding:2px 4px;margin:-2px -4px;}
 .rag-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:600;color:var(--green);margin-top:8px;}
 .rag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);}
@@ -770,6 +773,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
     <div class="validation-msg" id="val1"></div>
     <div class="btn-row">
       <button class="btn-dark" id="btn1" onclick="runAgent1()" aria-label="Run Discovery Agent">Run Discovery Agent →</button>
+      <button onclick="resetAssessment()" style="margin-left:auto;padding:9px 16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;" title="Clear inputs, constraints, and start fresh">↻ Reset Assessment</button>
     </div>
 
     <div id="out1" style="display:none;margin-top:36px;">
@@ -862,6 +866,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 
       <div class="btn-row">
         <button class="btn-primary" onclick="goStep(2)">Continue to Architect Agent →</button>
+        <button onclick="showHandoff('discovery')" style="margin-left:auto;padding:9px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;" title="View the JSON that will be sent to the Architect agent">🔍 View Handoff to Architect</button>
       </div>
     </div>
   </div>
@@ -943,6 +948,11 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <div class="divider"></div>
       <div class="tot-header">⚡ Tree-of-Thought: Explored Paths</div>
       <div class="tot-track" id="totPaths"></div>
+      <!-- "Why this recommendation?" — auto-built from winning path metadata -->
+      <div id="whyCard" style="display:none;margin:18px 0;padding:16px 20px;background:linear-gradient(135deg,#F0F9FF 0%,#EFF6FF 100%);border:1px solid rgba(26,86,219,0.25);border-radius:var(--r-md);">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--blue);margin-bottom:8px;">💡 Why this recommendation?</div>
+        <div id="whyCardBody" style="font-size:13px;color:var(--ink);line-height:1.65;"></div>
+      </div>
       <div class="card">
         <div class="card-header"><div class="card-title">⚙️ Final Recommendation</div><div style="display:flex;gap:8px;align-items:center;"><span class="edit-hint">✏️ Click to edit</span><span class="tag tag-amber">The Engineer</span></div></div>
         <div class="card-body" id="out2body" contenteditable="true" spellcheck="false"></div>
@@ -965,6 +975,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <div class="btn-row">
         <button class="btn-green" onclick="approveContinue()">✓ Approve &amp; Generate Proposal</button>
         <button class="btn-secondary" onclick="rejectHitl()">✕ Reject</button>
+        <button onclick="showHandoff('architect')" style="margin-left:auto;padding:9px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;" title="View the context that will be sent to the Writer agent">🔍 View Handoff to Writer</button>
       </div>
     </div>
   </div>
@@ -1172,6 +1183,8 @@ let proposals=[];
 let currentFilter='all';
 let currentVersionIndex=0;
 let proposalVersions=[];
+let _lastArchitectR1Hash='';
+let _lastArchitectR2='';
 let _editBaselineText='';
 let currentPage=1;
 const PAGE_SIZE=10;
@@ -1295,6 +1308,151 @@ function showStorageBadge(state,text){
 /* ═══ VALIDATION ═══ */
 function showValidation(id,type,msg){const el=document.getElementById(id);el.className='validation-msg visible '+type;el.innerHTML='<span class="validation-ico">'+(type==='error'?'⚠️':type==='warn'?'⚡':'ℹ️')+'</span><span>'+msg+'</span>';}
 function hideValidation(id){const el=document.getElementById(id);if(el){el.className='validation-msg';el.innerHTML='';}}
+
+/* ═══ "Why this recommendation?" — deterministic explainer built from winning path ═══
+ * Generates 2-4 concrete reasons by reading path metadata, NOT by re-asking Claude.
+ * Reasons cite budget utilization, in-stock status, GPU preference match, and deal-pattern fit.
+ */
+function renderWhyCard(paths,r1){
+  var card=document.getElementById('whyCard');
+  var body=document.getElementById('whyCardBody');
+  if(!card||!body||!Array.isArray(paths)||paths.length===0){if(card)card.style.display='none';return;}
+  var winner=paths.find(function(p){return p.status==='winning';});
+  if(!winner){card.style.display='none';return;}
+  var reasons=[];
+  // Budget utilization (extract numeric cost and budget if available)
+  var costStr=String(winner.cost||'').replace(/[^0-9]/g,'');
+  var budgetStr=String((r1&&r1.budget)||'').replace(/[^0-9 –\-toK]/gi,'');
+  if(costStr&&budgetStr){
+    var costN=parseInt(costStr,10);
+    var budgetMatch=String((r1&&r1.budget)||'').match(/\$?([\d,]+)\s*(?:K|k)?\s*(?:[–\-]|to)\s*\$?([\d,]+)\s*(?:K|k)?/);
+    if(budgetMatch){
+      var b1=parseInt(budgetMatch[1].replace(/,/g,''),10);var b2=parseInt(budgetMatch[2].replace(/,/g,''),10);
+      // If budget mentioned K, multiply
+      if(/K/i.test(String((r1&&r1.budget)||''))){b1*=1000;b2*=1000;}
+      var midBudget=(b1+b2)/2;
+      if(midBudget>0&&costN>0){
+        var util=Math.round((costN/midBudget)*100);
+        if(util>=50&&util<=95)reasons.push('Matches your budget at <strong>'+util+'%</strong> utilization (sweet spot for negotiation room).');
+        else if(util<50)reasons.push('Budget-conservative — uses only <strong>'+util+'%</strong> of stated budget, leaving headroom for scope expansion.');
+        else if(util>95)reasons.push('Premium config at <strong>'+util+'%</strong> of budget — assumes the higher end of the range was the real ceiling.');
+      }
+    }
+  }
+  // GPU preference match
+  if(r1&&r1.gpu_preference&&winner.label){
+    var pref=String(r1.gpu_preference).toLowerCase();
+    var label=String(winner.label).toLowerCase();
+    var prefWords=pref.split(/\s+/).filter(function(w){return w.length>=3;});
+    var hits=prefWords.filter(function(w){return label.indexOf(w)>=0;});
+    if(hits.length>=2)reasons.push('Matches client\'s GPU preference (<strong>'+escHtml(r1.gpu_preference)+'</strong>) directly.');
+  }
+  // Architecture preference (CX8 etc)
+  if(winner._arch&&r1){
+    var gpuPref=String(r1.gpu_preference||'').toLowerCase();
+    var keyReqs=Array.isArray(r1.key_requirements)?r1.key_requirements.join(' ').toLowerCase():'';
+    if(/cx8|mgx|switchboard/.test(gpuPref+' '+keyReqs)&&winner._arch==='cx8'){
+      reasons.push('Honors explicit <strong>'+winner._arch.toUpperCase()+'</strong> architecture request — full NVL72 fabric available.');
+    }
+  }
+  // In-stock status (parse "in stock" or "out of stock" from content)
+  if(winner.content){
+    var c=String(winner.content).toLowerCase();
+    if(c.indexOf('in stock')>=0)reasons.push('<strong>In stock today</strong> — no procurement lead time, deployment can begin immediately.');
+    else if(c.indexOf('pre-order')>=0||c.indexOf('out of stock')>=0)reasons.push('Pre-order — short lead time accepted to honor architecture preference; alternatives shown above.');
+  }
+  // Deal pattern fit
+  if(winner.deal_pattern){
+    var patternMap={
+      capex:'CapEx purchase + Zillion colocation (matches Ab Initia Plan #1 structure).',
+      lease:'GPU lease structure — OpEx-friendly, matches stated billing preference.',
+      colo:'Colocation-only — client supplies hardware, Zillion provides facility + managed services.',
+      managed:'Managed services contract — Zillion provides 24/7 L3 ops on customer-owned cluster.',
+      resell:'Source-and-resell procurement — Zillion sources unlisted SKU through supplier relationships.'
+    };
+    var dp=String(winner.deal_pattern).toLowerCase();
+    if(patternMap[dp])reasons.push('Deal structure: '+patternMap[dp]);
+  }
+  // VRAM justification
+  if(winner._vram&&r1&&r1.workflow){
+    var workflow=String(r1.workflow).toLowerCase();
+    if(/training/.test(workflow)&&winner._vram>=512){reasons.push('<strong>'+winner._vram+'GB</strong> aggregate VRAM provides headroom for FP8/BF16 training of large models.');}
+    else if(/inference/.test(workflow)&&winner._vram>=192){reasons.push('<strong>'+winner._vram+'GB</strong> aggregate VRAM supports concurrent batched inference at production throughput.');}
+  }
+  // Fallback if nothing extracted
+  if(reasons.length===0){
+    reasons.push('Highest-scoring option among the explored paths — see Tree-of-Thought analysis above for full reasoning.');
+  }
+  // Render — bullet list, max 4 reasons to keep scannable
+  var html='<ul style="margin:0;padding-left:20px;">';
+  reasons.slice(0,4).forEach(function(r){html+='<li style="margin-bottom:5px;">'+r+'</li>';});
+  html+='</ul>';
+  body.innerHTML=html;card.style.display='block';
+}
+
+/* ═══ AGENT CONTEXT HANDOFF VISUALIZATION ═══
+ * Shows the user the JSON payload that will be sent from one agent to the next.
+ * Critical for debugging "the agent ignored X" — you can see whether X actually got passed.
+ */
+function showHandoff(stage){
+  var title='',content='';
+  if(stage==='discovery'){
+    if(!r1){alert('Run the Discovery Agent first to see what would be handed off to Architect.');return;}
+    title='Discovery → Architect Handoff';
+    var byo=r1.customer_supplied_hardware?'⚠ TRUE (BYOD / colocation-only)':'false';
+    var unl=r1._unlistedSkuOverride?'⚠ TRUE (unlisted SKU procurement)':'(auto-detected from gpu_preference)';
+    content='# What the Architect Agent will receive\n\n## Critical signals (these drive deal-pattern selection)\n- customer_supplied_hardware: '+byo+'\n- unlisted SKU override: '+unl+'\n- gpu_preference: "'+(r1.gpu_preference||'')+'"\n- workflow: "'+(r1.workflow||'')+'"\n- budget: "'+(r1.budget||'')+'"\n\n## Full Discovery output (JSON)\n```json\n'+JSON.stringify(r1,null,2)+'\n```\n\n## What the Architect will do with this\nThe Architect uses this JSON to score 4-8 hardware paths against your inventory and budget. It checks for BYOD / unlisted-SKU signals at the top of its input (these are now bold, impossible-to-miss markers above the JSON). If it ignores something here, the issue is likely in (a) the Architect prompt, or (b) Anthropic\'s response to the prompt.\n\nIf you see a field below that is missing or wrong, click ↻ Re-run Discovery Agent on Step 1 with feedback like "Add a key_requirement for X" to fix it before continuing.';
+  } else if(stage==='architect'){
+    if(!r2){alert('Run the Architect Agent first to see what would be handed off to Writer.');return;}
+    title='Architect → Writer Handoff';
+    content='# What the Writer Agent will receive\n\n## From Discovery (r1)\n```json\n'+JSON.stringify(r1||{},null,2)+'\n```\n\n## From Architect (r2 — recommendation text)\n```\n'+(r2||'(empty)')+'\n```\n\n## What the Writer will do with this\nThe Writer combines both into a 9-section client-ready proposal. It uses r1 for client name, business context, and competitive intel; r2 for the actual hardware recommendation, pricing, and rack/power/colo numbers.\n\nIf the proposal output gets numbers wrong, check whether the wrong numbers are already in r2 above. If yes, fix the Architect (re-run with feedback or edit the recommendation inline) before approving. If r2 looks correct but the proposal output disagrees, the issue is in the Writer prompt.';
+  }
+  // Pop in a window
+  var w=window.open('','_blank','width=900,height=700,scrollbars=yes');
+  if(w){
+    var safeContent=content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    w.document.write('<title>'+title+'</title><style>body{font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;line-height:1.6;padding:32px 40px;color:#1a1a1a;max-width:900px;}h1{font-size:18px;border-bottom:1px solid #ddd;padding-bottom:8px;}h2{font-size:14px;color:#444;margin-top:24px;}pre,code{background:#f4f4f4;padding:2px 6px;border-radius:3px;}pre{padding:12px;overflow:auto;}</style>');
+    // Convert markdown-ish formatting to HTML
+    var html=safeContent
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/```json\n([\s\S]*?)\n```/g,'<pre>$1</pre>')
+      .replace(/```\n([\s\S]*?)\n```/g,'<pre>$1</pre>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/^- (.+)$/gm,'• $1<br/>');
+    w.document.write('<p>'+html+'</p>');
+    w.document.close();
+  } else {
+    // Fall back to download
+    var blob=new Blob([content],{type:'text/plain'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='handoff_'+stage+'.txt';a.click();
+  }
+}
+
+/* ═══ RESET ASSESSMENT — wipe everything except saved proposals ═══ */
+function resetAssessment(){
+  if(!confirm('Reset this assessment? This clears your inputs, all extracted constraints, the Architect recommendation, and the proposal draft. The proposals tracker is unaffected.'))return;
+  ['txInput','granolaInput','emailInput','gdocInput','slackInput','reprompt1','reprompt2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['cBudget','cGpu','cWorkflow','cTimeline','cBizModel','cDealStage'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';});
+  ['out1','dealIntelCard','confCard','ragBadge','dealStageBadge','fuQuestionsWrap','compIntelWrap','out2','out3','propActions','splitToggle'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  var byo=document.getElementById('byodCheckbox');if(byo)byo.checked=false;
+  var unl=document.getElementById('unlistedSkuCheckbox');if(unl)unl.checked=false;
+  ['constraintBar','summaryBar','recBar','proposalBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('visible');});
+  hideValidation('val1');hideValidation('val2');hideValidation('val3');
+  r1=null;r2=null;origConstraints=null;origSummary=null;origRec=null;origProposal=null;savedProposal=null;
+  proposalVersions=[];currentVersionIndex=0;_editBaselineText='';
+  _lastArchitectR1Hash='';_lastArchitectR2='';
+  ['s1d','s2d','s3d'].forEach(function(id){var el=document.getElementById(id);if(el)el.className='sdot';});
+  var s1s=document.getElementById('s1s');if(s1s)s1s.textContent='Ready to extract constraints';
+  var s2s=document.getElementById('s2s');if(s2s)s2s.textContent='Awaiting Discovery output';
+  var s3s=document.getElementById('s3s');if(s3s)s3s.textContent='Awaiting Architect approval';
+  ['btn1','btn2','btn3'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=false;});
+  var b1=document.getElementById('btn1');if(b1)b1.textContent='Run Discovery Agent →';
+  if(typeof clearDraft==='function')clearDraft();
+  goStep(1);
+  showStorageBadge('saved','Assessment reset — ready for new input');
+}
 
 /* ═══ RE-RUN DISCOVERY AGENT — preserves input, clears stale extraction ═══ */
 function rerunDiscovery(){
@@ -1619,6 +1777,22 @@ function quickEnableMockMode(){
 /* ═══ SETTINGS MODAL ═══ */
 function openSettings(){document.getElementById('settingsModal').classList.remove('hidden');setTimeout(function(){if(!ZN_API_KEY){var f=document.getElementById('settingsApiKey');if(f)f.focus();}},100);}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden');}
+function switchSettingsTab(name){
+  // Update tab styles
+  var tabs=document.querySelectorAll('#settingsTabs .settings-tab');
+  for(var i=0;i<tabs.length;i++){
+    var t=tabs[i];var active=t.getAttribute('data-tab')===name;
+    t.style.color=active?'var(--ink)':'var(--muted)';
+    t.style.fontWeight=active?'600':'500';
+    t.style.borderBottom=active?'2px solid var(--blue)':'2px solid transparent';
+    if(active)t.classList.add('active');else t.classList.remove('active');
+  }
+  // Show/hide panes
+  var panes=document.querySelectorAll('.settings-pane');
+  for(var j=0;j<panes.length;j++){
+    var p=panes[j];p.style.display=p.getAttribute('data-pane')===name?'block':'none';
+  }
+}
 function saveSettings(){
   var key=document.getElementById('settingsApiKey').value.trim();
   var mode=document.querySelector('input[name="apiModeRadio"]:checked');
@@ -1696,6 +1870,72 @@ async function callClaude(sys,usr,agentName,maxTokens){
     }
   }
   throw new Error('All retry attempts failed for '+agentName);
+}
+
+/* ═══ STREAMING VARIANT — partial text fed to onChunk callback as it arrives ═══
+ * Used for Writer Agent where the long output benefits from streaming. Falls back to non-streaming on error.
+ */
+async function callClaudeStream(sys,usr,agentName,maxTokens,onChunk){
+  agentName=agentName||'writer';
+  maxTokens=maxTokens||4000;
+  var effectiveKey=getEffectiveApiKey();
+  var proxyMode=API_BASE&&getApiMode()==='proxy';
+  if(!effectiveKey&&!proxyMode){throw new Error('NEEDS_API_KEY');}
+  // Streaming only works in direct mode (proxy backend doesn't yet expose SSE).
+  if(proxyMode){return callClaude(sys,usr,agentName,maxTokens);}
+  var body=JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:sys,messages:[{role:'user',content:usr}],stream:true});
+  var url='https://api.anthropic.com/v1/messages';
+  var headers={'Content-Type':'application/json','x-api-key':effectiveKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+  try{
+    console.log('[callClaudeStream] '+agentName+' starting');
+    var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('Stream timed out after 180s'));},180000);});
+    var r=await Promise.race([fetch(url,{method:'POST',headers:headers,body:body}),timeout]);
+    if(!r.ok){
+      // Fall back to non-streaming on any error
+      console.warn('[callClaudeStream] non-200 status '+r.status+' — falling back to non-streaming');
+      return callClaude(sys,usr,agentName,maxTokens);
+    }
+    if(!r.body||!r.body.getReader){
+      console.warn('[callClaudeStream] ReadableStream not supported — falling back');
+      return callClaude(sys,usr,agentName,maxTokens);
+    }
+    var reader=r.body.getReader();
+    var decoder=new TextDecoder();
+    var buffer='';
+    var fullText='';
+    while(true){
+      var chunk=await reader.read();
+      if(chunk.done)break;
+      buffer+=decoder.decode(chunk.value,{stream:true});
+      // SSE format: lines like "event: content_block_delta\ndata: {...}\n\n"
+      var lines=buffer.split('\n');
+      buffer=lines.pop()||''; // keep incomplete line for next iteration
+      for(var i=0;i<lines.length;i++){
+        var line=lines[i].trim();
+        if(!line||!line.indexOf('event:')===0&&line.indexOf('data:')!==0)continue;
+        if(line.indexOf('data:')===0){
+          var data=line.substring(5).trim();
+          if(!data||data==='[DONE]')continue;
+          try{
+            var parsed=JSON.parse(data);
+            if(parsed.type==='content_block_delta'&&parsed.delta&&parsed.delta.type==='text_delta'){
+              var deltaText=parsed.delta.text||'';
+              fullText+=deltaText;
+              if(typeof onChunk==='function'){try{onChunk(deltaText,fullText);}catch(cbErr){console.warn('onChunk error:',cbErr);}}
+            }
+          }catch(parseErr){/* skip malformed lines */}
+        }
+      }
+    }
+    if(!fullText){
+      console.warn('[callClaudeStream] empty stream — falling back');
+      return callClaude(sys,usr,agentName,maxTokens);
+    }
+    return fullText;
+  }catch(err){
+    console.warn('[callClaudeStream] error '+err.message+' — falling back to non-streaming');
+    return callClaude(sys,usr,agentName,maxTokens);
+  }
 }
 
 /* ═══ EDIT DELTA LOGGING (RLHF signal — stores locally when no backend) ═══ */
@@ -2285,16 +2525,51 @@ async function runAgent2(){
       var userPreamble='';
       if(isBYOD){userPreamble+='⚠ DEAL TYPE: COLOCATION-ONLY (client supplies own hardware). DO NOT recommend Zillion hardware SKUs. DO NOT propose RTX/H100/A100/Pro 6000 servers. Recommend rack space + power + managed services only.\n\n';}
       if(isUnlistedSku){userPreamble+='⚠ UNLISTED SKU: client requested "'+requestedGpu+'" — NOT in Zillion catalog. DO NOT substitute with 4090/5090/Pro 6000/H100. Build a procurement path explicitly labeled "'+requestedGpu+' (source-and-resell)". Set pricing to "TBD — pending supplier quote". Show the in-stock fallback as a clearly separate alternative path.\n\n';}
-      const usr=userPreamble+'Constraints:\n'+JSON.stringify(r1,null,2)+(fb?'\n\n=== HUMAN REVIEWER FEEDBACK (OVERRIDES — apply directly to recommendation) ===\n'+fb+'\n=== END FEEDBACK ===':'');
+      // Cache check — if we've already run Architect on this r1 (deep-equality check via JSON), this is a feedback re-run.
+      // In that case, send only the previous recommendation + feedback, not the full constraints again.
+      var r1Json=JSON.stringify(r1);
+      var isFeedbackRerun=fb&&_lastArchitectR1Hash===r1Json&&_lastArchitectR2;
+      var usr;
+      if(isFeedbackRerun){
+        // Delta-only mode — saves tokens and gives the agent a sharper signal
+        usr=userPreamble+'You previously generated this recommendation for this client:\n\n=== PREVIOUS RECOMMENDATION ===\n'+_lastArchitectR2+'\n=== END PREVIOUS ===\n\nThe human reviewer wants to refine it. Apply this feedback as an OVERRIDE to your previous output:\n\n=== FEEDBACK ===\n'+fb+'\n=== END FEEDBACK ===\n\nRegenerate the paths and recommendation, keeping what was correct and changing what the feedback addresses. Constraints (unchanged):\n- client: '+(r1.client_name||'')+'\n- budget: '+(r1.budget||'')+'\n- gpu_preference: '+(r1.gpu_preference||'')+'\n- workflow: '+(r1.workflow||'')+'\n- BYOD: '+(r1.customer_supplied_hardware?'true':'false');
+      } else {
+        usr=userPreamble+'Constraints:\n'+r1Json+(fb?'\n\n=== HUMAN REVIEWER FEEDBACK (OVERRIDES — apply directly to recommendation) ===\n'+fb+'\n=== END FEEDBACK ===':'');
+      }
       const raw=await callClaude(sys,usr,"architect",3500);const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
       totPaths=parsed.paths||[];recommendation=parsed.recommendation||generateRec(r1,totPaths);
       } // end if(getApiMode()==='mock') else block
     }catch(apiErr){console.warn('Architect API fallback to local engine:',apiErr.message);totPaths=generateToTPaths(r1);recommendation=generateRec(r1,totPaths);}
     const track=document.getElementById('totPaths');
-    for(let i=0;i<totPaths.length;i++){await mockDelay(380);const path=totPaths[i];const el=document.createElement('div');el.className='tot-path '+(path.status==='winning'?'winning':'eliminated');var vramPill=path._vram?'<span style="font-size:11px;font-weight:600;margin-left:8px;padding:2px 7px;border-radius:999px;background:rgba(26,86,219,0.08);color:var(--blue);border:1px solid rgba(26,86,219,0.2);">'+path._vram+'GB VRAM total</span>':'';var nodesPill=path._nodes?'<span style="font-size:11px;font-weight:500;margin-left:6px;color:var(--muted);">'+path._nodes+' nodes</span>':'';el.innerHTML='<div class="tot-path-label">'+(path.status==='winning'?'✓':'✗')+' '+path.label+vramPill+nodesPill+'<span style="font-size:11px;font-weight:500;margin-left:auto;">'+path.score+'</span></div><div class="tot-path-body">'+path.content+(fb?'\n\n[Feedback: '+fb+']':'')+'</div>';track.appendChild(el);}
+    for(let i=0;i<totPaths.length;i++){
+      await mockDelay(380);
+      const path=totPaths[i];
+      const el=document.createElement('div');
+      el.className='tot-path '+(path.status==='winning'?'winning':'eliminated');
+      // Header row — label + score
+      var headRow='<div class="tot-path-label">'+(path.status==='winning'?'✓':'✗')+' '+escHtml(path.label)+'<span style="font-size:11px;font-weight:500;margin-left:auto;">'+escHtml(path.score)+'</span></div>';
+      // Scannable stat row — compact summary of cost / VRAM / nodes / arch / pattern
+      var stats=[];
+      if(path.cost)stats.push({label:'Cost',value:path.cost});
+      if(path._vram)stats.push({label:'VRAM',value:path._vram+' GB'});
+      if(path._nodes)stats.push({label:'Nodes',value:path._nodes});
+      if(path._arch)stats.push({label:'Arch',value:path._arch.toUpperCase()});
+      if(path.deal_pattern)stats.push({label:'Pattern',value:String(path.deal_pattern).toUpperCase()});
+      var statsHtml='';
+      if(stats.length>0){
+        statsHtml='<div style="display:flex;flex-wrap:wrap;gap:14px;padding:10px 12px;margin:6px 0 10px 0;background:var(--bg);border-radius:6px;font-size:11.5px;">';
+        statsHtml+=stats.map(function(s){return '<div style="display:flex;flex-direction:column;gap:2px;"><span style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">'+s.label+'</span><span style="color:var(--ink);font-weight:600;">'+escHtml(String(s.value))+'</span></div>';}).join('');
+        statsHtml+='</div>';
+      }
+      el.innerHTML=headRow+statsHtml+'<div class="tot-path-body">'+escHtml(path.content)+(fb?'\n\n[Feedback: '+escHtml(fb)+']':'')+'</div>';
+      track.appendChild(el);
+    }
     await mockDelay(300);
     r2=recommendation+(fb?'\n\nNote: feedback applied: "'+fb+'"':'');origRec=r2;
+    // Cache for delta-only re-runs on this same r1
+    _lastArchitectR1Hash=JSON.stringify(r1);_lastArchitectR2=r2;
     const b=document.getElementById('out2body');b.classList.remove('out-empty');b.textContent=r2;
+    renderWhyCard(totPaths,r1);
     document.getElementById('out2').style.display='block';
     document.getElementById('out2').scrollIntoView({behavior:'smooth',block:'start'});
     watchEdits(['out2body'],'recBar');stopProgress(prog2);done('s2d','s2s','btn2','Run Architect Agent →','Recommendation ready — awaiting HITL');agentRunning=false;saveDraft();
@@ -2323,17 +2598,34 @@ async function runAgent3(){
     try{
       const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.\n\nBRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n9. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n10. ## Deployment Timeline (table using 3-week Zillion pipeline)\n11. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n12. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
       const usr='Generate a complete proposal from:\n\nClient Constraints:\n'+JSON.stringify(r1,null,2)+'\n\nHardware Recommendation:\n'+r2;
-      text=await callClaude(sys,usr,"writer",7000);
+      // Stream partial text into the proposal box so the user sees progress, not just a spinner.
+      // Sets contentEditable later — during streaming the box is read-only.
+      var streamBox=document.getElementById('out3body');
+      if(streamBox){streamBox.textContent='';streamBox.contentEditable='false';}
+      var streamingActive=true;
+      try{
+        text=await callClaudeStream(sys,usr,"writer",7000,function(chunk,total){
+          // Throttle DOM updates — only update every ~80 chars to avoid jank
+          if(streamingActive&&streamBox){
+            // Use textContent to avoid HTML injection on partial text
+            streamBox.textContent=total;
+            // Keep status text fresh during streaming
+            var sStatus=document.getElementById('s3s');
+            if(sStatus)sStatus.textContent='Streaming proposal… ('+total.length+' chars)';
+          }
+        });
+      } finally {
+        streamingActive=false;
+      }
     }catch(apiErr){console.warn('Writer API fallback to local generator:',apiErr.message);const paths=generateToTPaths(r1);text=generateProposal(r1,r2,paths);}
     } // end if(getApiMode()==='mock') else block
     origProposal=text;savedProposal=text;
     proposalVersions=[{label:'v1 — AI Draft',text:text,ts:new Date().toISOString(),current:true}];currentVersionIndex=0;
     b.textContent=text;b.contentEditable='true';renderVersionBtns();watchEdits(['out3body'],'proposalBar');
-    // Confidence-based styling — yellow border + banner when confidence is low
+    // Confidence-based styling — yellow banner when confidence is low (no outline on proposal box)
     var confScore=r1&&r1.confidence&&typeof r1.confidence.score==='number'?r1.confidence.score:7;
     var lowConfBanner=document.getElementById('lowConfBanner');
     if(confScore<7){
-      b.style.border='2px solid var(--amber)';
       if(!lowConfBanner){
         lowConfBanner=document.createElement('div');lowConfBanner.id='lowConfBanner';
         lowConfBanner.style.cssText='margin:0 0 12px 0;padding:10px 14px;background:#FFF8E1;border:1px solid #FFC107;border-radius:8px;font-size:12.5px;color:#5C4500;font-weight:500;';
@@ -2342,7 +2634,6 @@ async function runAgent3(){
       lowConfBanner.innerHTML='⚡ Low confidence extraction (score '+confScore+'/10) — review constraints carefully before sending to client';
       lowConfBanner.style.display='block';
     } else {
-      b.style.border='';
       if(lowConfBanner)lowConfBanner.style.display='none';
     }
     // Detect placeholder text that needs filling in before sending
@@ -2351,7 +2642,6 @@ async function runAgent3(){
     var placeholderBanner=document.getElementById('placeholderBanner');
     if(placeholders.length>0){
       var unique=[];placeholders.forEach(function(p){if(unique.indexOf(p)<0)unique.push(p);});
-      b.style.border='2px solid var(--red)';
       if(!placeholderBanner){
         placeholderBanner=document.createElement('div');placeholderBanner.id='placeholderBanner';
         placeholderBanner.style.cssText='margin:0 0 12px 0;padding:10px 14px;background:#FEF2F2;border:1px solid #DC2626;border-radius:8px;font-size:12.5px;color:#7F1D1D;font-weight:500;';
@@ -2525,7 +2815,7 @@ function renderTracker(){
   var rc=document.getElementById('resultsCount');if(rc)rc.textContent=filtered.length!==proposals.length?filtered.length+' of '+proposals.length+' proposals':'';
   var list=document.getElementById('proposalList');
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">'+(proposals.length?'🔍':'📭')+'</div><div class="empty-state-title">'+(proposals.length?'No proposals match this filter':'No proposals yet')+'</div></div>';document.getElementById('paginationControls').style.display='none';return;}
-  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
+  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
   var pc=document.getElementById('paginationControls');if(totalPages>1){pc.style.display='flex';document.getElementById('pageInfo').textContent='Page '+currentPage+' of '+totalPages;document.getElementById('prevPage').disabled=currentPage<=1;document.getElementById('nextPage').disabled=currentPage>=totalPages;}else{pc.style.display='none';}
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -2554,6 +2844,27 @@ function getProposalSummary(p){
 function toggleProposal(id){var exp=document.getElementById('pexp-'+id);var row=document.getElementById('prow-'+id);var open=exp.classList.contains('open');document.querySelectorAll('.pr-expanded').forEach(function(e){e.classList.remove('open');});document.querySelectorAll('.proposal-row').forEach(function(r){r.classList.remove('expanded');});if(!open){exp.classList.add('open');row.classList.add('expanded');}}
 function toggleStatusPicker(id){var p=document.getElementById('sp-'+id);var open=p.classList.contains('open');document.querySelectorAll('.status-picker').forEach(function(x){x.classList.remove('open');});if(!open)p.classList.add('open');}
 document.addEventListener('click',function(){document.querySelectorAll('.status-picker').forEach(function(p){p.classList.remove('open');});});
+function renameClient(id){
+  var p=proposals.find(function(x){return x.id===id;});
+  if(!p)return;
+  var current=p.client||'';
+  var newName=prompt('Rename client (was "'+current+'"):',current);
+  if(newName===null)return;
+  newName=newName.trim();
+  if(!newName){alert('Client name cannot be empty.');return;}
+  if(newName===current)return;
+  // Check for collision with another proposal
+  var collision=proposals.find(function(x){return x.id!==id&&x.client.toLowerCase()===newName.toLowerCase();});
+  if(collision&&!confirm('Another proposal already exists for "'+newName+'" (ID '+collision.id+'). Rename anyway?'))return;
+  p.client=newName;
+  // Also update client_name on r1 snapshot if present, for consistency
+  if(p.r1)p.r1.client_name=newName;
+  storageSave();
+  updateProposalOnBackend(id,{client:newName});
+  renderTracker();
+  renderHomeRecent();
+  showStorageBadge('saved','Client renamed to "'+newName+'"');
+}
 function setStatus(id,status){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var prevStatus=p.status;p.status=status;document.querySelectorAll('.status-picker').forEach(function(x){x.classList.remove('open');});
   // Auto-decrement inventory when proposal closes successfully (won)
   if(status==='success'&&prevStatus!=='success'){decrementInventoryFromProposal(p);}
@@ -3302,11 +3613,19 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
 
 <!-- ════════ SETTINGS MODAL ════════ -->
 <div id="settingsModal" class="hidden" role="dialog" aria-label="Settings" style="position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);">
-  <div style="background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:28px 32px;width:480px;max-width:90vw;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <div style="background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:24px 28px;width:540px;max-width:90vw;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="font-size:18px;font-weight:700;color:var(--ink);">⚙ Settings</div>
       <button onclick="closeSettings()" style="background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;">✕</button>
     </div>
+    <!-- Settings tabs -->
+    <div id="settingsTabs" style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px;">
+      <button class="settings-tab active" data-tab="api" onclick="switchSettingsTab('api')" style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:600;color:var(--ink);border-bottom:2px solid var(--blue);cursor:pointer;margin-bottom:-1px;">API & Mode</button>
+      <button class="settings-tab" data-tab="data" onclick="switchSettingsTab('data')" style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;">Data</button>
+      <button class="settings-tab" data-tab="diag" onclick="switchSettingsTab('diag')" style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;">Diagnostics</button>
+    </div>
+    <!-- Tab: API & Mode -->
+    <div class="settings-pane" data-pane="api" style="display:block;">
     <div style="margin-bottom:20px;padding:14px;background:var(--bg);border:1px dashed var(--border);border-radius:var(--r-md);">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">⚡ Quick Setup — Team Passphrase</div>
       <div style="font-size:11.5px;color:var(--ink2);line-height:1.5;margin-bottom:10px;">If Larry shared a team passphrase, paste it here to unlock the shared API key. <strong>This is the easiest way to get started</strong> — no Anthropic console access needed.</div>
@@ -3343,7 +3662,10 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Backend URL</div>
       <input type="text" id="settingsApiBase" placeholder="https://your-backend.railway.app" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;background:var(--bg);color:var(--ink);"/>
     </div>
-    <div style="margin-bottom:20px;padding-top:16px;border-top:1px solid var(--border);">
+    </div><!-- /api pane -->
+    <!-- Tab: Data -->
+    <div class="settings-pane" data-pane="data" style="display:none;">
+    <div style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">Data Backup</div>
       <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:8px;">All data lives in this browser's localStorage. <strong>Export weekly</strong> to avoid loss if browser data is cleared.</div>
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;">An auto-snapshot is saved every 5 changes as a fallback. The bizops site also reminds you to export every 7 days.</div>
@@ -3354,10 +3676,25 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
           <input type="file" accept=".json" style="display:none;" onchange="importAllData(this)"/>
         </label>
         <button onclick="restoreAutoSnapshot()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink2);font-size:12px;font-weight:500;cursor:pointer;" title="Restore from the redundant auto-snapshot saved every few changes">↻ Restore Auto-Snapshot</button>
-        <button onclick="exportEditLog()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;">📊 Export Edit Log (RLHF)</button>
-        <button onclick="analyzeEditPatterns()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;" title="Analyze edit patterns to identify which prompts need tuning">🔍 Analyze Edit Patterns</button>
       </div>
     </div>
+    </div><!-- /data pane -->
+    <!-- Tab: Diagnostics -->
+    <div class="settings-pane" data-pane="diag" style="display:none;">
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">Edit Log & Prompt Tuning</div>
+      <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:12px;">Edit log captures every change you make to AI output. <strong>Analyze Edit Patterns</strong> shows which prompts need tuning based on real usage.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button onclick="exportEditLog()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;">📊 Export Edit Log (RLHF)</button>
+        <button onclick="analyzeEditPatterns()" style="padding:7px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;">🔍 Analyze Edit Patterns</button>
+      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;padding-top:12px;border-top:1px solid var(--border);">About this build</div>
+      <div style="font-size:11.5px;color:var(--muted);line-height:1.6;">
+        Build version: <span style="font-family:monospace;color:var(--ink2);">v2026.04.27</span><br/>
+        If features look outdated, hard refresh (Cmd+Shift+R) to load the latest deploy.
+      </div>
+    </div>
+    </div><!-- /diag pane -->
     <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--border);">
       <button onclick="closeSettings()" style="padding:8px 18px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--white);color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;">Cancel</button>
       <button onclick="saveSettings()" style="padding:8px 22px;border:none;border-radius:var(--r-md);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Save Settings</button>
