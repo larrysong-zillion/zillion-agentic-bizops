@@ -640,6 +640,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <div class="home-bar-right">
         <div style="display:flex;align-items:center;gap:6px;margin-right:12px;"><div id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);"></div><span id="apiStatusText" style="font-size:11px;color:var(--muted);">Mock Mode</span><span style="font-size:10px;color:rgba(255,255,255,0.25);margin-left:8px;font-family:monospace;" title="Build version — hard refresh (Cmd+Shift+R) if older than today">v2026.04.27</span></div>
         <button onclick="loadSettingsIntoModal();openSettings()" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;margin-right:8px;" title="Settings" aria-label="Open Settings">⚙</button>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDzTonEVcnqT1si6dSmoCEYNycbtcM38-I50eKGQugX_Rn1w/viewform" target="_blank" rel="noopener" title="Share feedback on Bizops" style="display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid rgba(0,196,122,0.35);border-radius:8px;padding:6px 11px;cursor:pointer;color:rgba(0,196,122,0.85);font-size:12px;font-weight:500;text-decoration:none;margin-right:8px;transition:all 0.15s;" onmouseover="this.style.background='rgba(0,196,122,0.1)'" onmouseout="this.style.background='none'">💬 Feedback</a>
         <button class="home-proposals-btn" onclick="goTracker()">
           All Proposals <span class="home-count" id="homeCount">0</span>
         </button>
@@ -1055,6 +1056,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <button class="act-btn" onclick="doExport()">⬇ Export .md</button>
         <button class="act-btn" onclick="openPdfModal(null)" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button>
         <button class="act-btn" onclick="sendForReview()" style="color:var(--green);border-color:rgba(0,196,122,0.3);">📧 Send for Review</button>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDzTonEVcnqT1si6dSmoCEYNycbtcM38-I50eKGQugX_Rn1w/viewform" target="_blank" rel="noopener" class="act-btn" style="color:var(--muted);border-color:var(--border);text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Share feedback on this proposal workflow">💬 Feedback</a>
         <button class="act-btn" onclick="goStep(2)" style="color:var(--ink2);">📦 View Inventory & Recommendation</button>
       </div>
       <div class="btn-row">
@@ -3694,6 +3696,14 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
     </div><!-- /data pane -->
     <!-- Tab: Diagnostics -->
     <div class="settings-pane" data-pane="diag" style="display:none;">
+    <!-- Feedback banner -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,196,122,0.07);border:1px solid rgba(0,196,122,0.25);border-radius:var(--r-md);margin-bottom:18px;">
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:2px;">💬 Share Feedback</div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.45;">Help improve Bizops — takes ~5 min. Reports bugs, bad extractions, and UX issues directly to Larry.</div>
+      </div>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDzTonEVcnqT1si6dSmoCEYNycbtcM38-I50eKGQugX_Rn1w/viewform" target="_blank" rel="noopener" style="flex-shrink:0;margin-left:16px;padding:8px 16px;background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);text-decoration:none;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Open Form →</a>
+    </div>
     <div style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:10px;">Edit Log & Prompt Tuning</div>
       <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:12px;">Edit log captures every change you make to AI output. <strong>Analyze Edit Patterns</strong> shows which prompts need tuning based on real usage.</div>
