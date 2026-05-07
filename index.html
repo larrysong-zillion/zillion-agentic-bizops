@@ -170,6 +170,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-he
 .rs-pending{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 .rs-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .rs-lost{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.rs-disqualified{background:#F1F5F9;color:#64748B;border:1px solid #CBD5E1;}
 .home-recent-empty{text-align:center;padding:20px;color:var(--placeholder);font-size:13px;}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
@@ -342,7 +343,11 @@ textarea::placeholder,input::placeholder{color:var(--placeholder);}
 /* ══════════════════════════════
    INVENTORY
 ══════════════════════════════ */
-.inv-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;-webkit-overflow-scrolling:touch;}
+.inv-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow-sm);margin-bottom:24px;-webkit-overflow-scrolling:touch;position:relative;}
+@media(max-width:900px){
+  .inv-wrap::after{content:'';position:sticky;right:0;top:0;display:block;width:24px;height:100%;background:linear-gradient(to right,transparent,rgba(0,0,0,0.06));pointer-events:none;float:right;margin-top:-1px;}
+  .inv-wrap{scrollbar-width:thin;}
+}
 .inv-table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
 .inv-table th{text-align:left;padding:10px 15px;font-size:11px;font-weight:600;color:var(--placeholder);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg);}
 .inv-table td{padding:10px 15px;border-bottom:1px solid var(--border);color:var(--ink);}
@@ -459,6 +464,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .status-badge.success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .status-badge.pending{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 .status-badge.lost{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.status-badge.disqualified{background:#F1F5F9;color:#64748B;border:1px solid #CBD5E1;}
 .status-dot-sm{width:6px;height:6px;border-radius:50%;background:currentColor;}
 .status-picker{display:none;position:absolute;background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-lg);padding:6px;z-index:50;min-width:160px;}
 .status-picker.open{display:block;}
@@ -823,9 +829,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
           <div style="font-size:13px;font-weight:700;color:var(--ink);">Deal Intelligence</div>
           <span id="dealStageBadge" style="display:none;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);"></span>
         </div>
-        <div id="fuQuestionsWrap" style="display:none;margin-bottom:14px;">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Follow-up Questions for Sales Team</div>
-          <div id="fuQuestionsList" style="font-size:13px;color:var(--ink2);line-height:1.7;"></div>
+        <div id="fuQuestionsWrap" style="display:none;margin-bottom:18px;padding:14px 18px;background:linear-gradient(135deg,#EFF6FF 0%,#F0F9FF 100%);border:1px solid rgba(26,86,219,0.2);border-radius:var(--r-md);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--blue);">📋 Follow-up Questions for Sales Team</div>
+            <button onclick="copyFollowUpQuestions()" style="font-size:11px;font-weight:600;padding:4px 12px;border:1px solid rgba(26,86,219,0.3);border-radius:6px;background:#fff;color:var(--blue);cursor:pointer;">📋 Copy all</button>
+          </div>
+          <div id="fuQuestionsList" style="font-size:13.5px;color:var(--ink);line-height:1.75;font-weight:500;"></div>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);font-style:italic;">Bring these to the next customer call to fill gaps in the proposal.</div>
         </div>
         <div id="compIntelWrap" style="display:none;">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Competitive Intel</div>
@@ -1115,6 +1125,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <button class="filter-btn" onclick="filterProposals('success',this)">✓ Won</button>
         <button class="filter-btn" onclick="filterProposals('pending',this)">⏳ Pending</button>
         <button class="filter-btn" onclick="filterProposals('lost',this)">✗ Lost</button>
+        <button class="filter-btn" onclick="filterProposals('disqualified',this)">✕ Disqualified</button>
       </div>
       <span class="results-count" id="resultsCount"></span>
     </div>
@@ -1340,6 +1351,47 @@ function showHandoffTooltipOnce(stage){
   localStorage.setItem(key,'1');
 }
 
+/* ═══ COPY FOLLOW-UP QUESTIONS — for sales team to use in next customer call ═══ */
+function copyFollowUpQuestions(){
+  if(!r1||!Array.isArray(r1.follow_up_questions)||r1.follow_up_questions.length===0){alert('No follow-up questions to copy.');return;}
+  var text='Follow-up Questions for '+(r1.client_name||'Client')+'\n'+
+    '─'.repeat(50)+'\n\n'+
+    r1.follow_up_questions.map(function(q,i){return (i+1)+'. '+q;}).join('\n\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      showStorageBadge('saved','📋 '+r1.follow_up_questions.length+' questions copied to clipboard');
+    }).catch(function(){alert('Copy failed — please select and copy manually.');});
+  } else {
+    alert('Clipboard not available — please select and copy manually.');
+  }
+}
+
+/* ═══ MARK AS DISQUALIFIED — for low-fit deals that shouldn't proceed to a proposal ═══ */
+function markAsDisqualified(){
+  if(!r1){alert('Run Discovery Agent first before disqualifying.');return;}
+  var clientName=r1.client_name||'Unknown Client';
+  var flagsList=(r1.low_fit_flags||[]).join('; ')||'manual disqualification';
+  if(!confirm('Mark "'+clientName+'" as DISQUALIFIED?\n\nThis saves the deal to your Tracker with status "disqualified" and the low-fit reasons. No proposal will be generated. You can still edit the entry later.'))return;
+  var id=genId();
+  var disqualified={
+    id:id,
+    client:clientName,
+    amount:r1.budget||'—',
+    date:new Date().toISOString().slice(0,10),
+    status:'disqualified',
+    text:'## Disqualification Notes\n\n**Client:** '+clientName+'\n**Reasons (Low-fit flags):**\n'+(r1.low_fit_flags||[]).map(function(f){return '- '+f;}).join('\n')+'\n\n**Discovery Summary:**\n- Budget: '+(r1.budget||'unknown')+'\n- GPU preference: '+(r1.gpu_preference||'unknown')+'\n- Workflow: '+(r1.workflow||'unknown')+'\n- Deal stage: '+(r1.deal_stage||'unknown')+'\n\n**Recommendation:** '+(r1.low_fit_flags&&r1.low_fit_flags.length>=2?'Disqualify or pivot to colocation-only quote.':'Reviewer disqualified at Step 1.'),
+    notes:'Disqualified at Discovery — '+flagsList,
+    versions:[],
+    r1:JSON.parse(JSON.stringify(r1))
+  };
+  proposals.unshift(disqualified);
+  storageSave();
+  if(typeof createProposalOnBackend==='function')createProposalOnBackend(disqualified);
+  showStorageBadge('saved','✕ "'+clientName+'" marked as disqualified');
+  // Navigate to tracker so user sees their entry
+  setTimeout(function(){goTracker();},800);
+}
+
 /* ═══ "Why this recommendation?" — deterministic explainer built from winning path ═══
  * Generates 2-4 concrete reasons by reading path metadata, NOT by re-asking Claude.
  * Reasons cite budget utilization, in-stock status, GPU preference match, and deal-pattern fit.
@@ -1466,7 +1518,7 @@ function resetAssessment(){
   ['txInput','granolaInput','emailInput','gdocInput','slackInput','reprompt1','reprompt2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['cBudget','cGpu','cWorkflow','cTimeline','cBizModel','cDealStage'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';});
   ['out1','dealIntelCard','confCard','ragBadge','dealStageBadge','fuQuestionsWrap','compIntelWrap','out2','out3','propActions','splitToggle'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   var byo=document.getElementById('byodCheckbox');if(byo)byo.checked=false;
   var unl=document.getElementById('unlistedSkuCheckbox');if(unl)unl.checked=false;
   ['constraintBar','summaryBar','recBar','proposalBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('visible');});
@@ -1544,11 +1596,29 @@ function toggleByodOverride(el){
   if(!r1)return;
   r1.customer_supplied_hardware=!!el.checked;
   showStorageBadge('saved',el.checked?'BYOD override on — Architect will recommend colo only':'BYOD override off');
+  showOverrideRerunHint();
 }
 function toggleUnlistedOverride(el){
   if(!r1)return;
   r1._unlistedSkuOverride=!!el.checked;
   showStorageBadge('saved',el.checked?'Unlisted SKU override on — Architect will treat as procurement deal':'Unlisted SKU override off');
+  showOverrideRerunHint();
+}
+/* If Architect has already run, an override change means the existing recommendation is stale.
+ * Show a non-blocking hint banner so the user knows to re-run Architect. */
+function showOverrideRerunHint(){
+  if(!r2)return; // No prior Architect run, nothing to invalidate
+  // Invalidate the cache so a re-run actually re-computes
+  _lastArchitectR1Hash='';
+  var hint=document.getElementById('overrideRerunHint');
+  if(!hint){
+    hint=document.createElement('div');hint.id='overrideRerunHint';
+    hint.style.cssText='margin:12px 0;padding:10px 14px;background:#FFF8E1;border:1px solid #FFC107;border-radius:8px;font-size:12.5px;color:#5C4500;font-weight:500;display:flex;align-items:center;gap:10px;';
+    var dto=document.getElementById('dealTypeOverrides');
+    if(dto&&dto.parentNode)dto.parentNode.insertBefore(hint,dto.nextSibling);
+  }
+  hint.innerHTML='⚡ Architect recommendation may now be stale — overrides changed since last run. <button onclick="document.getElementById(\'overrideRerunHint\').style.display=\'none\';goStep(2);setTimeout(runAgent2,150);" style="margin-left:auto;padding:5px 12px;border:1px solid #F59E0B;border-radius:5px;background:#fff;color:#78350F;font-size:11.5px;font-weight:600;cursor:pointer;">↻ Re-run Architect</button>';
+  hint.style.display='flex';
 }
 function syncDealTypeCheckboxesFromR1(){
   var byo=document.getElementById('byodCheckbox');
@@ -1566,33 +1636,42 @@ function syncDealTypeCheckboxesFromR1(){
 /* ═══ SCHEMA VALIDATOR — fills missing fields, prevents UI breakage ═══ */
 function validateR1(p){
   if(!p||typeof p!=='object')p={};
-  p.client_name=p.client_name||'Unknown Client';
-  p.budget=p.budget||'Unknown';
-  p.gpu_preference=p.gpu_preference||'';
-  p.workflow=p.workflow||'Hybrid';
-  p.timeline=p.timeline||'Not specified';
-  p.deal_stage=p.deal_stage||'Discovery';
-  p.business_model=p.business_model||'Insufficient context to determine business model.';
-  p.rag_classification=p.rag_classification||'Unclassified workload';
-  if(!Array.isArray(p.key_requirements))p.key_requirements=[];
-  if(!Array.isArray(p.follow_up_questions))p.follow_up_questions=[];
-  if(!Array.isArray(p.gaps))p.gaps=[];
-  if(!Array.isArray(p.low_fit_flags))p.low_fit_flags=[];
-  if(!Array.isArray(p.meeting_topics))p.meeting_topics=[];
-  if(!Array.isArray(p.action_items))p.action_items=[];
-  p.project_plan=p.project_plan||'';
+  // Track which fields had to be defaulted — surfaces prompt-drift if Anthropic stops returning fields
+  var _defaulted=[];
+  if(!p.client_name){p.client_name='Unknown Client';_defaulted.push('client_name');}
+  if(!p.budget){p.budget='Unknown';_defaulted.push('budget');}
+  if(typeof p.gpu_preference!=='string'){p.gpu_preference='';_defaulted.push('gpu_preference');}
+  if(!p.workflow){p.workflow='Hybrid';_defaulted.push('workflow');}
+  if(!p.timeline){p.timeline='Not specified';_defaulted.push('timeline');}
+  if(!p.deal_stage){p.deal_stage='Discovery';_defaulted.push('deal_stage');}
+  if(!p.business_model){p.business_model='Insufficient context to determine business model.';_defaulted.push('business_model');}
+  if(!p.rag_classification){p.rag_classification='Unclassified workload';_defaulted.push('rag_classification');}
+  if(!Array.isArray(p.key_requirements)){p.key_requirements=[];_defaulted.push('key_requirements');}
+  if(!Array.isArray(p.follow_up_questions)){p.follow_up_questions=[];_defaulted.push('follow_up_questions');}
+  if(!Array.isArray(p.gaps)){p.gaps=[];_defaulted.push('gaps');}
+  if(!Array.isArray(p.low_fit_flags)){p.low_fit_flags=[];_defaulted.push('low_fit_flags');}
+  if(!Array.isArray(p.meeting_topics)){p.meeting_topics=[];_defaulted.push('meeting_topics');}
+  if(!Array.isArray(p.action_items)){p.action_items=[];_defaulted.push('action_items');}
+  if(typeof p.project_plan!=='string'){p.project_plan='';_defaulted.push('project_plan');}
   p.customer_supplied_hardware=p.customer_supplied_hardware===true;
-  if(!p.meeting_completeness||typeof p.meeting_completeness!=='object')p.meeting_completeness={};
-  if(typeof p.meeting_completeness.score!=='number')p.meeting_completeness.score=7;
-  if(!Array.isArray(p.meeting_completeness.covered))p.meeting_completeness.covered=[];
-  if(!Array.isArray(p.meeting_completeness.missing))p.meeting_completeness.missing=[];
+  if(!p.meeting_completeness||typeof p.meeting_completeness!=='object'){p.meeting_completeness={};_defaulted.push('meeting_completeness');}
+  if(typeof p.meeting_completeness.score!=='number'){p.meeting_completeness.score=7;_defaulted.push('meeting_completeness.score');}
+  if(!Array.isArray(p.meeting_completeness.covered)){p.meeting_completeness.covered=[];_defaulted.push('meeting_completeness.covered');}
+  if(!Array.isArray(p.meeting_completeness.missing)){p.meeting_completeness.missing=[];_defaulted.push('meeting_completeness.missing');}
   p.meeting_completeness.reasoning=p.meeting_completeness.reasoning||'';
-  p.competitive_intel=p.competitive_intel||'';
-  if(!p.confidence||typeof p.confidence!=='object')p.confidence={};
-  p.confidence.score=typeof p.confidence.score==='number'?p.confidence.score:5;
-  p.confidence.label=p.confidence.label||'Moderate Confidence';
-  p.confidence.reasoning=p.confidence.reasoning||'Limited context provided.';
-  if(!Array.isArray(p.confidence.matched_deals))p.confidence.matched_deals=[];
+  if(typeof p.competitive_intel!=='string'){p.competitive_intel='';_defaulted.push('competitive_intel');}
+  if(!p.confidence||typeof p.confidence!=='object'){p.confidence={};_defaulted.push('confidence');}
+  if(typeof p.confidence.score!=='number'){p.confidence.score=5;_defaulted.push('confidence.score');}
+  if(!p.confidence.label){p.confidence.label='Moderate Confidence';_defaulted.push('confidence.label');}
+  if(!p.confidence.reasoning){p.confidence.reasoning='Limited context provided.';_defaulted.push('confidence.reasoning');}
+  if(!Array.isArray(p.confidence.matched_deals)){p.confidence.matched_deals=[];_defaulted.push('confidence.matched_deals');}
+  // Surface prompt-drift signal when the response is wholesale broken — not just slightly incomplete.
+  // Threshold of 18 chosen so a partial-but-real Discovery output (e.g. 10/15 top-level fields populated,
+  // confidence + meeting_completeness parents missing → ~15 defaults) doesn't spam warnings.
+  // Empty {} input → 24 defaults, definitively broken → warns.
+  if(_defaulted.length>=18){
+    console.warn('[validateR1] Defaulted '+_defaulted.length+' missing fields — possible Discovery prompt drift. Fields: '+_defaulted.slice(0,8).join(', ')+(_defaulted.length>8?', +'+(_defaulted.length-8)+' more':''));
+  }
   return p;
 }
 
@@ -1912,13 +1991,20 @@ async function callClaudeStream(sys,usr,agentName,maxTokens,onChunk){
   var effectiveKey=getEffectiveApiKey();
   var proxyMode=API_BASE&&getApiMode()==='proxy';
   if(!effectiveKey&&!proxyMode){throw new Error('NEEDS_API_KEY');}
-  // Streaming only works in direct mode (proxy backend doesn't yet expose SSE).
-  if(proxyMode){return callClaude(sys,usr,agentName,maxTokens);}
-  var body=JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:sys,messages:[{role:'user',content:usr}],stream:true});
-  var url='https://api.anthropic.com/v1/messages';
-  var headers={'Content-Type':'application/json','x-api-key':effectiveKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+  // Streaming endpoint depends on mode — proxy uses /api/agent/{name}/stream, direct hits Anthropic
+  var url,headers,body;
+  if(proxyMode){
+    url=API_BASE+'/api/agent/'+agentName+'/stream';
+    headers={'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('zn_auth_token')||'')};
+    if(ZN_API_KEY)headers['X-User-Api-Key']=ZN_API_KEY;
+    body=JSON.stringify({system_prompt:sys,user_message:usr,max_tokens:maxTokens});
+  } else {
+    url='https://api.anthropic.com/v1/messages';
+    headers={'Content-Type':'application/json','x-api-key':effectiveKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+    body=JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:sys,messages:[{role:'user',content:usr}],stream:true});
+  }
   try{
-    console.log('[callClaudeStream] '+agentName+' starting');
+    console.log('[callClaudeStream] '+agentName+' starting ('+(proxyMode?'proxy':'direct')+')');
     var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('Stream timed out after 180s'));},180000);});
     var r=await Promise.race([fetch(url,{method:'POST',headers:headers,body:body}),timeout]);
     if(!r.ok){
@@ -2215,14 +2301,32 @@ function generateRec(c,paths){
   const coloMatch=w.content.match(/Colo: \$([\d,]+)/);const coloMo=coloMatch?coloMatch[1]:Math.round(parseFloat(power)*448);
   // Lease preference signal — surface lease rates if client mentioned lease/opex/per-month/monthly
   var wantsLease=/lease|opex|per.?year|per.?month|monthly|gpu.?as.?a.?service|gaas/i.test(c.gpu_preference||'')||/lease|opex|per.?year|per.?month|monthly/i.test(c.workflow||'')||(c.key_requirements||[]).some(function(r){return /lease|opex|gpu.?as.?a.?service|gaas/i.test(r);});
+  // Multi-pattern detection: if the customer mentioned BOTH options or said they want a comparison,
+  // surface CapEx and Lease side-by-side with TCO comparison (matches Ab Initia Plan #1 vs Plan #2 structure)
+  var wantsBothPatterns=(/comparison|capex.{0,20}(or|vs|and).{0,5}(lease|opex)|both options|either option|flexible.{0,20}(structure|deal|financial)/i.test((c.key_requirements||[]).join(' ')+' '+(c.gpu_preference||'')+' '+(c.business_model||'')));
   var leaseBlock='';
-  if(wantsLease){
+  if(wantsLease||wantsBothPatterns){
     var totalGpus=parseInt(nodes)*8;
     var tier=totalGpus>=128?LEASE_TIERS[128]:(totalGpus>=96?LEASE_TIERS[96]:(totalGpus>=64?LEASE_TIERS[64]:LEASE_TIERS[8]));
     var mo12=Math.round(totalGpus*tier.r12*730);var mo24=Math.round(totalGpus*tier.r24*730);
-    leaseBlock='\n\nLease Option (client expressed OpEx preference):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month = $'+mo12.toLocaleString()+')\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months = $'+(mo24*2).toLocaleString()+')\n- No upfront CapEx; Zillion owns hardware. Refundable deposit at end of term.';
+    if(wantsBothPatterns){
+      // Side-by-side TCO: Pattern A (CapEx + Colo) vs Pattern B (Lease)
+      var costNum=parseInt(String(cost).replace(/[^0-9]/g,''),10)||0;
+      var capex24moTotal=costNum+(parseInt(coloMo,10)||0)*24;
+      var lease24moTotal=mo24*24+(mo24*2); // 24mo recurring + deposit
+      leaseBlock='\n\n═══ DEAL STRUCTURE COMPARISON (CapEx vs Lease) ═══\n\nPATTERN A — CapEx + Colocation (Ab Initia Plan #1 structure):\n- Hardware: $'+cost+' upfront\n- Colo: $'+coloMo+'/mo × 24 = $'+((parseInt(coloMo,10)||0)*24).toLocaleString()+' over 24 months\n- 24-month TCO: $'+capex24moTotal.toLocaleString()+'\n- Customer owns hardware at end of term\n\nPATTERN B — GPU Lease / OpEx (Ab Initia Plan #2 structure):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month)\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months)\n- 24-month TCO: $'+lease24moTotal.toLocaleString()+' (includes deposit)\n- No CapEx; Zillion owns hardware; refundable deposit at end\n\nDECISION GUIDE:\n- If customer has IT budget and wants ownership: Pattern A (lower 24-mo TCO if held 24+ months)\n- If customer prefers OpEx, has uncertain workload duration, or wants flexibility: Pattern B\n- If customer plans to hold 36+ months: Pattern A wins TCO clearly\n- If customer plans to hold <18 months: Pattern B wins (no sunk hardware cost)';
+    } else {
+      leaseBlock='\n\nLease Option (client expressed OpEx preference):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month = $'+mo12.toLocaleString()+')\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months = $'+(mo24*2).toLocaleString()+')\n- No upfront CapEx; Zillion owns hardware. Refundable deposit at end of term.';
+    }
   }
-  return 'FINAL RECOMMENDATION\n\nHardware: '+sku+' 8× Cluster\nQuantity: '+nodes+' nodes ('+parseInt(nodes)*8+'× '+sku+' total)\nTotal Cost: $'+cost+' — within '+(c.budget||'budget')+'\n\nRack & Facility:\n- Footprint: '+rackU+'U — 42U rack minimum\n- Power: ~'+power+' kW full load — recommend '+Math.ceil(parseFloat(power)*1.5)+' kW PDU\n- Cooling: Air-cooled CRAC sufficient; in-row liquid recommended\n- Network: Leaf-spine fabric (see Architect Agent paths for switch details)\n- Data Center: Zillion DC — '+COLO_DATA.locations[0]+'\n\nColocation & Managed Services:\n- Monthly: ~$'+coloMo+'/mo (power @ $448/kW + IP block)\n- SLA: '+COLO_DATA.sla.network+' network, '+COLO_DATA.sla.incidentResponse+' incident response, '+COLO_DATA.sla.hwReplacement+' HW replacement\n- Scope: 24/7 GPU monitoring (nvidia-smi/DCGM every 60s), hardware monitoring (IPMI/BMC), network, OS patching, remote hands\n- Software: '+COLO_DATA.softwareStack.slice(0,5).join(', ')+leaseBlock+'\n\nJustification: '+vram+'GB aggregate VRAM meets requirements. Homogeneous architecture simplifies NCCL config. Delivery within '+(c.timeline||'agreed timeline')+' via Zillion 3-week deployment pipeline.\n\nRisks:\n1. Confirm NCCL topology file matches cluster layout before NCCL benchmarks\n2. '+power+' kW full load — verify PDU and cooling capacity at facility\n3. Verify facility circuit ratings (208V/30A) and cross-connect for RDMA fabric';
+  // BYOD detection — for colo-only deals, surface managed services pricing instead of hardware
+  var isBYODDeal=c.customer_supplied_hardware===true;
+  var managedBlock='';
+  if(isBYODDeal){
+    var totalKw=parseFloat(power)||5;
+    managedBlock='\n\nPATTERN D — Managed Services (Cudo Ventures 4K H100 structure):\n- Customer owns hardware; Zillion provides 24/7 L3 ops\n- Colo: ~$'+(Math.round(totalKw*448)).toLocaleString()+'/mo (power @ $448/kW)\n- Managed services retainer: pricing per cluster size — typically 8-12% of hardware MSRP/year\n- Includes: monitoring, incident response, software deployment, troubleshooting, remote hands';
+  }
+  return 'FINAL RECOMMENDATION\n\nHardware: '+sku+' 8× Cluster\nQuantity: '+nodes+' nodes ('+parseInt(nodes)*8+'× '+sku+' total)\nTotal Cost: $'+cost+' — within '+(c.budget||'budget')+'\n\nRack & Facility:\n- Footprint: '+rackU+'U — 42U rack minimum\n- Power: ~'+power+' kW full load — recommend '+Math.ceil(parseFloat(power)*1.5)+' kW PDU\n- Cooling: Air-cooled CRAC sufficient; in-row liquid recommended\n- Network: Leaf-spine fabric (see Architect Agent paths for switch details)\n- Data Center: Zillion DC — '+COLO_DATA.locations[0]+'\n\nColocation & Managed Services:\n- Monthly: ~$'+coloMo+'/mo (power @ $448/kW + IP block)\n- SLA: '+COLO_DATA.sla.network+' network, '+COLO_DATA.sla.incidentResponse+' incident response, '+COLO_DATA.sla.hwReplacement+' HW replacement\n- Scope: 24/7 GPU monitoring (nvidia-smi/DCGM every 60s), hardware monitoring (IPMI/BMC), network, OS patching, remote hands\n- Software: '+COLO_DATA.softwareStack.slice(0,5).join(', ')+leaseBlock+managedBlock+'\n\nJustification: '+vram+'GB aggregate VRAM meets requirements. Homogeneous architecture simplifies NCCL config. Delivery within '+(c.timeline||'agreed timeline')+' via Zillion 3-week deployment pipeline.\n\nRisks:\n1. Confirm NCCL topology file matches cluster layout before NCCL benchmarks\n2. '+power+' kW full load — verify PDU and cooling capacity at facility\n3. Verify facility circuit ratings (208V/30A) and cross-connect for RDMA fabric';
 }
 
 function generateProposal(c,rec,paths){
@@ -2447,7 +2551,7 @@ async function runAgent1(){
         lowFitBanner.style.cssText='margin:12px 0;padding:12px 16px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;font-size:12.5px;color:#78350F;';
         var di=document.getElementById('dealIntelCard');di.parentNode.insertBefore(lowFitBanner,di.nextSibling);
       }
-      lowFitBanner.innerHTML='<div style="font-weight:700;margin-bottom:6px;">⚠ Low-fit signals detected — consider co-location-only quote or disqualify before proceeding</div><ul style="margin:0;padding-left:20px;">'+p.low_fit_flags.map(function(f){return '<li>'+escHtml(String(f))+'</li>';}).join('')+'</ul>';
+      lowFitBanner.innerHTML='<div style="font-weight:700;margin-bottom:6px;">⚠ Low-fit signals detected — consider co-location-only quote or disqualify before proceeding</div><ul style="margin:0 0 10px 0;padding-left:20px;">'+p.low_fit_flags.map(function(f){return '<li>'+escHtml(String(f))+'</li>';}).join('')+'</ul><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button onclick="markAsDisqualified()" style="padding:6px 14px;border:1px solid #F59E0B;border-radius:6px;background:#fff;color:#7C2D12;font-size:11.5px;font-weight:600;cursor:pointer;">✕ Mark as Disqualified</button><span style="font-size:11px;color:#78350F;opacity:0.75;">Saves to Tracker as disqualified — no proposal generation needed.</span></div>';
       lowFitBanner.style.display='block';
     } else if(lowFitBanner){lowFitBanner.style.display='none';}
     // Meeting completeness banner — proactive coverage warning
@@ -2501,6 +2605,17 @@ function renderConfidenceScore(conf){document.getElementById('confCard').style.d
 async function runAgent2(){
   if(agentRunning)return;
   if(!r1){alert('Complete Step 1 first.');return;}
+  // Short-circuit: when ≥2 low-fit flags fire, we shouldn't be generating proposals.
+  // Surface the disqualification path explicitly instead of burning API tokens on a deal we'll reject.
+  if(r1.low_fit_flags&&r1.low_fit_flags.length>=2){
+    var bypass=confirm('⚠ This deal has '+r1.low_fit_flags.length+' low-fit flags:\n\n• '+r1.low_fit_flags.join('\n• ')+'\n\nLow-fit deals usually shouldn\'t go to proposal generation. Recommended actions:\n\n  ✕ Mark as Disqualified  (recommended)\n  Or pivot to a colocation-only quote\n\nClick OK to BYPASS this warning and run Architect anyway.\nClick Cancel to go back to Step 1 and disqualify the deal.');
+    if(!bypass){
+      goStep(1);
+      // Scroll to the low-fit banner if it's there
+      setTimeout(function(){var b=document.getElementById('lowFitBanner');if(b&&b.scrollIntoView)b.scrollIntoView({behavior:'smooth',block:'center'});},200);
+      return;
+    }
+  }
   agentRunning=true;
   const fb=document.getElementById('reprompt2').value.trim();
   busy('s2d','s2s','btn2','Exploring reasoning paths…'+(fb?' (with feedback)':''));
@@ -2830,7 +2945,7 @@ function saveToTracker(){if(!r1){alert('No proposal data to save.');return;}
 }
 function extractAmount(txt){var m=txt.match(/\$[\d,]+/g);return m?m[0]:'N/A';}
 function updateTrackerCount(){var n=proposals.length;['homeCount','tc1','tc2','tc3','tcInv'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=n;});}
-function renderHomeRecent(){var wrap=document.getElementById('homeRecent');var list=document.getElementById('homeRecentList');if(!proposals.length){wrap.style.display='none';return;}wrap.style.display='block';var recent=proposals.slice(0,3);list.innerHTML=recent.map(function(p){return '<div class="recent-row" onclick="goTracker()"><span class="recent-client">'+escHtml(p.client)+'</span><div class="recent-meta"><span class="recent-amount">'+escHtml(p.amount)+'</span><span class="recent-status rs-'+p.status+'">'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Lost')+'</span></div></div>';}).join('');}
+function renderHomeRecent(){var wrap=document.getElementById('homeRecent');var list=document.getElementById('homeRecentList');if(!proposals.length){wrap.style.display='none';return;}wrap.style.display='block';var recent=proposals.slice(0,3);list.innerHTML=recent.map(function(p){var label=p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':'✗ Lost';return '<div class="recent-row" onclick="goTracker()"><span class="recent-client">'+escHtml(p.client)+'</span><div class="recent-meta"><span class="recent-amount">'+escHtml(p.amount)+'</span><span class="recent-status rs-'+p.status+'">'+label+'</span></div></div>';}).join('');}
 function followupClass(p){if(!p.followup)return 'followup-row';var d=new Date(p.followup);var now=new Date();now.setHours(0,0,0,0);if(d<now)return 'followup-row overdue';var diff=(d-now)/(86400000);return diff<=7?'followup-row':'followup-row clear';}
 function followupIcon(p){if(!p.followup)return '📅';var d=new Date(p.followup);var now=new Date();now.setHours(0,0,0,0);return d<now?'🔴':((d-now)/86400000)<=7?'🟡':'🟢';}
 function followupBadgeHtml(p){if(!p.followup)return '';var d=new Date(p.followup);var now=new Date();now.setHours(0,0,0,0);var diff=Math.round((d-now)/86400000);if(diff<0)return '<span class="followup-badge followup-overdue-badge">'+Math.abs(diff)+'d overdue</span>';if(diff===0)return '<span class="followup-badge followup-soon-badge">Today</span>';if(diff<=7)return '<span class="followup-badge followup-soon-badge">In '+diff+'d</span>';return '';}
@@ -2880,7 +2995,7 @@ function renderTracker(){
   var rc=document.getElementById('resultsCount');if(rc)rc.textContent=filtered.length!==proposals.length?filtered.length+' of '+proposals.length+' proposals':'';
   var list=document.getElementById('proposalList');
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">'+(proposals.length?'🔍':'📭')+'</div><div class="empty-state-title">'+(proposals.length?'No proposals match this filter':'No proposals yet')+'</div></div>';document.getElementById('paginationControls').style.display='none';return;}
-  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
+  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount">'+p.amount+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div><div class=\"sp-opt\" onclick=\"event.stopPropagation();setStatus(\\\'"+p.id+"\\\',\\\'disqualified\\\')\"><div class=\"sp-dot l\" style=\"background:#94A3B8;\"></div>✕ Disqualified</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
   var pc=document.getElementById('paginationControls');if(totalPages>1){pc.style.display='flex';document.getElementById('pageInfo').textContent='Page '+currentPage+' of '+totalPages;document.getElementById('prevPage').disabled=currentPage<=1;document.getElementById('nextPage').disabled=currentPage>=totalPages;}else{pc.style.display='none';}
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
