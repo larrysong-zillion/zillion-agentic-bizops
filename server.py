@@ -20,7 +20,7 @@ from typing import Optional
  
 from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
  
 import httpx
@@ -202,6 +202,7 @@ class ProposalCreate(BaseModel):
     versions: Optional[list] = None
  
 class ProposalUpdate(BaseModel):
+    client: Optional[str] = None
     status: Optional[str] = None
     text: Optional[str] = None
     notes: Optional[str] = None
@@ -311,6 +312,131 @@ async def run_agent(
             except Exception:
                 pass
  
+# ═══ STREAMING AGENT ENDPOINT ═══
+# Server-Sent Events pass-through to Anthropic. Used by the frontend Writer Agent
+# to stream proposal text as it generates instead of waiting for the full response.
+# Audit logging is best-effort — we capture token counts from the message_delta
+# event at end of stream.
+@app.post("/api/agent/{agent_name}/stream")
+async def run_agent_stream(
+    agent_name: str,
+    req: AgentRequest,
+    request: Request,
+    x_user_api_key: Optional[str] = Header(None, alias="X-User-Api-Key"),
+    _=Depends(verify_token),
+):
+    if agent_name not in ("discovery", "architect", "writer"):
+        raise HTTPException(400, f"Unknown agent: {agent_name}")
+ 
+    # Same key-resolution logic as the non-streaming endpoint
+    api_key = x_user_api_key.strip() if x_user_api_key else ANTHROPIC_API_KEY
+    key_source = "user" if x_user_api_key else "shared"
+    if not api_key:
+        raise HTTPException(400, "No API key available. Provide X-User-Api-Key header or set ANTHROPIC_API_KEY.")
+    if not api_key.startswith("sk-ant-"):
+        raise HTTPException(400, "Invalid API key format.")
+ 
+    # Rate limit
+    if key_source == "user":
+        rate_id = "u_" + hashlib.sha256(api_key.encode()).hexdigest()[:16]
+    else:
+        rate_id = "shared_" + (request.client.host if request.client else "unknown")
+    check_rate_limit(request, rate_id)
+ 
+    system = sanitize_prompt(req.system_prompt)
+    user_msg = sanitize_prompt(req.user_message)
+    max_tok = min(req.max_tokens, 8000)
+    ip = request.client.host if request.client else "unknown"
+ 
+    async def event_generator():
+        """Pipe Anthropic's SSE stream straight to the client, then audit-log on finish."""
+        in_tok = out_tok = 0
+        out_text_buf = []
+        success = 0
+        error_msg = None
+        try:
+            async with httpx.AsyncClient(timeout=180.0) as client:
+                async with client.stream(
+                    "POST",
+                    ANTHROPIC_URL,
+                    headers={
+                        "Content-Type": "application/json",
+                        "x-api-key": api_key,
+                        "anthropic-version": "2023-06-01",
+                    },
+                    json={
+                        "model": MODEL,
+                        "max_tokens": max_tok,
+                        "system": system,
+                        "messages": [{"role": "user", "content": user_msg}],
+                        "stream": True,
+                    },
+                ) as resp:
+                    if resp.status_code != 200:
+                        body = await resp.aread()
+                        error_msg = f"HTTP {resp.status_code}: {body.decode('utf-8', errors='replace')[:200]}"
+                        # Send an error frame in SSE format and stop
+                        yield f"event: error\ndata: {json.dumps({'status': resp.status_code, 'message': error_msg})}\n\n"
+                        return
+                    success = 1
+                    # Pass each line through unchanged. Lightly parse delta events for audit token count.
+                    async for line in resp.aiter_lines():
+                        if not line:
+                            yield "\n"
+                            continue
+                        # Forward the raw SSE line (Anthropic already formats them)
+                        yield line + "\n"
+                        # Inspect data: payloads to capture text + token totals for audit log
+                        if line.startswith("data: "):
+                            payload_str = line[6:].strip()
+                            if payload_str and payload_str != "[DONE]":
+                                try:
+                                    payload = json.loads(payload_str)
+                                    ev_type = payload.get("type")
+                                    if ev_type == "content_block_delta":
+                                        delta = payload.get("delta", {})
+                                        if delta.get("type") == "text_delta":
+                                            out_text_buf.append(delta.get("text", ""))
+                                    elif ev_type == "message_delta":
+                                        usage = payload.get("usage", {}) or {}
+                                        if "output_tokens" in usage:
+                                            out_tok = usage["output_tokens"]
+                                    elif ev_type == "message_start":
+                                        msg = payload.get("message", {}) or {}
+                                        usage = msg.get("usage", {}) or {}
+                                        if "input_tokens" in usage:
+                                            in_tok = usage["input_tokens"]
+                                except Exception:
+                                    # Don't break the stream if a single line fails to parse
+                                    pass
+        except httpx.HTTPStatusError as e:
+            error_msg = f"HTTP {e.response.status_code}"
+            yield f"event: error\ndata: {json.dumps({'status': e.response.status_code})}\n\n"
+        except Exception as e:
+            error_msg = str(e)[:200]
+            yield f"event: error\ndata: {json.dumps({'message': error_msg})}\n\n"
+        finally:
+            # Best-effort audit log — never blocks stream
+            try:
+                out_text = "".join(out_text_buf)
+                with get_db() as db:
+                    db.execute(
+                        "INSERT INTO call_log (agent, input_chars, output_chars, input_tokens, output_tokens, ip, key_source, success, error) VALUES (?,?,?,?,?,?,?,?,?)",
+                        (agent_name, len(system) + len(user_msg), len(out_text), in_tok, out_tok, ip, key_source, success, error_msg)
+                    )
+            except Exception:
+                pass
+ 
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # disable nginx buffering when reverse-proxied
+        },
+    )
+ 
 # ═══ PROPOSALS CRUD ═══
 @app.get("/api/proposals")
 async def list_proposals(_=Depends(verify_token)):
@@ -349,6 +475,8 @@ async def create_proposal(req: ProposalCreate, _=Depends(verify_token)):
 async def update_proposal(proposal_id: str, req: ProposalUpdate, _=Depends(verify_token)):
     with get_db() as db:
         updates, params = [], []
+        if req.client is not None:
+            updates.append("client=?"); params.append(req.client)
         if req.status is not None:
             updates.append("status=?"); params.append(req.status)
         if req.text is not None:
@@ -515,6 +643,62 @@ async def usage_stats(_=Depends(verify_token)):
         "recent_errors": [dict(r) for r in recent_errors],
         "estimated_cost_usd_24h": round(est_cost_usd, 3),
     }
+ 
+# ─── Audit log retention ────────────────────────────────────────────────
+# call_log grows linearly with usage. Without retention, after 6 months at
+# moderate volume the table will be in the millions of rows and the indexes
+# stop fitting in memory. We delete logs older than the configured window.
+RETENTION_DAYS = int(os.getenv("AUDIT_LOG_RETENTION_DAYS", "90"))
+ 
+def cleanup_old_audit_logs(retention_days: int = None) -> int:
+    """Delete call_log rows older than retention_days. Returns count deleted."""
+    days = retention_days if retention_days is not None else RETENTION_DAYS
+    if days < 7:
+        # Refuse to delete too aggressively — even debug retention should keep a week
+        days = 7
+    with get_db() as db:
+        cur = db.execute(
+            "DELETE FROM call_log WHERE ts < datetime('now', ?)",
+            (f"-{days} days",),
+        )
+        deleted = cur.rowcount
+        # VACUUM is expensive — only run if we deleted >1000 rows
+        if deleted > 1000:
+            db.execute("VACUUM")
+    return deleted
+ 
+@app.post("/api/admin/cleanup-audit-log")
+async def cleanup_audit_log_endpoint(retention_days: Optional[int] = None, _=Depends(verify_token)):
+    """Manual trigger for audit log cleanup. Requires admin token."""
+    deleted = cleanup_old_audit_logs(retention_days)
+    return {
+        "deleted_rows": deleted,
+        "retention_days": retention_days if retention_days is not None else RETENTION_DAYS,
+        "ran_at": datetime.now(timezone.utc).isoformat(),
+    }
+ 
+@app.get("/api/admin/audit-log-size")
+async def audit_log_size(_=Depends(verify_token)):
+    """Returns audit log row count and oldest entry timestamp — useful for monitoring."""
+    with get_db() as db:
+        row = db.execute("SELECT COUNT(*) as n, MIN(ts) as oldest, MAX(ts) as newest FROM call_log").fetchone()
+    return {
+        "total_rows": row["n"] or 0,
+        "oldest_entry": row["oldest"],
+        "newest_entry": row["newest"],
+        "retention_policy_days": RETENTION_DAYS,
+    }
+ 
+@app.on_event("startup")
+async def run_initial_cleanup_if_needed():
+    """On server startup, clean up old audit logs in the background."""
+    try:
+        deleted = cleanup_old_audit_logs()
+        if deleted > 0:
+            print(f"[startup cleanup] Deleted {deleted} call_log rows older than {RETENTION_DAYS} days")
+    except Exception as e:
+        # Don't block startup if cleanup fails
+        print(f"[startup cleanup] Failed: {e}")
  
 # ═══ FLEET INVENTORY ═══
 class FleetServer(BaseModel):
