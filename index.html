@@ -1607,9 +1607,10 @@ function toggleUnlistedOverride(el){
 /* If Architect has already run, an override change means the existing recommendation is stale.
  * Show a non-blocking hint banner so the user knows to re-run Architect. */
 function showOverrideRerunHint(){
-  if(!r2)return; // No prior Architect run, nothing to invalidate
-  // Invalidate the cache so a re-run actually re-computes
+  // ALWAYS invalidate cache on override change — even if Architect hasn't run yet,
+  // we want next Architect run to re-compute, not serve a stale cache.
   _lastArchitectR1Hash='';
+  if(!r2)return; // No prior Architect run, no hint to show
   var hint=document.getElementById('overrideRerunHint');
   if(!hint){
     hint=document.createElement('div');hint.id='overrideRerunHint';
@@ -2077,9 +2078,25 @@ const MOCK_R1={client_name:"Acme Research Labs",budget:"$180,000 – $220,000",g
 
 /* ═══ DYNAMIC ToT ═══ */
 function generateToTPaths(c){
-  const budgetNums=(c.budget||'').match(/[\d,]+/g)||[];
-  const bMax=budgetNums.length>=2?parseInt(budgetNums[1].replace(/,/g,'')):300000;
-  const bMin=budgetNums.length>=1?parseInt(budgetNums[0].replace(/,/g,'')):100000;
+  // Robust budget parsing — handle K/M suffixes, ignore monthly costs ("$30K/mo")
+  function parseBudget(s){
+    s=String(s||'');
+    // Strip out any "$N/mo" or "$N/month" patterns — those are recurring costs, not the budget ceiling
+    var cleaned=s.replace(/\$?[\d,.]+\s*(K|k|M|m)?\s*\/\s*(mo|month|hr|hour|year|yr|day)/gi,'');
+    // Match "$500K" / "$1.2M" / "$500,000" patterns
+    var matches=cleaned.match(/\$?\s*([\d,.]+)\s*(K|k|M|m)?/g)||[];
+    var values=matches.map(function(m){
+      var num=parseFloat(m.replace(/[\$,\s]/g,''));
+      if(isNaN(num))return 0;
+      if(/[Mm]/.test(m))num*=1000000;
+      else if(/[Kk]/.test(m))num*=1000;
+      return num;
+    }).filter(function(v){return v>=1000;}); // ignore noise <$1K
+    return values;
+  }
+  const budgetValues=parseBudget(c.budget);
+  const bMax=budgetValues.length>=2?Math.max.apply(null,budgetValues):(budgetValues[0]||300000);
+  const bMin=budgetValues.length>=2?Math.min.apply(null,budgetValues):(budgetValues[0]?budgetValues[0]*0.7:100000);
   const reqs=c.key_requirements||[];
   const vramReq=reqs.find(r=>/vram|memory|GB/i.test(r));
   const minVram=vramReq?parseInt((vramReq.match(/\d+/)||['192'])[0]):192;
@@ -2295,7 +2312,8 @@ function generateRec(c,paths){
   const cm=w.content.match(/= \$([\d,]+)/);const cost=cm?cm[1]:'TBD';
   const vm=w.content.match(/([\d,]+)GB VRAM/);const vram=vm?vm[1]:'TBD';
   const nm=w.content.match(/^(\d+)×/);const nodes=nm?nm[1]:'N';
-  const sm=w.label.match(/RTX [^\s(]+/)||['RTX 4090'];const sku=sm[0];
+  // Match the full SKU including multi-word product names: "RTX 5090", "RTX Pro 6000 SE", "H100", "A100"
+  const sm=w.label.match(/(RTX (?:Pro )?\w+(?:\s+SE)?|H100|A100|H200|L40S|L4)/)||['RTX 4090'];const sku=sm[0];
   const rm=w.content.match(/(\d+)U,/);const rackU=rm?rm[1]:(parseInt(nodes)*4);
   const pm=w.content.match(/~([\d.]+)kW/);const power=pm?pm[1]:(parseInt(nodes)*3.2).toFixed(1);
   const coloMatch=w.content.match(/Colo: \$([\d,]+)/);const coloMo=coloMatch?coloMatch[1]:Math.round(parseFloat(power)*448);
@@ -2312,9 +2330,11 @@ function generateRec(c,paths){
     if(wantsBothPatterns){
       // Side-by-side TCO: Pattern A (CapEx + Colo) vs Pattern B (Lease)
       var costNum=parseInt(String(cost).replace(/[^0-9]/g,''),10)||0;
-      var capex24moTotal=costNum+(parseInt(coloMo,10)||0)*24;
+      // Strip commas before parseInt — "2,150" → 2150, not 2 (parseInt stops at comma)
+      var coloMoNum=parseInt(String(coloMo).replace(/,/g,''),10)||0;
+      var capex24moTotal=costNum+coloMoNum*24;
       var lease24moTotal=mo24*24+(mo24*2); // 24mo recurring + deposit
-      leaseBlock='\n\n═══ DEAL STRUCTURE COMPARISON (CapEx vs Lease) ═══\n\nPATTERN A — CapEx + Colocation (Ab Initia Plan #1 structure):\n- Hardware: $'+cost+' upfront\n- Colo: $'+coloMo+'/mo × 24 = $'+((parseInt(coloMo,10)||0)*24).toLocaleString()+' over 24 months\n- 24-month TCO: $'+capex24moTotal.toLocaleString()+'\n- Customer owns hardware at end of term\n\nPATTERN B — GPU Lease / OpEx (Ab Initia Plan #2 structure):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month)\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months)\n- 24-month TCO: $'+lease24moTotal.toLocaleString()+' (includes deposit)\n- No CapEx; Zillion owns hardware; refundable deposit at end\n\nDECISION GUIDE:\n- If customer has IT budget and wants ownership: Pattern A (lower 24-mo TCO if held 24+ months)\n- If customer prefers OpEx, has uncertain workload duration, or wants flexibility: Pattern B\n- If customer plans to hold 36+ months: Pattern A wins TCO clearly\n- If customer plans to hold <18 months: Pattern B wins (no sunk hardware cost)';
+      leaseBlock='\n\n═══ DEAL STRUCTURE COMPARISON (CapEx vs Lease) ═══\n\nPATTERN A — CapEx + Colocation (Ab Initia Plan #1 structure):\n- Hardware: $'+cost+' upfront\n- Colo: $'+coloMo+'/mo × 24 = $'+(coloMoNum*24).toLocaleString()+' over 24 months\n- 24-month TCO: $'+capex24moTotal.toLocaleString()+'\n- Customer owns hardware at end of term\n\nPATTERN B — GPU Lease / OpEx (Ab Initia Plan #2 structure):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month)\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months)\n- 24-month TCO: $'+lease24moTotal.toLocaleString()+' (includes deposit)\n- No CapEx; Zillion owns hardware; refundable deposit at end\n\nDECISION GUIDE:\n- If customer has IT budget and wants ownership: Pattern A (lower 24-mo TCO if held 24+ months)\n- If customer prefers OpEx, has uncertain workload duration, or wants flexibility: Pattern B\n- If customer plans to hold 36+ months: Pattern A wins TCO clearly\n- If customer plans to hold <18 months: Pattern B wins (no sunk hardware cost)';
     } else {
       leaseBlock='\n\nLease Option (client expressed OpEx preference):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month = $'+mo12.toLocaleString()+')\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months = $'+(mo24*2).toLocaleString()+')\n- No upfront CapEx; Zillion owns hardware. Refundable deposit at end of term.';
     }
@@ -2334,7 +2354,8 @@ function generateProposal(c,rec,paths){
   const cm=w.content.match(/= \$([\d,]+)/);const cost=cm?cm[1]:'TBD';
   const vm=w.content.match(/([\d,]+)GB VRAM/);const vram=vm?vm[1]:'TBD';
   const nm=w.content.match(/^(\d+)×/);const nodes=nm?parseInt(nm[1]):4;
-  const sm=w.label.match(/RTX [^\s(]+/)||['RTX 4090'];const sku=sm[0];
+  // Match the full SKU including multi-word product names: "RTX 5090", "RTX Pro 6000 SE", "H100", "A100"
+  const sm=w.label.match(/(RTX (?:Pro )?\w+(?:\s+SE)?|H100|A100|H200|L40S|L4)/)||['RTX 4090'];const sku=sm[0];
   const rm=w.content.match(/(\d+)U,/);const rackU=rm?parseInt(rm[1]):(nodes*4);
   const pm=w.content.match(/~([\d.]+)kW/);const power=pm?pm[1]:(nodes*3.2).toFixed(1);
   const totalGpus=nodes*8;
