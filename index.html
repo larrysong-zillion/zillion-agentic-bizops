@@ -1191,6 +1191,10 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
    STATE
 ═══════════════════════════════════════ */
 let r1=null,r2=null;
+// Re-run history: when Discovery or Architect re-runs with feedback, the prior output is archived
+// here so the user can compare or revert. Capped at 5 entries each to avoid memory bloat.
+let r1History=[];
+let r2History=[];
 let origConstraints=null,origSummary=null,origRec=null,origProposal=null,savedProposal=null;
 let proposals=[];
 let currentFilter='all';
@@ -1392,6 +1396,232 @@ function markAsDisqualified(){
   setTimeout(function(){goTracker();},800);
 }
 
+/* ═══ HALLUCINATION CHECKS — runs against final Writer output ═══
+ * Three targeted post-generation checks that catch the failure modes most likely
+ * to embarrass Zillion in front of a customer. Logs to console.warn for engineering
+ * visibility AND returns findings for UI surfacing.
+ *
+ * Check 1: Numeric consistency — every dollar figure in the proposal should trace
+ *          back to r1 (constraints), r2 (architect rec), or known constants. Catches
+ *          fabricated numbers Claude pulls out of thin air.
+ *
+ * Check 2: Constraint violation — when r1 has hard constraints (BYOD, "no remote
+ *          management", "air-gapped"), proposal should not contradict them.
+ *
+ * Check 3: Arithmetic spot-check — three patterns the Writer uses repeatedly
+ *          (N×$X=$Y, $448×N kW, N nodes×$X=$Y). Recompute and compare.
+ */
+function runHallucinationChecks(text,r1,r2){
+  if(!text||typeof text!=='string')return {findings:[],severity:'none'};
+  var findings=[];
+  var r1Json=r1?JSON.stringify(r1):'';
+  var r2Str=r2||'';
+  var combinedSource=(r1Json+' '+r2Str).toLowerCase();
+
+  // ── Check 1: Numeric consistency ──
+  // Pull every dollar figure (>= $1000 — smaller numbers are usually colo per-unit, GPU/hr rates, etc.)
+  // For each one, verify it appears in r1 OR r2 OR is computable from known constants ($448/kW, lease rates).
+  var dollarMatches=text.match(/\$\s*[\d,]+(?:\.\d{1,2})?(?:\s*[KkMm])?/g)||[];
+  var knownConstants=[448,2240,2336,78490]; // colo $/kW, common monthly fees from Ab Initia deal
+  var leaseRates=[1.42,1.32,1.35,1.25,1.15,0.40]; // from LEASE_TIERS and closed Ab Initia rate
+  var unverifiedNumbers=[];
+  dollarMatches.forEach(function(match){
+    // Normalize "$5,000" → 5000, "$1.5M" → 1500000, "$300K" → 300000
+    var raw=match.replace(/[\$\s]/g,'');
+    var num=parseFloat(raw.replace(/,/g,''));
+    if(isNaN(num))return;
+    if(/[Mm]/.test(raw))num*=1000000;
+    else if(/[Kk]/.test(raw))num*=1000;
+    if(num<1000)return; // ignore small numbers (likely $/hr rates, per-GPU costs, etc.)
+    // Search for this number (or close variant) in r1, r2, or known constants
+    var numStr=String(Math.round(num));
+    var numWithComma=Math.round(num).toLocaleString();
+    var numWithDecimal=num.toFixed(2);
+    var hits=combinedSource.indexOf(numStr)>=0
+      ||combinedSource.indexOf(numWithComma.toLowerCase())>=0
+      ||combinedSource.indexOf(numWithDecimal)>=0
+      ||knownConstants.indexOf(num)>=0
+      ||leaseRates.indexOf(num)>=0;
+    // Also check if it's a reasonable derivation: N × known_constant
+    if(!hits){
+      for(var i=1;i<=128;i++){
+        if(knownConstants.some(function(k){return Math.abs(num-k*i)<1;})){hits=true;break;}
+      }
+    }
+    if(!hits)unverifiedNumbers.push(match);
+  });
+  // Dedupe and cap to avoid spam
+  var uniqueUnverified=[];
+  unverifiedNumbers.forEach(function(n){if(uniqueUnverified.indexOf(n)<0)uniqueUnverified.push(n);});
+  if(uniqueUnverified.length>=3){ // 1-2 unverified is normal (computed totals); 3+ is suspicious
+    findings.push({
+      type:'numeric_consistency',
+      severity:'medium',
+      message:uniqueUnverified.length+' dollar figures in proposal don\'t trace to inputs: '+uniqueUnverified.slice(0,5).join(', ')+(uniqueUnverified.length>5?', +'+(uniqueUnverified.length-5)+' more':''),
+      detail:'These numbers may be legitimately computed (e.g., TCO totals) but worth verifying.'
+    });
+  }
+
+  // ── Check 2: Constraint violations ──
+  // For each hard constraint in r1, scan the proposal for contradicting language.
+  var constraints=[];
+  if(r1&&r1.customer_supplied_hardware===true){
+    // BYOD deal — proposal should not promise Zillion-provided hardware
+    var byodViolations=[
+      /Zillion (?:will (?:supply|provide|sell|ship)|provides) (?:the )?(?:hardware|servers|nodes|GPUs|RTX|H100|A100|Pro 6000|5090|4090)/i,
+      /\b(?:purchase|buy) (?:the |this )?(?:hardware|servers|nodes) (?:from Zillion|through Zillion)/i,
+      /hardware (?:cost|price|fee):\s*\$/i,
+      /CapEx (?:purchase|hardware)/i
+    ];
+    var byodHits=byodViolations.filter(function(re){return re.test(text);});
+    if(byodHits.length>0){
+      constraints.push({
+        type:'byod_contradicted',
+        match:byodHits.length+' pattern(s) suggesting Zillion-sold hardware in a BYOD deal',
+        snippet:(text.match(byodViolations[0])||[null])[0]||''
+      });
+    }
+  }
+  // Other constraint types via key_requirements
+  if(r1&&Array.isArray(r1.key_requirements)){
+    var keyReqText=r1.key_requirements.join(' ').toLowerCase();
+    if(/no remote (?:management|access)|air.?gap/i.test(keyReqText)){
+      if(/24\/7 (?:remote |L3 )?(?:management|monitoring|support)|remote hands|remote access/i.test(text)&&!/no remote/i.test(text)){
+        constraints.push({
+          type:'remote_mgmt_contradicted',
+          match:'Proposal offers remote management but customer specified air-gap / no remote management'
+        });
+      }
+    }
+    if(/itar|ts\/sci|classified|sovereign/i.test(keyReqText)){
+      if(/(?:offshore|overseas|foreign|international) (?:engineer|support|facility)/i.test(text)){
+        constraints.push({
+          type:'sovereignty_contradicted',
+          match:'Proposal mentions offshore/foreign elements in a sovereign-cleared deal'
+        });
+      }
+    }
+  }
+  if(constraints.length>0){
+    findings.push({
+      type:'constraint_violation',
+      severity:'high',
+      message:constraints.length+' constraint violation(s) detected',
+      detail:constraints.map(function(c){return c.match;}).join('; ')
+    });
+  }
+
+  // ── Check 3: Arithmetic spot-check ──
+  // Three patterns the Writer uses constantly. Extract, recompute, compare.
+  var arithIssues=[];
+  // Pattern A: "N × $X = $Y" or "N x $X = $Y"
+  var multiplyPattern=/(\d+)\s*[×x]\s*\$([\d,]+(?:\.\d+)?)\s*=\s*\$([\d,]+(?:\.\d+)?)/g;
+  var m;
+  while((m=multiplyPattern.exec(text))!==null){
+    var multiplier=parseFloat(m[1]);
+    var perUnit=parseFloat(m[2].replace(/,/g,''));
+    var stated=parseFloat(m[3].replace(/,/g,''));
+    var computed=multiplier*perUnit;
+    if(stated>0&&Math.abs(computed-stated)/stated>0.02){ // >2% off
+      arithIssues.push('"'+m[0]+'" — recomputed: $'+computed.toLocaleString()+' (off by '+Math.round(Math.abs(computed-stated)/stated*100)+'%)');
+    }
+  }
+  // Pattern B: power math — "$448 × N kW" or "$448/kW × N"
+  var powerPattern=/\$448\s*(?:\/kW)?\s*[×x]\s*(\d+(?:\.\d+)?)\s*kW\s*=\s*\$([\d,]+)/g;
+  while((m=powerPattern.exec(text))!==null){
+    var kw=parseFloat(m[1]);
+    var statedMo=parseFloat(m[2].replace(/,/g,''));
+    var computedMo=448*kw;
+    if(Math.abs(computedMo-statedMo)/statedMo>0.02){
+      arithIssues.push('"'+m[0]+'" — power math off: $448 × '+kw+'kW = $'+computedMo.toLocaleString());
+    }
+  }
+  // Pattern C: monthly × 12 or × 24 totals
+  var monthlyPattern=/\$([\d,]+)\s*\/\s*mo\s*[×x]\s*(\d+)\s*(?:months?|mo)\s*=\s*\$([\d,]+)/gi;
+  while((m=monthlyPattern.exec(text))!==null){
+    var mo=parseFloat(m[1].replace(/,/g,''));
+    var months=parseFloat(m[2]);
+    var stated2=parseFloat(m[3].replace(/,/g,''));
+    var computed2=mo*months;
+    if(stated2>0&&Math.abs(computed2-stated2)/stated2>0.02){
+      arithIssues.push('"'+m[0]+'" — monthly math off: $'+mo+'/mo × '+months+' = $'+computed2.toLocaleString());
+    }
+  }
+  if(arithIssues.length>0){
+    findings.push({
+      type:'arithmetic_error',
+      severity:'high',
+      message:arithIssues.length+' arithmetic error(s) found',
+      detail:arithIssues.slice(0,3).join(' | ')
+    });
+  }
+
+  // Determine overall severity
+  var hasHigh=findings.some(function(f){return f.severity==='high';});
+  var hasMedium=findings.some(function(f){return f.severity==='medium';});
+  var severity=hasHigh?'high':(hasMedium?'medium':'none');
+
+  // Console logging for Larry
+  if(findings.length>0){
+    console.warn('[hallucinationChecks] '+findings.length+' finding(s), severity='+severity);
+    findings.forEach(function(f){console.warn('  • ['+f.type+'] '+f.message+(f.detail?'\n    '+f.detail:''));});
+  }
+
+  return {findings:findings,severity:severity};
+}
+
+/* Render hallucination findings as a banner above the proposal output. */
+function renderHallucinationBanner(result){
+  var existing=document.getElementById('hallucinationBanner');
+  if(!result||!result.findings||result.findings.length===0){
+    if(existing)existing.style.display='none';
+    return;
+  }
+  var box=document.getElementById('out3body');
+  if(!box)return;
+  var banner=existing;
+  if(!banner){
+    banner=document.createElement('div');banner.id='hallucinationBanner';
+    box.parentNode.insertBefore(banner,box);
+  }
+  var sev=result.severity;
+  var bg=sev==='high'?'#FEF2F2':'#FFF8E1';
+  var bd=sev==='high'?'#DC2626':'#F59E0B';
+  var fg=sev==='high'?'#7F1D1D':'#78350F';
+  var ico=sev==='high'?'⚠':'⚡';
+  banner.style.cssText='margin:0 0 12px 0;padding:12px 16px;background:'+bg+';border:1px solid '+bd+';border-radius:8px;font-size:12.5px;color:'+fg+';line-height:1.55;';
+  var html='<div style="font-weight:700;margin-bottom:6px;">'+ico+' Hallucination check: '+result.findings.length+' finding'+(result.findings.length>1?'s':'')+' — review before sending</div>';
+  html+='<ul style="margin:6px 0 0 0;padding-left:20px;font-size:12px;">';
+  result.findings.forEach(function(f){
+    html+='<li style="margin-bottom:4px;"><strong>'+escHtml(f.type.replace(/_/g,' '))+':</strong> '+escHtml(f.message);
+    if(f.detail)html+='<div style="font-size:11px;opacity:0.85;margin-top:2px;">'+escHtml(f.detail)+'</div>';
+    html+='</li>';
+  });
+  html+='</ul>';
+  banner.innerHTML=html;banner.style.display='block';
+}
+
+/* ═══ BUDGET-OVERSHOOT WARNING — shown when no in-budget path exists ═══
+ * Renders above the Why card when the engine couldn't find a path within budget.
+ * Set up by validatePathBudget which tags the winner with _budgetWarning. */
+function renderBudgetWarning(paths){
+  var existing=document.getElementById('budgetOvershootBanner');
+  var winner=paths&&paths.find(function(p){return p.status==='winning';});
+  if(!winner||!winner._budgetWarning){
+    if(existing)existing.style.display='none';
+    return;
+  }
+  var banner=existing;
+  if(!banner){
+    banner=document.createElement('div');banner.id='budgetOvershootBanner';
+    var why=document.getElementById('whyCard');
+    if(why&&why.parentNode)why.parentNode.insertBefore(banner,why);
+  }
+  banner.style.cssText='margin:14px 0;padding:12px 16px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;font-size:12.5px;color:#78350F;line-height:1.55;';
+  banner.innerHTML='<div style="font-weight:700;margin-bottom:6px;">⚠ Budget overshoot</div><div>'+escHtml(winner._budgetWarning)+'</div><div style="margin-top:8px;font-size:11.5px;opacity:0.85;font-style:italic;">Tell the customer up front, or revisit budget with them before sending this proposal.</div>';
+  banner.style.display='block';
+}
+
 /* ═══ "Why this recommendation?" — deterministic explainer built from winning path ═══
  * Generates 2-4 concrete reasons by reading path metadata, NOT by re-asking Claude.
  * Reasons cite budget utilization, in-stock status, GPU preference match, and deal-pattern fit.
@@ -1518,13 +1748,14 @@ function resetAssessment(){
   ['txInput','granolaInput','emailInput','gdocInput','slackInput','reprompt1','reprompt2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['cBudget','cGpu','cWorkflow','cTimeline','cBizModel','cDealStage'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';});
   ['out1','dealIntelCard','confCard','ragBadge','dealStageBadge','fuQuestionsWrap','compIntelWrap','out2','out3','propActions','splitToggle'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint','budgetOvershootBanner','hallucinationBanner'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   var byo=document.getElementById('byodCheckbox');if(byo)byo.checked=false;
   var unl=document.getElementById('unlistedSkuCheckbox');if(unl)unl.checked=false;
   ['constraintBar','summaryBar','recBar','proposalBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('visible');});
   hideValidation('val1');hideValidation('val2');hideValidation('val3');
   r1=null;r2=null;origConstraints=null;origSummary=null;origRec=null;origProposal=null;savedProposal=null;
   proposalVersions=[];currentVersionIndex=0;_editBaselineText='';
+  r1History=[];r2History=[];
   _lastArchitectR1Hash='';_lastArchitectR2='';
   ['s1d','s2d','s3d'].forEach(function(id){var el=document.getElementById(id);if(el)el.className='sdot';});
   var s1s=document.getElementById('s1s');if(s1s)s1s.textContent='Ready to extract constraints';
@@ -2106,7 +2337,7 @@ function generateToTPaths(c){
   var archPref='';
   if(/cx8|mgx|switchboard|switch.?board/i.test(c.gpu_preference||'')||(c.key_requirements||[]).some(function(r){return /cx8|mgx|switchboard/i.test(r);})){archPref='cx8';}
   else if(/passthrough/i.test(c.gpu_preference||'')||(c.key_requirements||[]).some(function(r){return /passthrough/i.test(r);})){archPref='passthrough';}
-  const paths=[];
+  let paths=[];
   // Evaluate SKUs: build candidate list from catalog + fleet inventory
   var isInference=/inference|serving|api|latency/i.test(c.workflow||'');
   var liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
@@ -2304,7 +2535,58 @@ function generateToTPaths(c){
   }
   // Sort: winner first, then by score descending — keep top 4 only
   paths.sort(function(a,b){if(a.status==='winning')return -1;if(b.status==='winning')return 1;return b._score-a._score;});
-  return paths.slice(0,4);
+  paths=paths.slice(0,4);
+  // ── Per-path content validation ──
+  // Before returning, sanity-check the winner against parsed budget. Catches cases where the
+  // engine picks a winner whose cost exceeds the budget (Bug C class — naive budget parsing).
+  // If the winner is over-budget, downgrade it and promote the cheapest in-budget alternative.
+  validatePathBudget(paths,bMax,bMin);
+  return paths;
+}
+
+/* ═══ PER-PATH CONTENT VALIDATION ═══
+ * Verify the winning path is actually within the customer's budget.
+ * If not, look for an in-budget alternative and swap; if none exists, log a warning.
+ * Sets _budgetWarning on the path so the UI can surface it. */
+function validatePathBudget(paths,bMax,bMin){
+  if(!paths||paths.length===0||!bMax||bMax<1000)return; // No meaningful budget, skip
+  var winner=paths.find(function(p){return p.status==='winning';});
+  if(!winner)return;
+  // Parse cost from winner content — pattern is "= $X,YYY"
+  var costMatch=String(winner.content||'').match(/=\s*\$([\d,]+)/);
+  if(!costMatch)return; // No cost to validate
+  var winnerCost=parseInt(costMatch[1].replace(/,/g,''),10);
+  if(isNaN(winnerCost)||winnerCost===0)return;
+  // 15% over budget is the threshold — small overshoots are acceptable since budgets are ranges
+  var overBudgetThreshold=bMax*1.15;
+  if(winnerCost<=overBudgetThreshold){
+    // Winner is within budget (or close enough) — clear any prior warning
+    delete winner._budgetWarning;
+    return;
+  }
+  // Winner is over-budget. Look for an in-budget alternative among the eliminated paths.
+  var alternatives=paths.filter(function(p){return p.status!=='winning';});
+  var inBudget=alternatives.map(function(p){
+    var cm=String(p.content||'').match(/=\s*\$([\d,]+)/);
+    return {path:p,cost:cm?parseInt(cm[1].replace(/,/g,''),10):Infinity};
+  }).filter(function(item){return !isNaN(item.cost)&&item.cost>0&&item.cost<=bMax;});
+  if(inBudget.length>0){
+    // Pick the cheapest in-budget alternative as new winner
+    inBudget.sort(function(a,b){return a.cost-b.cost;});
+    var newWinner=inBudget[0].path;
+    winner.status='eliminated';
+    winner.label=winner.label.replace(/\(.*?\)/,'(Over-budget — see alternative ✗)');
+    winner.content=(winner.content||'')+'\nNote: Cost $'+winnerCost.toLocaleString()+' exceeds budget ceiling of $'+bMax.toLocaleString()+'. Promoted alternative.';
+    newWinner.status='winning';
+    newWinner.label=newWinner.label.replace(/\(.*?\)/,'(In-Budget Winner ✓)');
+    // Re-sort with new winner first
+    paths.sort(function(a,b){if(a.status==='winning')return -1;if(b.status==='winning')return 1;return (b._score||0)-(a._score||0);});
+    console.warn('[validatePathBudget] Original winner $'+winnerCost.toLocaleString()+' exceeded budget $'+bMax.toLocaleString()+' — promoted in-budget alternative $'+inBudget[0].cost.toLocaleString());
+  } else {
+    // No in-budget alternative exists. Tag the winner with a warning so the UI can surface it.
+    winner._budgetWarning='Cost $'+winnerCost.toLocaleString()+' exceeds stated budget ceiling of $'+bMax.toLocaleString()+'. No in-budget alternative available — customer may need to increase budget or accept reduced scope.';
+    console.warn('[validatePathBudget] Winner $'+winnerCost.toLocaleString()+' exceeds budget $'+bMax.toLocaleString()+' AND no in-budget alternative exists');
+  }
 }
 
 function generateRec(c,paths){
@@ -2334,6 +2616,27 @@ function generateRec(c,paths){
       var coloMoNum=parseInt(String(coloMo).replace(/,/g,''),10)||0;
       var capex24moTotal=costNum+coloMoNum*24;
       var lease24moTotal=mo24*24+(mo24*2); // 24mo recurring + deposit
+      // ── TCO sanity check ──
+      // Catches the Bug B class — broken arithmetic, missing components, or impossible ratios.
+      // We log warnings to console for Larry; we don't block rendering since the user can still
+      // judge whether the numbers look right. Three independent assertions:
+      var tcoIssues=[];
+      if(capex24moTotal<10000)tcoIssues.push('CapEx TCO $'+capex24moTotal.toLocaleString()+' is suspiciously low (<$10K). Check cost parsing.');
+      if(lease24moTotal<10000)tcoIssues.push('Lease TCO $'+lease24moTotal.toLocaleString()+' is suspiciously low (<$10K). Check lease rate calculation.');
+      if(capex24moTotal>0&&lease24moTotal>0){
+        var ratio=lease24moTotal/capex24moTotal;
+        if(ratio>3||ratio<0.33){
+          tcoIssues.push('TCO ratio is '+ratio.toFixed(2)+'× (Lease '+(ratio>1?'over':'under')+' CapEx). Typical range is 0.5×–2.5×. Verify the inputs aren\'t mis-parsed.');
+        }
+      }
+      if(coloMoNum===0&&costNum>0){
+        tcoIssues.push('Colo monthly resolved to $0 — colo cost extraction failed. Check coloMo regex.');
+      }
+      if(tcoIssues.length>0){
+        console.warn('[TCO sanity check] Issues detected in side-by-side comparison:');
+        tcoIssues.forEach(function(issue){console.warn('  • '+issue);});
+        console.warn('  Inputs: hw=$'+costNum.toLocaleString()+', colo/mo=$'+coloMoNum.toLocaleString()+', lease24mo=$'+mo24.toLocaleString()+'/mo, totalGPUs='+totalGpus);
+      }
       leaseBlock='\n\n═══ DEAL STRUCTURE COMPARISON (CapEx vs Lease) ═══\n\nPATTERN A — CapEx + Colocation (Ab Initia Plan #1 structure):\n- Hardware: $'+cost+' upfront\n- Colo: $'+coloMo+'/mo × 24 = $'+(coloMoNum*24).toLocaleString()+' over 24 months\n- 24-month TCO: $'+capex24moTotal.toLocaleString()+'\n- Customer owns hardware at end of term\n\nPATTERN B — GPU Lease / OpEx (Ab Initia Plan #2 structure):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month)\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months)\n- 24-month TCO: $'+lease24moTotal.toLocaleString()+' (includes deposit)\n- No CapEx; Zillion owns hardware; refundable deposit at end\n\nDECISION GUIDE:\n- If customer has IT budget and wants ownership: Pattern A (lower 24-mo TCO if held 24+ months)\n- If customer prefers OpEx, has uncertain workload duration, or wants flexibility: Pattern B\n- If customer plans to hold 36+ months: Pattern A wins TCO clearly\n- If customer plans to hold <18 months: Pattern B wins (no sunk hardware cost)';
     } else {
       leaseBlock='\n\nLease Option (client expressed OpEx preference):\n- 12-month: $'+tier.r12+'/GPU/hr × '+totalGpus+' GPUs = $'+mo12.toLocaleString()+'/mo (deposit: 1 month = $'+mo12.toLocaleString()+')\n- 24-month: $'+tier.r24+'/GPU/hr × '+totalGpus+' GPUs = $'+mo24.toLocaleString()+'/mo (deposit: 2 months = $'+(mo24*2).toLocaleString()+')\n- No upfront CapEx; Zillion owns hardware. Refundable deposit at end of term.';
@@ -2506,6 +2809,14 @@ async function runAgent1(){
       return;
     } // end agent 1 API call
     } // end if(getApiMode()==='mock') else block
+    // Auto-save: if Discovery had a prior r1 (i.e. this is a re-run with feedback), archive it
+    // so the user can revert if the new extraction is worse. History capped at 5 to avoid bloat.
+    if(r1&&fb){
+      r1History=r1History||[];
+      r1History.push({r1:JSON.parse(JSON.stringify(r1)),feedback:fb,ts:new Date().toISOString()});
+      if(r1History.length>5)r1History.shift();
+      console.log('[Discovery] Re-run with feedback: archived prior r1 ('+r1History.length+' total in history)');
+    }
     r1=p;
     syncDealTypeCheckboxesFromR1();
     // Feedback application verification — if reviewer added feedback, check that key terms appear in output
@@ -2765,11 +3076,20 @@ async function runAgent2(){
       track.appendChild(el);
     }
     await mockDelay(300);
+    // Auto-save: if Architect had a prior r2 (i.e. this is a re-run), archive it.
+    if(r2&&fb){
+      r2History=r2History||[];
+      r2History.push({r2:r2,feedback:fb,ts:new Date().toISOString()});
+      if(r2History.length>5)r2History.shift();
+      console.log('[Architect] Re-run with feedback: archived prior r2 ('+r2History.length+' total in history)');
+    }
     r2=recommendation+(fb?'\n\nNote: feedback applied: "'+fb+'"':'');origRec=r2;
     // Cache for delta-only re-runs on this same r1
     _lastArchitectR1Hash=JSON.stringify(r1);_lastArchitectR2=r2;
     const b=document.getElementById('out2body');b.classList.remove('out-empty');b.textContent=r2;
     renderWhyCard(totPaths,r1);
+    // Surface budget-overshoot warning if validation flagged it
+    renderBudgetWarning(totPaths);
     document.getElementById('out2').style.display='block';
     document.getElementById('out2').scrollIntoView({behavior:'smooth',block:'start'});
     watchEdits(['out2body'],'recBar');stopProgress(prog2);done('s2d','s2s','btn2','Run Architect Agent →','Recommendation ready — awaiting HITL');agentRunning=false;saveDraft();
@@ -2821,7 +3141,24 @@ async function runAgent3(){
     }catch(apiErr){console.warn('Writer API fallback to local generator:',apiErr.message);const paths=generateToTPaths(r1);text=generateProposal(r1,r2,paths);}
     } // end if(getApiMode()==='mock') else block
     origProposal=text;savedProposal=text;
-    proposalVersions=[{label:'v1 — AI Draft',text:text,ts:new Date().toISOString(),current:true}];currentVersionIndex=0;
+    // Run hallucination checks against final Writer output — surface findings before user sees proposal.
+    try{
+      var hallucCheck=runHallucinationChecks(text,r1,r2);
+      renderHallucinationBanner(hallucCheck);
+    }catch(checkErr){console.warn('Hallucination check failed (non-blocking):',checkErr.message);}
+    // Auto-save: if there are prior versions, preserve them and append the new draft as a fresh version.
+    // First run: proposalVersions is empty → start at v1.
+    // Subsequent runs: previous versions stay; new draft becomes v(N+1) and is marked current.
+    if(proposalVersions.length>0){
+      // Mark all prior versions as not-current
+      proposalVersions.forEach(function(v){v.current=false;});
+      var nextNum=proposalVersions.length+1;
+      proposalVersions.push({label:'v'+nextNum+' — AI Draft (re-run)',text:text,ts:new Date().toISOString(),current:true});
+      currentVersionIndex=proposalVersions.length-1;
+      console.log('[Writer] Re-run: preserved '+(proposalVersions.length-1)+' prior version(s), saved as v'+nextNum);
+    } else {
+      proposalVersions=[{label:'v1 — AI Draft',text:text,ts:new Date().toISOString(),current:true}];currentVersionIndex=0;
+    }
     b.textContent=text;b.contentEditable='true';renderVersionBtns();watchEdits(['out3body'],'proposalBar');
     // Confidence-based styling — yellow banner when confidence is low (no outline on proposal box)
     var confScore=r1&&r1.confidence&&typeof r1.confidence.score==='number'?r1.confidence.score:7;
