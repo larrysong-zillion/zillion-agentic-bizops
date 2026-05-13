@@ -1390,6 +1390,8 @@ function markAsDisqualified(){
   };
   proposals.unshift(disqualified);
   storageSave();
+  // Telemetry: count disqualifications for the Diagnostics dashboard
+  try{var n=parseInt(localStorage.getItem('zn_disqual_count')||'0',10);localStorage.setItem('zn_disqual_count',String(n+1));}catch(e){}
   if(typeof createProposalOnBackend==='function')createProposalOnBackend(disqualified);
   showStorageBadge('saved','✕ "'+clientName+'" marked as disqualified');
   // Navigate to tracker so user sees their entry
@@ -1826,12 +1828,15 @@ async function testApiSetup(){
 function toggleByodOverride(el){
   if(!r1)return;
   r1.customer_supplied_hardware=!!el.checked;
+  // Telemetry: increment override counter for the Diagnostics dashboard
+  try{var n=parseInt(localStorage.getItem('zn_override_count')||'0',10);localStorage.setItem('zn_override_count',String(n+1));}catch(e){}
   showStorageBadge('saved',el.checked?'BYOD override on — Architect will recommend colo only':'BYOD override off');
   showOverrideRerunHint();
 }
 function toggleUnlistedOverride(el){
   if(!r1)return;
   r1._unlistedSkuOverride=!!el.checked;
+  try{var n=parseInt(localStorage.getItem('zn_override_count')||'0',10);localStorage.setItem('zn_override_count',String(n+1));}catch(e){}
   showStorageBadge('saved',el.checked?'Unlisted SKU override on — Architect will treat as procurement deal':'Unlisted SKU override off');
   showOverrideRerunHint();
 }
@@ -1903,6 +1908,8 @@ function validateR1(p){
   // Empty {} input → 24 defaults, definitively broken → warns.
   if(_defaulted.length>=18){
     console.warn('[validateR1] Defaulted '+_defaulted.length+' missing fields — possible Discovery prompt drift. Fields: '+_defaulted.slice(0,8).join(', ')+(_defaulted.length>8?', +'+(_defaulted.length-8)+' more':''));
+    // Telemetry: persist the count for the Diagnostics dashboard
+    try{var n=parseInt(localStorage.getItem('zn_prompt_drift_count')||'0',10);localStorage.setItem('zn_prompt_drift_count',String(n+1));}catch(e){}
   }
   return p;
 }
@@ -2134,6 +2141,10 @@ function switchSettingsTab(name){
   for(var j=0;j<panes.length;j++){
     var p=panes[j];p.style.display=p.getAttribute('data-pane')===name?'block':'none';
   }
+  // Auto-render dashboard when Diagnostics tab is opened
+  if(name==='diag'&&typeof renderDashboard==='function'){
+    try{renderDashboard();}catch(e){console.warn('Dashboard render failed:',e);}
+  }
 }
 function saveSettings(){
   var key=document.getElementById('settingsApiKey').value.trim();
@@ -2159,7 +2170,10 @@ function loadSettingsIntoModal(){
 async function callClaude(sys,usr,agentName,maxTokens){
   agentName=agentName||'discovery';
   maxTokens=maxTokens||4000;
-  
+  // Timing: capture start so we can log duration on success/failure for the observability dashboard
+  var _agentStart=Date.now();
+  var _agentMode=getApiMode();
+
   var effectiveKey=getEffectiveApiKey();
   // In proxy mode, backend may have shared key (frontend key optional). In direct mode, a key is required.
   var proxyMode=API_BASE&&getApiMode()==='proxy';
@@ -2200,8 +2214,8 @@ async function callClaude(sys,usr,agentName,maxTokens){
         throw new Error(errMsg);
       }
       var d=await r.json();
-      if(d.content&&Array.isArray(d.content)){var txt=d.content.map(function(b){return b.text||'';}).join('');if(txt)return txt;}
-      if(d.text)return d.text;
+      if(d.content&&Array.isArray(d.content)){var txt=d.content.map(function(b){return b.text||'';}).join('');if(txt){logAgentRun(agentName,_agentMode,Date.now()-_agentStart,true);return txt;}}
+      if(d.text){logAgentRun(agentName,_agentMode,Date.now()-_agentStart,true);return d.text;}
       throw new Error('Empty response from API');
     }catch(err){
       console.log('[callClaude] '+agentName+' error: '+err.message);
@@ -2285,6 +2299,19 @@ async function callClaudeStream(sys,usr,agentName,maxTokens,onChunk){
     console.warn('[callClaudeStream] error '+err.message+' — falling back to non-streaming');
     return callClaude(sys,usr,agentName,maxTokens);
   }
+}
+
+/* ═══ AGENT RUN LOG (timing + mode telemetry for the Diagnostics dashboard) ═══
+ * Lightweight ring buffer of agent runs. Cap at 100 entries.
+ * Schema: {agent, mode, duration_ms, success, ts}
+ */
+function logAgentRun(agent,mode,durationMs,success){
+  try{
+    var runs=JSON.parse(localStorage.getItem('zn_agent_runs')||'[]');
+    runs.push({agent:agent,mode:mode||'unknown',duration_ms:durationMs,success:success!==false,ts:new Date().toISOString()});
+    if(runs.length>100)runs=runs.slice(-100);
+    localStorage.setItem('zn_agent_runs',JSON.stringify(runs));
+  }catch(e){}
 }
 
 /* ═══ EDIT DELTA LOGGING (RLHF signal — stores locally when no backend) ═══ */
@@ -2771,11 +2798,13 @@ async function runAgent1(){
   document.getElementById('confCard').style.display='none';document.getElementById('out1').style.display='none';
   try{
     let p;
+    var _runStart=Date.now();
     // Mock mode — bypass API entirely, return MOCK_R1 sample
     if(getApiMode()==='mock'){
       await mockDelay(1500);
       p=validateR1(JSON.parse(JSON.stringify(MOCK_R1))); // deep clone so mutations don't pollute
       stopProgress(prog1);
+      logAgentRun('discovery','mock',Date.now()-_runStart,true);
     } else {
     try{
       const sys='You are the Discovery Agent for Zillion Network, a GPU infrastructure company. Your job is to extract actionable deal intelligence from meeting notes, transcripts, or Granola summaries.\n\nEXTRACTION PRINCIPLE — extract first, infer second, mark third:\n1. EXTRACT: anything explicitly stated in the input — exact numbers, specific GPU names, named timelines, topics raised, issues discussed\n2. INFER: obvious implications from context (e.g., "pharma client" → "biomedical AI workload likely") — but never invent specifics like budget numbers or GPU models if not mentioned\n3. MARK: anything you cannot determine confidently goes in the gaps array with a brief reason\n\nDo NOT hallucinate. If budget is not mentioned, set budget="Unknown" and add it to gaps. If no GPU is named, leave gpu_preference empty rather than guessing.\n\nMEETING COMPLETENESS — capture EVERYTHING discussed, not just deal terms:\n- meeting_topics: every distinct topic, agenda item, or theme raised in the conversation, including issues, complaints, blockers, and tangents. If the meeting covered "issue fixing," "deployment problems," "supplier delays," or any operational concerns alongside commercial topics, capture each as a separate topic. The output should reflect the actual agenda of the meeting, not just the parts about purchasing.\n- action_items: explicit or implied next-step actions with an owner where stated (e.g., "Larry to send updated quote by Friday", "supplier to confirm GBP300 ETA")\n- project_plan: any phased plan, timeline, or milestone discussion (e.g., "POC in May, full deploy in July, scale-up in Q4")\n\nIMPORTANT — UNLISTED HARDWARE & CUSTOMER-SUPPLIED EQUIPMENT:\nClients sometimes ask about hardware Zillion does NOT stock (e.g., GB300, MI300, custom ASICs, future SKUs not yet in our catalog). When this happens:\n- Set gpu_preference to the EXACT SKU the client requested, even if Zillion does not stock it (e.g., "GB300"). Do not substitute it with what we DO stock.\n- Flag the unlisted hardware in low_fit_flags ONLY IF Zillion has no path to procure it. If Zillion can source-and-resell, this is a valid deal.\nIf the client is bringing their own hardware (BYOD), set customer_supplied_hardware=true. This means Zillion provides colocation + managed services only, not hardware sales. Look for phrases like "we already own", "we have our own servers", "we will ship hardware to you", "colocation only", "self-supplied".\n\nFEEDBACK HANDLING — if reviewer feedback is provided in the input:\nThe reviewer feedback OVERRIDES anything in the original transcript. If feedback says "the meeting also covered issue X" or "we discussed Y", you MUST include X and Y in your output. Treat feedback as ground truth supplied by the human reviewer who was actually in the room. Specifically: if feedback mentions a topic, action item, or constraint not in the transcript, ADD IT to the appropriate field. Never silently drop reviewer feedback.\n\nZILLION BUSINESS:\n- Sells GPU servers (RTX 4090, 5090, Pro 6000 SE, A100, H100)\n- Colocation hosting at Irvine CA, Dallas TX, Ashburn VA ($448/kW/mo)\n- 24/7 L3 managed support (<15min incident, <4hr HW replacement)\n- GPU-as-a-Service leasing ($1.25-1.42/GPU/hr 12-mo)\n- Can broker / source-and-resell unlisted GPUs (H200, GB200, GB300, MI300X) on case-by-case basis\n- Colocation-only deals welcome — clients bringing their own hardware\n\nBUSINESS WORKFLOW STAGES (identify which stage this deal is in):\n1. Demand Discovery — initial contact, understanding the client need\n2. Tech Discussion — architecture alignment, GPU selection\n3. POC/Evaluation — proof-of-concept, benchmark testing\n4. Contract Negotiation — pricing, terms, SLA commitments\n5. Deal Closing — PO, MSA signing\n6. Service Delivery — deployment, monitoring, ongoing ops\n\nPAST DEAL PATTERNS:\n- Pharma/biomedical AI: $150-220K, VRAM-sensitive, NVLink critical (Ab Initia $2M, Vertex $94K)\n- Foundation model training: $500K-1M+ (Helios $892K)\n- Inference: $100-300K, latency-sensitive (NovaStar $312K)\n- Lost deals: budget mismatch (CloudMind $76K)\n\nINPUT HANDLING:\n- Input may be raw notes, Granola summaries, email chains, or Slack threads\n- EMAIL CHAINS: Reconstruct timeline. Extract every pricing proposal with exact numbers. Identify stakeholders by email domain. Track requirement evolution. Flag competitor mentions (Lambda, CoreWeave, Exxact).\n- Granola summaries may miss granular technical details — infer carefully, mark gaps\n\nReturn ONLY valid JSON (no markdown, no backticks):\n{"client_name":"","budget":"$X – $Y or Unknown","gpu_preference":"specific GPU or empty","workflow":"Training/Inference/Hybrid/Managed Services/Colocation Only","timeline":"","deal_stage":"Discovery/Tech Discussion/POC/Negotiation/Closing/Delivery","business_model":"2-3 sentences","rag_classification":"workload type","customer_supplied_hardware":false,"key_requirements":[],"meeting_topics":[],"action_items":[],"project_plan":"","follow_up_questions":[],"gaps":[{"field":"","reason":""}],"low_fit_flags":[],"competitive_intel":"","meeting_completeness":{"score":7,"covered":[],"missing":[],"reasoning":""},"confidence":{"score":7.5,"label":"High/Moderate/Low Confidence","reasoning":"","matched_deals":[]}}\n\nThe gaps array is REQUIRED. List every field you could not extract or had to infer.\n\nThe meeting_topics array is REQUIRED for any meeting transcript or summary. Include EVERY distinct topic raised, especially operational issues, blockers, complaints, and side discussions — not just commercial topics.\n\nThe meeting_completeness object is REQUIRED. After extracting, honestly assess what fraction of the meeting content you captured:\n- score (0-10): how thoroughly the meeting was covered (10 = nothing missed; 5 = caught the deal terms but lost half the qualitative content; 2 = mostly missed the meeting beyond a few headline numbers)\n- covered: array of content categories you extracted well (e.g., "deal terms", "competitive context", "stakeholders")\n- missing: array of content categories you LIKELY missed if the meeting was substantive — common gaps include "project plan", "action items", "blockers / issues raised", "operational concerns", "side topics". When in doubt about whether a category was discussed, list it as potentially missing rather than claiming coverage.\n- reasoning: 1-2 sentence honest assessment\nThis field exists to help the user decide if more context is needed before moving forward. Be self-critical — over-claim coverage and the user gets blindsided downstream.\n\nThe customer_supplied_hardware field is REQUIRED. Set true if the client is bringing their own hardware (BYOD / colo-only); false otherwise. When true, recommend colocation + managed services in the proposal, not hardware sales.\n\nThe low_fit_flags array signals when a deal is a poor fit. Add a flag if ANY of these are true:\n- Budget below $50K\n- Edge / self-managed deployment with no colocation\n- Client wants cloud-style hourly billing only\n- Workload requires hardware Zillion absolutely cannot procure (e.g., custom ASICs, very rare SKUs with no resell path)\nDo NOT flag for unlisted-but-stockable SKUs (GB300, MI300X, H200) — those are valid deals.';
@@ -2958,11 +2987,13 @@ async function runAgent2(){
     // Detect vague input — if budget AND gpu_preference are both unknown, generate needs assessment
     var isVague=(!r1.budget||r1.budget.match(/unknown|tbd|not sure|exploring/i))&&(!r1.gpu_preference||r1.gpu_preference.match(/^$|unknown|best fit|not sure|tbd/i));
     try{
+      var _archStart=Date.now();
       // Mock mode — skip API, use local engine directly with no wasted call attempts
       if(getApiMode()==='mock'){
         await mockDelay(800);
         totPaths=generateToTPaths(r1);
         recommendation=generateRec(r1,totPaths);
+        logAgentRun('architect','mock',Date.now()-_archStart,true);
       } else {
       const liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
       var invStr;
@@ -3110,11 +3141,13 @@ async function runAgent3(){
   const b=document.getElementById('out3body');b.classList.remove('out-empty');b.contentEditable='false';b.textContent='Drafting client-facing proposal…';document.getElementById('proposalBar').classList.remove('visible');
   try{
     let text;
+    var _writerStart=Date.now();
     // Mock mode — skip API entirely, use local generator
     if(getApiMode()==='mock'){
       await mockDelay(1200);
       const paths=generateToTPaths(r1);
       text=generateProposal(r1,r2,paths);
+      logAgentRun('writer','mock',Date.now()-_writerStart,true);
     } else {
     try{
       const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.\n\nBRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n9. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n10. ## Deployment Timeline (table using 3-week Zillion pipeline)\n11. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n12. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
@@ -3971,6 +4004,217 @@ function exportEditLog(){
   }catch(e){alert('Export failed: '+e.message);}
 }
 
+/* ═══ LAYER 1 OBSERVABILITY DASHBOARD ═══
+ * Engineering-side metrics surfaced in Settings → Diagnostics. Reads from localStorage only;
+ * no backend calls. Helps Larry see what's working, what's drifting, what to fix next.
+ *
+ * Data sources:
+ *  - zn_edit_log: edit events per agent (agent, proposal_id, original/edited text, outcome, ts)
+ *  - zn_proposals_v6: proposals with status (success/lost/pending/disqualified)
+ *  - zn_agent_runs: agent timing log (added below — written on every callClaude)
+ *  - zn_prompt_drift: prompt-drift counter (incremented by validateR1 warning)
+ *
+ * What we compute:
+ *  - This week's activity: agent runs, proposals saved, outcomes
+ *  - Top 3 most-rewritten Writer sections (from edit log)
+ *  - Mode usage breakdown (mock / direct / proxy)
+ *  - Prompt-drift counter (Anthropic response regression signal)
+ *  - Median latency per agent
+ */
+function dashboardStats(){
+  var stats={
+    weekRange:'',
+    agentRuns:{discovery:0,architect:0,writer:0,total:0},
+    proposals:{total:0,success:0,lost:0,pending:0,disqualified:0,thisWeek:0},
+    editEvents:{total:0,thisWeek:0},
+    topRewrittenSections:[],
+    modeUsage:{mock:0,direct:0,proxy:0},
+    promptDrift:0,
+    latency:{discovery:null,architect:null,writer:null},
+    overrideEvents:0,
+    disqualEvents:0
+  };
+
+  var now=Date.now();
+  var weekAgo=now-7*24*60*60*1000;
+  var weekStart=new Date(weekAgo).toISOString().slice(0,10);
+  var today=new Date().toISOString().slice(0,10);
+  stats.weekRange=weekStart+' → '+today;
+
+  // 1. Edit events (proxy for agent runs since every agent run produces at minimum the initial output)
+  try{
+    var editLog=JSON.parse(localStorage.getItem('zn_edit_log')||'[]');
+    stats.editEvents.total=editLog.length;
+    editLog.forEach(function(e){
+      var ts=Date.parse(e.ts||0);
+      if(ts>=weekAgo)stats.editEvents.thisWeek++;
+    });
+    // Most-rewritten Writer sections — pull markdown headers from original text
+    var sectionCounts={};
+    editLog.filter(function(e){return e.agent==='writer'||e.agent==='tracker';}).forEach(function(e){
+      var headers=(e.original||'').match(/^##\s+(.+)$/gm)||[];
+      // Check if section's content was modified
+      headers.forEach(function(h){
+        var name=h.replace(/^##\s+/,'').trim().substring(0,40);
+        var origIdx=(e.original||'').indexOf(h);
+        var editIdx=(e.edited||'').indexOf(h);
+        if(origIdx>=0&&editIdx>=0){
+          // Compare paragraph that follows header (next ~500 chars)
+          var origPara=(e.original||'').substring(origIdx+h.length,origIdx+h.length+500);
+          var editPara=(e.edited||'').substring(editIdx+h.length,editIdx+h.length+500);
+          if(origPara!==editPara){sectionCounts[name]=(sectionCounts[name]||0)+1;}
+        }
+      });
+    });
+    stats.topRewrittenSections=Object.keys(sectionCounts).map(function(k){return {section:k,count:sectionCounts[k]};})
+      .sort(function(a,b){return b.count-a.count;}).slice(0,3);
+  }catch(e){}
+
+  // 2. Proposals + outcomes
+  try{
+    var props=JSON.parse(localStorage.getItem('zn_proposals_v6')||'[]');
+    stats.proposals.total=props.length;
+    props.forEach(function(p){
+      if(p.status==='success')stats.proposals.success++;
+      else if(p.status==='lost')stats.proposals.lost++;
+      else if(p.status==='disqualified')stats.proposals.disqualified++;
+      else stats.proposals.pending++;
+      // Count this-week
+      var pDate=p.date||p.createdAt;
+      if(pDate&&pDate>=weekStart)stats.proposals.thisWeek++;
+    });
+  }catch(e){}
+
+  // 3. Agent runs + timing (from zn_agent_runs — populated by callClaude wrapper added below)
+  try{
+    var runs=JSON.parse(localStorage.getItem('zn_agent_runs')||'[]');
+    var byAgent={discovery:[],architect:[],writer:[]};
+    runs.forEach(function(r){
+      var ts=Date.parse(r.ts||0);
+      if(ts<weekAgo)return; // only this-week stats
+      if(byAgent[r.agent])byAgent[r.agent].push(r);
+      stats.agentRuns[r.agent]=(stats.agentRuns[r.agent]||0)+1;
+      stats.agentRuns.total++;
+      if(r.mode)stats.modeUsage[r.mode]=(stats.modeUsage[r.mode]||0)+1;
+    });
+    // Median latency per agent
+    function median(arr){
+      if(arr.length===0)return null;
+      var s=arr.slice().sort(function(a,b){return a-b;});
+      var m=Math.floor(s.length/2);
+      return s.length%2?s[m]:Math.round((s[m-1]+s[m])/2);
+    }
+    ['discovery','architect','writer'].forEach(function(a){
+      var durs=byAgent[a].map(function(r){return r.duration_ms||0;}).filter(function(d){return d>0;});
+      stats.latency[a]=median(durs);
+    });
+  }catch(e){}
+
+  // 4. Prompt-drift counter (incremented by validateR1 when ≥18 defaults fire)
+  stats.promptDrift=parseInt(localStorage.getItem('zn_prompt_drift_count')||'0',10);
+
+  // 5. Override events (from a counter we'll start incrementing)
+  stats.overrideEvents=parseInt(localStorage.getItem('zn_override_count')||'0',10);
+  stats.disqualEvents=parseInt(localStorage.getItem('zn_disqual_count')||'0',10);
+
+  return stats;
+}
+
+/* Render the dashboard in Settings → Diagnostics. */
+function renderDashboard(){
+  var container=document.getElementById('dashboardContent');
+  if(!container)return;
+  var s=dashboardStats();
+
+  function fmtMs(ms){
+    if(!ms)return '—';
+    if(ms<1000)return ms+'ms';
+    return (ms/1000).toFixed(1)+'s';
+  }
+  function metricCard(label,value,sub){
+    return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;">'+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">'+label+'</div>'+
+      '<div style="font-size:20px;font-weight:700;color:var(--ink);line-height:1.1;">'+value+'</div>'+
+      (sub?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+sub+'</div>':'')+
+      '</div>';
+  }
+
+  var html='';
+  html+='<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Window: '+escHtml(s.weekRange)+' (last 7 days)</div>';
+
+  // Row 1: Activity
+  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">';
+  html+=metricCard('Agent Runs',s.agentRuns.total,'D '+s.agentRuns.discovery+' / A '+s.agentRuns.architect+' / W '+s.agentRuns.writer);
+  html+=metricCard('Proposals',s.proposals.thisWeek,s.proposals.total+' total');
+  html+=metricCard('Edit Events',s.editEvents.thisWeek,s.editEvents.total+' total');
+  html+=metricCard('Prompt Drift',s.promptDrift,'validateR1 warnings');
+  html+='</div>';
+
+  // Row 2: Outcomes
+  var totalDecided=s.proposals.success+s.proposals.lost+s.proposals.disqualified;
+  var winRate=totalDecided>0?Math.round(s.proposals.success/totalDecided*100):0;
+  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">';
+  html+=metricCard('Won','<span style="color:var(--green);">'+s.proposals.success+'</span>',(totalDecided>0?winRate+'% win rate':'—'));
+  html+=metricCard('Lost','<span style="color:var(--red);">'+s.proposals.lost+'</span>','');
+  html+=metricCard('Disqualified','<span style="color:#64748B;">'+s.proposals.disqualified+'</span>','');
+  html+=metricCard('Pending',s.proposals.pending,'');
+  html+='</div>';
+
+  // Row 3: Latency
+  html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px;">Median Latency (last 7 days)</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">';
+  html+=metricCard('Discovery',fmtMs(s.latency.discovery),'');
+  html+=metricCard('Architect',fmtMs(s.latency.architect),'');
+  html+=metricCard('Writer',fmtMs(s.latency.writer),'streaming');
+  html+='</div>';
+
+  // Mode usage + override / disqual counters
+  var totalMode=s.modeUsage.mock+s.modeUsage.direct+s.modeUsage.proxy;
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">';
+  html+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px;">Mode Usage</div>';
+  if(totalMode===0){
+    html+='<div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">No runs logged yet this week.</div>';
+  } else {
+    ['mock','direct','proxy'].forEach(function(m){
+      var n=s.modeUsage[m]||0;
+      var pct=Math.round((n/totalMode)*100);
+      html+='<div style="font-size:12px;display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:var(--bg);border-radius:4px;margin-bottom:3px;"><span style="color:var(--ink2);text-transform:capitalize;">'+m+'</span><span style="color:var(--ink);font-weight:600;font-family:ui-monospace,monospace;">'+n+' ('+pct+'%)</span></div>';
+    });
+  }
+  html+='</div>';
+  html+='<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px;">User Behavior</div>';
+  html+='<div style="font-size:12px;display:flex;justify-content:space-between;padding:4px 10px;background:var(--bg);border-radius:4px;margin-bottom:3px;"><span>Override clicks</span><span style="font-weight:600;font-family:ui-monospace,monospace;">'+s.overrideEvents+'</span></div>';
+  html+='<div style="font-size:12px;display:flex;justify-content:space-between;padding:4px 10px;background:var(--bg);border-radius:4px;"><span>Disqualifications</span><span style="font-weight:600;font-family:ui-monospace,monospace;">'+s.disqualEvents+'</span></div>';
+  html+='</div></div>';
+
+  // Top rewritten sections
+  if(s.topRewrittenSections.length>0){
+    html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px;">Most-Rewritten Writer Sections (prompt tuning targets)</div>';
+    html+='<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;">';
+    s.topRewrittenSections.forEach(function(item,i){
+      html+='<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:12px;'+(i<s.topRewrittenSections.length-1?'border-bottom:1px solid var(--border);':'')+'"><span style="color:var(--ink);">'+escHtml(item.section)+'</span><span style="color:var(--muted);font-family:ui-monospace,monospace;">'+item.count+'× rewritten</span></div>';
+    });
+    html+='</div>';
+  } else {
+    html+='<div style="font-size:11px;color:var(--muted);font-style:italic;padding:8px 0;">No Writer rewrites logged yet — surface this section after the team has edited 2+ proposals.</div>';
+  }
+
+  // Health indicator
+  html+='<div style="margin-top:14px;padding:10px 14px;background:'+
+    (s.promptDrift>5?'#FEF2F2':(s.agentRuns.total>0?'#F0FDF4':'#F0F9FF'))+
+    ';border-radius:6px;font-size:11.5px;color:var(--ink2);line-height:1.5;">';
+  if(s.promptDrift>5){
+    html+='⚠ <strong>Prompt drift elevated</strong> — '+s.promptDrift+' validateR1 warnings logged. Check console for missing-field details; Anthropic response shape may have changed.';
+  } else if(s.agentRuns.total===0){
+    html+='ℹ <strong>No agent runs this week.</strong> Dashboard will populate as the team uses bizops.';
+  } else {
+    html+='✓ <strong>Healthy</strong> — '+s.agentRuns.total+' agent runs, '+s.proposals.thisWeek+' proposal'+(s.proposals.thisWeek===1?'':'s')+', no prompt drift detected.';
+  }
+  html+='</div>';
+
+  container.innerHTML=html;
+}
+
 /* ═══ EDIT-LOG ANALYSIS — surfaces prompt-tuning patterns from real user edits ═══ */
 function analyzeEditPatterns(){
   var logs;
@@ -4219,6 +4463,14 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
     </div><!-- /data pane -->
     <!-- Tab: Diagnostics -->
     <div class="settings-pane" data-pane="diag" style="display:none;">
+    <!-- Engineering Observability Dashboard (Layer 1) -->
+    <div style="margin-bottom:22px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);">📊 Engineering Dashboard</div>
+        <button onclick="renderDashboard()" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--muted);font-size:11px;cursor:pointer;" title="Refresh metrics from latest data">↻ Refresh</button>
+      </div>
+      <div id="dashboardContent" style="font-size:13px;color:var(--ink);"></div>
+    </div>
     <!-- Feedback banner -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,196,122,0.07);border:1px solid rgba(0,196,122,0.25);border-radius:var(--r-md);margin-bottom:18px;">
       <div>
