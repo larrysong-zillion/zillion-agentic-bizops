@@ -203,6 +203,7 @@ class ProposalCreate(BaseModel):
  
 class ProposalUpdate(BaseModel):
     client: Optional[str] = None
+    amount: Optional[str] = None
     status: Optional[str] = None
     text: Optional[str] = None
     notes: Optional[str] = None
@@ -477,6 +478,8 @@ async def update_proposal(proposal_id: str, req: ProposalUpdate, _=Depends(verif
         updates, params = [], []
         if req.client is not None:
             updates.append("client=?"); params.append(req.client)
+        if req.amount is not None:
+            updates.append("amount=?"); params.append(req.amount)
         if req.status is not None:
             updates.append("status=?"); params.append(req.status)
         if req.text is not None:
