@@ -1181,6 +1181,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       </div>
       <span class="results-count" id="resultsCount"></span>
     </div>
+    <!-- Deal direction filter row — separate from status so they compose -->
+    <div class="filter-bar" style="margin-bottom:18px;flex-wrap:wrap;gap:6px;align-items:center;">
+      <span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-right:4px;">Type:</span>
+      <button class="filter-btn dir-btn active" onclick="filterByDirection('all',this)">All deals</button>
+      <button class="filter-btn dir-btn" onclick="filterByDirection('outbound_sale',this)">→ Customer / Sale</button>
+      <button class="filter-btn dir-btn" onclick="filterByDirection('inbound_procurement',this)">← Supplier / Procurement</button>
+      <button class="filter-btn dir-btn" onclick="filterByDirection('vendor_services',this)">⇄ Vendor services</button>
     <div class="proposal-list" id="proposalList"></div>
     <!-- Pagination -->
     <div id="paginationControls" style="display:none;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -1250,6 +1257,8 @@ let r2History=[];
 let origConstraints=null,origSummary=null,origRec=null,origProposal=null,savedProposal=null;
 let proposals=[];
 let currentFilter='all';
+// Direction filter — composes with currentFilter (status). Default 'all' = show every deal.
+let currentDirectionFilter='all';
 let currentVersionIndex=0;
 let proposalVersions=[];
 let _lastArchitectR1Hash='';
@@ -1429,10 +1438,13 @@ function markAsDisqualified(){
   var flagsList=(r1.low_fit_flags||[]).join('; ')||'manual disqualification';
   if(!confirm('Mark "'+clientName+'" as DISQUALIFIED?\n\nThis saves the deal to your Tracker with status "disqualified" and the low-fit reasons. No proposal will be generated. You can still edit the entry later.'))return;
   var id=genId();
+  // Normalize unknown/pending budgets to "TBD" so the tracker reads cleanly.
+  // Discovery often leaves budget as "Unknown" when negotiations are still in flight (e.g. GCP procurement).
+  var amt=normalizeAmount(r1.budget);
   var disqualified={
     id:id,
     client:clientName,
-    amount:r1.budget||'—',
+    amount:amt,
     date:new Date().toISOString().slice(0,10),
     status:'disqualified',
     text:'## Disqualification Notes\n\n**Client:** '+clientName+'\n**Reasons (Low-fit flags):**\n'+(r1.low_fit_flags||[]).map(function(f){return '- '+f;}).join('\n')+'\n\n**Discovery Summary:**\n- Budget: '+(r1.budget||'unknown')+'\n- GPU preference: '+(r1.gpu_preference||'unknown')+'\n- Workflow: '+(r1.workflow||'unknown')+'\n- Deal stage: '+(r1.deal_stage||'unknown')+'\n\n**Recommendation:** '+(r1.low_fit_flags&&r1.low_fit_flags.length>=2?'Disqualify or pivot to colocation-only quote.':'Reviewer disqualified at Step 1.'),
@@ -1654,6 +1666,106 @@ function updateDocTypeChip(dir){
   chip.style.display='inline-flex';
 }
 
+/* ═══ EXISTING CUSTOMER MATCH ═══
+ * When Discovery extracts a client_name, look for an existing proposal in the tracker
+ * with the same client. Lets the user link this as a NEW VERSION of the prior deal
+ * instead of creating a duplicate entry. Important for ongoing negotiations and
+ * follow-up rounds with the same customer.
+ *
+ * Match strategy: case-insensitive, normalized whitespace, ignores common suffixes
+ * (Inc / LLC / Ltd / Co / Corp). Too narrow misses real matches; too loose risks
+ * false positives. Threshold: exact normalized equality OR one is a substring of the other
+ * AND the shorter one is ≥6 characters (prevents "AI" matching "AI Corp" by accident). */
+function normalizeClientName(name){
+  if(!name)return '';
+  return String(name).toLowerCase().trim()
+    .replace(/[,.]/g,' ')
+    .replace(/\s+/g,' ')
+    .replace(/\b(?:inc|incorporated|llc|ltd|limited|co|corp|corporation|company|labs?|technologies|tech|systems|group|holdings|gmbh|sa|ag)\b\.?/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function findExistingProposalsForClient(clientName){
+  if(!clientName||!proposals||proposals.length===0)return [];
+  var target=normalizeClientName(clientName);
+  if(!target||target.length<3)return [];
+  return proposals.filter(function(p){
+    if(!p||!p.client)return false;
+    var existing=normalizeClientName(p.client);
+    if(!existing||existing.length<3)return false;
+    if(existing===target)return true;
+    // Substring match — require ≥6 chars on shorter side to avoid false positives
+    var shorter=existing.length<target.length?existing:target;
+    var longer=existing.length<target.length?target:existing;
+    return shorter.length>=6&&longer.indexOf(shorter)>=0;
+  });
+}
+
+/* Render the "existing customer found" banner above Step 1 output.
+ * Two actions: link this discovery to a prior proposal (build off it as a new version)
+ * OR dismiss and treat as a brand-new deal (default if user takes no action). */
+function renderExistingCustomerMatch(p){
+  var existing=document.getElementById('existingCustomerMatch');
+  if(!p||!p.client_name){if(existing)existing.style.display='none';return;}
+  var matches=findExistingProposalsForClient(p.client_name);
+  if(matches.length===0){if(existing)existing.style.display='none';return;}
+  var banner=existing;
+  if(!banner){
+    banner=document.createElement('div');banner.id='existingCustomerMatch';
+    var anchor=document.getElementById('dealDirectionBadge');
+    if(!anchor)anchor=document.getElementById('constraintBar');
+    if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(banner,anchor);
+  }
+  banner.style.cssText='margin:10px 0;padding:10px 14px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:6px;font-size:12px;color:#1E3A8A;line-height:1.55;';
+  // List up to 3 matches; if more, show "+N more"
+  var top=matches.slice(0,3);
+  var listHtml=top.map(function(m){
+    var amt=m.amount||'TBD';
+    var status=m.status||'pending';
+    var date=m.date||'';
+    var vCount=(m.versions||[]).length;
+    return '<div style="display:flex;gap:8px;align-items:baseline;padding:3px 0;border-top:1px solid rgba(147,197,253,0.4);">'+
+      '<span style="flex:1;font-weight:500;">'+escHtml(m.client)+'</span>'+
+      '<span style="color:#1E40AF;font-size:11px;font-family:ui-monospace,monospace;">'+escHtml(amt)+'</span>'+
+      '<span style="color:#3B82F6;font-size:11px;text-transform:capitalize;">'+escHtml(status)+'</span>'+
+      '<span style="color:#64748B;font-size:11px;">'+escHtml(date)+(vCount>0?(' · '+vCount+'v'):'')+'</span>'+
+      '<button onclick="linkToExistingProposal(\''+m.id+'\')" style="font-size:10.5px;padding:3px 10px;border:1px solid #3B82F6;border-radius:4px;background:#fff;color:#1E40AF;font-weight:600;cursor:pointer;">Link &amp; continue</button>'+
+      '</div>';
+  }).join('');
+  banner.innerHTML='<div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;">🔗 Existing customer found · '+matches.length+' prior '+(matches.length===1?'proposal':'proposals')+' for "'+escHtml(p.client_name)+'"</div>'+
+    '<div style="font-size:11px;color:#1E40AF;opacity:0.85;margin-bottom:6px;">Link this assessment to a prior deal to build a new version off it, or dismiss to treat as a new entry.</div>'+
+    listHtml+
+    (matches.length>3?'<div style="font-size:10.5px;color:#64748B;padding:4px 0 0 0;text-align:center;">+'+(matches.length-3)+' more in tracker</div>':'')+
+    '<div style="margin-top:8px;text-align:right;"><button onclick="dismissCustomerMatch()" style="font-size:10.5px;padding:3px 10px;border:1px solid #CBD5E1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;">Dismiss · treat as new deal</button></div>';
+  banner.style.display='block';
+}
+
+/* Link this Discovery output to a prior proposal — the new run becomes a version-bump
+ * of that customer's existing entry rather than a new tracker row.
+ * Stashes the parent ID on r1 so saveToTracker reads it later. */
+function linkToExistingProposal(parentId){
+  var parent=proposals.find(function(x){return x.id===parentId;});
+  if(!parent){alert('Couldn\'t find that proposal — it may have been deleted.');return;}
+  if(!r1)return;
+  r1._linkedToProposal=parentId;
+  // Also overwrite r1.client_name to match the parent's exact spelling — keeps everything consistent
+  r1.client_name=parent.client;
+  // Update visible client name in any display
+  var clientChip=document.getElementById('cClient');
+  if(clientChip)clientChip.textContent=parent.client;
+  // Hide the match banner — decision made
+  var banner=document.getElementById('existingCustomerMatch');
+  if(banner)banner.style.display='none';
+  // Show a confirmation that the link is active
+  showStorageBadge('saved','Linked to existing customer: '+parent.client+' (this Discovery will save as a new version)');
+}
+
+function dismissCustomerMatch(){
+  var banner=document.getElementById('existingCustomerMatch');
+  if(banner)banner.style.display='none';
+  if(r1)delete r1._linkedToProposal;
+}
+
 function renderDealDirectionBadge(p){
   var existing=document.getElementById('dealDirectionBadge');
   if(!p||!p.deal_direction){if(existing)existing.style.display='none';return;}
@@ -1685,14 +1797,16 @@ function renderDealDirectionBadge(p){
       anchor.parentNode.insertBefore(banner,anchor);
     }
   }
-  // Single-line compact treatment: dot + label + meta. No background block, no thick borders.
-  banner.style.cssText='margin:8px 0;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11.5px;color:var(--ink2);line-height:1.5;display:flex;align-items:center;gap:10px;';
+  // Stacked layout — dot + label on one row, description below. Never wraps awkwardly at any width.
+  banner.style.cssText='margin:8px 0;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11.5px;color:var(--ink2);line-height:1.5;';
   banner.innerHTML=
-    '<span style="width:8px;height:8px;border-radius:50%;background:'+cfg.accent+';flex-shrink:0;"></span>'+
-    '<span style="font-weight:600;color:var(--ink);">'+escHtml(cfg.label)+'</span>'+
-    (role?'<span style="color:var(--muted);font-size:11px;">· '+escHtml(role)+'</span>':'')+
-    '<span style="color:var(--muted);font-size:11px;margin-left:auto;text-align:right;">'+escHtml(cfg.sub)+'</span>';
-  banner.style.display='flex';
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">'+
+      '<span style="width:8px;height:8px;border-radius:50%;background:'+cfg.accent+';flex-shrink:0;"></span>'+
+      '<span style="font-weight:600;color:var(--ink);">'+escHtml(cfg.label)+'</span>'+
+      (role?'<span style="color:var(--muted);font-size:11px;">· '+escHtml(role)+'</span>':'')+
+    '</div>'+
+    '<div style="color:var(--muted);font-size:11px;padding-left:16px;">'+escHtml(cfg.sub)+'</div>';
+  banner.style.display='block';
 }
 
 /* Render hallucination findings as a banner above the proposal output. */
@@ -1958,7 +2072,7 @@ function resetAssessment(){
   ['txInput','granolaInput','emailInput','gdocInput','slackInput','reprompt1','reprompt2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['cBudget','cGpu','cWorkflow','cTimeline','cBizModel','cDealStage'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';});
   ['out1','dealIntelCard','confCard','ragBadge','dealStageBadge','fuQuestionsWrap','compIntelWrap','out2','out3','propActions','splitToggle'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint','budgetOvershootBanner','hallucinationBanner','stockoutWarningBanner','dealDirectionBadge'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint','budgetOvershootBanner','hallucinationBanner','stockoutWarningBanner','dealDirectionBadge','existingCustomerMatch'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   var byo=document.getElementById('byodCheckbox');if(byo)byo.checked=false;
   var unl=document.getElementById('unlistedSkuCheckbox');if(unl)unl.checked=false;
   ['constraintBar','summaryBar','recBar','proposalBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('visible');});
@@ -3255,6 +3369,8 @@ async function runAgent1(){
     } else if(fbBanner){fbBanner.style.display='none';}
     // Render deal direction badge — surfaces which mode the downstream agents will use
     renderDealDirectionBadge(p);
+    // Check if this client matches an existing tracker entry — offer to link as a new version
+    renderExistingCustomerMatch(p);
     document.getElementById('cBudget').textContent=p.budget;document.getElementById('cGpu').textContent=p.gpu_preference;
     document.getElementById('cWorkflow').textContent=p.workflow;document.getElementById('cTimeline').textContent=p.timeline;
     document.getElementById('cBizModel').textContent=p.business_model;
@@ -3715,34 +3831,72 @@ function doExport(){var txt=splitPaneActive?(document.getElementById('splitEdito
 function saveToTracker(){if(!r1){alert('No proposal data to save.');return;}
   var txt=splitPaneActive?(document.getElementById('splitEditor').value||''):(document.getElementById('out3body').innerText||'');
   var clientName=(r1.client_name||'Unknown').trim();
-  // Check for existing proposal with same client name
-  var existing=proposals.find(function(p){return p.client.toLowerCase()===clientName.toLowerCase();});
   var now=new Date();
+  // If Discovery linked this run to an existing proposal, use that parent directly (no prompt).
+  var linkedParentId=r1._linkedToProposal;
+  var existing=null;
+  if(linkedParentId){
+    existing=proposals.find(function(p){return p.id===linkedParentId;});
+  }
+  // Also check for an exact name match (legacy path) only when no explicit link
+  if(!existing){
+    existing=proposals.find(function(p){return p.client.toLowerCase()===clientName.toLowerCase();});
+  }
+  // Track whether the merge was user-driven (linked from Discovery) or prompt-driven (legacy)
+  var shouldMerge=false;
   if(existing){
-    var action=confirm('Found existing proposal for "'+existing.client+'" ('+existing.date+').\n\nClick OK to update it with new version, or Cancel to create a separate proposal.');
-    if(action){
+    if(linkedParentId){
+      shouldMerge=true; // already confirmed at link time
+    } else {
+      shouldMerge=confirm('Found existing proposal for "'+existing.client+'" ('+existing.date+').\n\nClick OK to update it with new version, or Cancel to create a separate proposal.');
+    }
+  }
+  if(existing&&shouldMerge){
       // Update existing: add as new version
       if(!existing.versions)existing.versions=[];
       existing.versions.forEach(function(v){v.current=false;});
       existing.versions.push({label:'v'+(existing.versions.length+1)+' — Updated '+now.toLocaleDateString('en-US',{month:'short',day:'numeric'}),text:txt,ts:now.toISOString(),current:true});
       existing.text=txt;existing.savedText=txt;
-      existing.amount=extractAmount(txt)||existing.amount;
+      existing.amount=normalizeAmount(extractAmount(txt))||existing.amount;
       existing.deal_stage=r1.deal_stage||existing.deal_stage;
       existing.confidence=r1.confidence||existing.confidence;
       if(r1.follow_up_questions)existing.follow_up_questions=r1.follow_up_questions;
       if(r1.competitive_intel)existing.competitive_intel=r1.competitive_intel;
-      storageSave();updateProposalOnBackend(existing.id,{text:txt,status:existing.status});
+      // If linked, carry deal_direction over so the tracker filter (procurement vs customer) reflects the latest
+      if(r1.deal_direction)existing.deal_direction=r1.deal_direction;
+      storageSave();updateProposalOnBackend(existing.id,{text:txt,status:existing.status,amount:existing.amount});
       var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Updated!';btn.style.background='var(--green)';btn.disabled=true;
       setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(existing.id);},150);},1200);
       return;
-    }
   }
-  var p={id:genId(),client:clientName,amount:extractAmount(txt),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,deal_stage:r1.deal_stage||'Discovery',follow_up_questions:r1.follow_up_questions||[],competitive_intel:r1.competitive_intel||'',versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});})};
+  var p={id:genId(),client:clientName,amount:normalizeAmount(extractAmount(txt)),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,deal_stage:r1.deal_stage||'Discovery',deal_direction:r1.deal_direction||'outbound_sale',follow_up_questions:r1.follow_up_questions||[],competitive_intel:r1.competitive_intel||'',versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});})};
   proposals.unshift(p);updateTrackerCount();storageSave();saveProposalToBackend(p);
   var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;
   setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);
+  var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;
+  setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);
 }
-function extractAmount(txt){var m=txt.match(/\$[\d,]+/g);return m?m[0]:'N/A';}
+/* Extract a dollar figure from a proposal's text. Returns 'TBD' when nothing matches
+ * or when the proposal explicitly states pricing is pending — common for procurement
+ * deals where supplier quotes haven't landed yet. */
+function extractAmount(txt){
+  if(!txt)return 'TBD';
+  // Detect explicit "pending" markers near the price field
+  if(/(?:pricing|cost|price|amount)[^\n]{0,40}(?:TBD|pending|under negotiation|not (?:yet )?(?:finalized|determined|confirmed))/i.test(txt))return 'TBD';
+  var m=txt.match(/\$[\d,]+/g);
+  return m?m[0]:'TBD';
+}
+
+/* Normalize a budget string for display in the tracker. Maps various "unknown"
+ * signals to a uniform "TBD" so the tracker doesn't show "Unknown", "—", "pending",
+ * "n/a", and empty strings as separate categories. */
+function normalizeAmount(raw){
+  if(raw===null||raw===undefined)return 'TBD';
+  var s=String(raw).trim();
+  if(s===''||s==='—'||s==='-')return 'TBD';
+  if(/^(?:unknown|tbd|n\/?a|pending|negotiating|under negotiation|not (?:yet )?(?:finalized|determined|confirmed)|to be (?:determined|confirmed))$/i.test(s))return 'TBD';
+  return s;
+}
 function updateTrackerCount(){var n=proposals.length;['homeCount','tc1','tc2','tc3','tcInv'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=n;});}
 function renderHomeRecent(){var wrap=document.getElementById('homeRecent');var list=document.getElementById('homeRecentList');if(!proposals.length){wrap.style.display='none';return;}wrap.style.display='block';var recent=proposals.slice(0,3);list.innerHTML=recent.map(function(p){var label=p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':'✗ Lost';return '<div class="recent-row" onclick="goTracker()"><span class="recent-client">'+escHtml(p.client)+'</span><div class="recent-meta"><span class="recent-amount">'+escHtml(p.amount)+'</span><span class="recent-status rs-'+p.status+'">'+label+'</span></div></div>';}).join('');}
 function followupClass(p){if(!p.followup)return 'followup-row';var d=new Date(p.followup);var now=new Date();now.setHours(0,0,0,0);if(d<now)return 'followup-row overdue';var diff=(d-now)/(86400000);return diff<=7?'followup-row':'followup-row clear';}
@@ -3786,6 +3940,11 @@ function renderTracker(){
   var q=(document.getElementById('searchInput')?document.getElementById('searchInput').value:'').toLowerCase().trim();
   var filtered=proposals.slice();
   if(currentFilter!=='all')filtered=filtered.filter(function(p){return p.status===currentFilter;});
+  // Direction filter — proposals without an explicit deal_direction are treated as outbound_sale (legacy default)
+  if(currentDirectionFilter!=='all')filtered=filtered.filter(function(p){
+    var dir=p.deal_direction||'outbound_sale';
+    return dir===currentDirectionFilter;
+  });
   if(q)filtered=filtered.filter(function(p){return p.client.toLowerCase().indexOf(q)>=0||p.id.toLowerCase().indexOf(q)>=0||(p.amount||'').indexOf(q)>=0||(p.notes||'').toLowerCase().indexOf(q)>=0;});
   filtered.sort(function(a,b){if(a.status==='pending'&&b.status==='pending'&&a.followup&&b.followup)return new Date(a.followup)-new Date(b.followup);return 0;});
   var totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
@@ -3794,7 +3953,7 @@ function renderTracker(){
   var rc=document.getElementById('resultsCount');if(rc)rc.textContent=filtered.length!==proposals.length?filtered.length+' of '+proposals.length+' proposals':'';
   var list=document.getElementById('proposalList');
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">'+(proposals.length?'🔍':'📭')+'</div><div class="empty-state-title">'+(proposals.length?'No proposals match this filter':'No proposals yet')+'</div></div>';document.getElementById('paginationControls').style.display='none';return;}
-  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount" ondblclick="event.stopPropagation();editAmount(\''+p.id+'\')" title="Double-click to edit amount" style="cursor:pointer;">'+escHtml(p.amount)+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div><div class=\"sp-opt\" onclick=\"event.stopPropagation();setStatus(\\\'"+p.id+"\\\',\\\'disqualified\\\')\"><div class=\"sp-dot l\" style=\"background:#94A3B8;\"></div>✕ Disqualified</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
+  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client">'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount" ondblclick="event.stopPropagation();editAmount(\''+p.id+'\')" title="Double-click to edit amount" style="cursor:pointer;">'+escHtml(p.amount)+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(function(){var dir=p.deal_direction||'outbound_sale';if(dir==='outbound_sale')return '';var dcfg=dir==='inbound_procurement'?{txt:'← Procurement',bg:'#FFF8E1',fg:'#78350F',bd:'#D97706'}:{txt:'⇄ Vendor svc',bg:'#EFF6FF',fg:'#1E3A8A',bd:'#2563EB'};return '<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:'+dcfg.bg+';color:'+dcfg.fg+';border:1px solid '+dcfg.bd+';">'+dcfg.txt+'</span>';})()+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div><div class=\"sp-opt\" onclick=\"event.stopPropagation();setStatus(\\\'"+p.id+"\\\',\\\'disqualified\\\')\"><div class=\"sp-dot l\" style=\"background:#94A3B8;\"></div>✕ Disqualified</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
   var pc=document.getElementById('paginationControls');if(totalPages>1){pc.style.display='flex';document.getElementById('pageInfo').textContent='Page '+currentPage+' of '+totalPages;document.getElementById('prevPage').disabled=currentPage<=1;document.getElementById('nextPage').disabled=currentPage>=totalPages;}else{pc.style.display='none';}
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -3830,10 +3989,11 @@ function editAmount(id){
   var newAmount=prompt('Edit deal amount (was "'+current+'"):\n\nUse formats like "$1,500,000", "$300K", "$2.5M", or "TBD".',current);
   if(newAmount===null)return;
   newAmount=newAmount.trim();
-  if(!newAmount){alert('Deal amount cannot be empty. Use "—" or "TBD" if unknown.');return;}
+  if(!newAmount){newAmount='TBD';}
   if(newAmount===current)return;
-  // Normalize: if user typed plain digits, prepend $
+  // Plain digits get $ prepended; everything else passes through normalizeAmount
   if(/^[\d,.]+[KkMm]?$/.test(newAmount)){newAmount='$'+newAmount;}
+  else{newAmount=normalizeAmount(newAmount);}
   p.amount=newAmount;
   storageSave();
   if(typeof updateProposalOnBackend==='function')updateProposalOnBackend(id,{amount:newAmount});
@@ -3920,7 +4080,17 @@ function parseSkusFromProposal(text){
   });
   return skuMap;
 }
-function filterProposals(f,btn){currentFilter=f;currentPage=1;document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderTracker();}
+function filterProposals(f,btn){
+  currentFilter=f;currentPage=1;
+  // Only deactivate buttons in the status row (not the .dir-btn direction row, which composes independently)
+  document.querySelectorAll('.filter-btn:not(.dir-btn)').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');renderTracker();
+}
+function filterByDirection(d,btn){
+  currentDirectionFilter=d;currentPage=1;
+  document.querySelectorAll('.filter-btn.dir-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');renderTracker();
+}
 function saveTrackerEdit(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var el=document.getElementById('ptext-'+id);var nt=el.innerText||el.textContent;var origText=p.savedText||p.text||'';p.text=nt;p.savedText=nt;var cur=p.versions&&p.versions.find(function(v){return v.current;});if(cur)cur.text=nt;storageSave();updateProposalOnBackend(id,{text:nt});if(origText&&nt!==origText)logEditDelta(id,'tracker',origText,nt,p.status);captureEditDelta(id,'tracker');var btn=el.nextElementSibling.querySelector('button');btn.textContent='✓ Saved!';setTimeout(function(){btn.textContent='✓ Save edits';},2000);}
 function exportTrackerProposal(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([p.text],{type:'text/markdown'}));a.download=p.id+'_proposal.md';a.click();}
 function deleteProposal(id){if(!confirm('Delete this proposal permanently?'))return;proposals=proposals.filter(function(p){return p.id!==id;});updateTrackerCount();storageSave();deleteProposalOnBackend(id);renderTracker();renderHomeRecent();}
