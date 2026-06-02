@@ -73,6 +73,7 @@ def init_db():
             saved_text TEXT,
             notes TEXT DEFAULT '',
             followup TEXT,
+            pinned INTEGER DEFAULT 0,
             confidence_json TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -143,6 +144,12 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_call_log_ts ON call_log(ts);
         """)
+        # ── Migrations for existing databases ──
+        # ALTER TABLE statements fail with OperationalError if column already exists; suppress.
+        try:
+            db.execute("ALTER TABLE proposals ADD COLUMN pinned INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
  
 @contextmanager
 def get_db():
@@ -208,6 +215,7 @@ class ProposalUpdate(BaseModel):
     text: Optional[str] = None
     notes: Optional[str] = None
     followup: Optional[str] = None
+    pinned: Optional[bool] = None
     versions: Optional[list] = None
  
 class EditLogEntry(BaseModel):
@@ -489,6 +497,8 @@ async def update_proposal(proposal_id: str, req: ProposalUpdate, _=Depends(verif
             updates.append("notes=?"); params.append(req.notes)
         if req.followup is not None:
             updates.append("followup=?"); params.append(req.followup)
+        if req.pinned is not None:
+            updates.append("pinned=?"); params.append(1 if req.pinned else 0)
         if updates:
             updates.append("updated_at=?"); params.append(datetime.now(timezone.utc).isoformat())
             params.append(proposal_id)
