@@ -542,7 +542,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
 .followup-pr-badge.soon{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 
 /* ── PDF EXPORT MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeOverlay 0.18s ease;}
+.modal-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeOverlay 0.18s ease;}
 .modal-overlay.hidden{display:none;}
 @keyframes fadeOverlay{from{opacity:0;}to{opacity:1;}}
 .modal-box{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp 0.2s ease;}
@@ -694,7 +694,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       </div>
       <div class="home-bar-right">
         <div style="display:flex;align-items:center;gap:6px;margin-right:12px;"><div id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);"></div><span id="apiStatusText" style="font-size:11px;color:var(--muted);">Mock Mode</span><span style="font-size:10px;color:rgba(255,255,255,0.25);margin-left:8px;font-family:monospace;" title="Build version — hard refresh (Cmd+Shift+R) if older than today">v2026.04.27</span></div>
-        <button onclick="loadSettingsIntoModal();openSettings()" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;margin-right:8px;" title="Settings" aria-label="Open Settings">⚙</button>
+        <button onclick="safeOpenSettings()" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:14px;margin-right:8px;" title="Settings" aria-label="Open Settings">⚙</button>
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDzTonEVcnqT1si6dSmoCEYNycbtcM38-I50eKGQugX_Rn1w/viewform" target="_blank" rel="noopener" title="Share feedback on Bizops" style="display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid rgba(0,196,122,0.35);border-radius:8px;padding:6px 11px;cursor:pointer;color:rgba(0,196,122,0.85);font-size:12px;font-weight:500;text-decoration:none;margin-right:8px;transition:all 0.15s;" onmouseover="this.style.background='rgba(0,196,122,0.1)'" onmouseout="this.style.background='none'">💬 Feedback</a>
         <button class="home-proposals-btn" onclick="goTracker()">
           All Proposals <span class="home-count" id="homeCount">0</span>
@@ -775,7 +775,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
       <span style="color:var(--muted);font-size:11.5px;" id="step1SetupHelp">Configure an API key or switch to Mock Mode before running the agent.</span>
       <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
         <button onclick="testApiSetup()" id="step1TestBtn" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;">⚡ Test Setup</button>
-        <button onclick="loadSettingsIntoModal();openSettings();" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;">⚙ Settings</button>
+        <button onclick="safeOpenSettings()" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;">⚙ Settings</button>
         <button onclick="quickEnableMockMode()" style="font-size:11.5px;font-weight:600;padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--ink2);border-radius:6px;cursor:pointer;" title="Switch to Mock Mode for demo / no API key required">🧪 Mock Mode</button>
       </div>
     </div>
@@ -921,6 +921,11 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink2);cursor:pointer;">
           <input type="checkbox" id="unlistedSkuCheckbox" onchange="toggleUnlistedOverride(this)" style="margin-top:2px;flex-shrink:0;"/>
           <span><strong>Customer requested an unlisted SKU (GB300, MI300, H200, etc.)</strong><br/><span style="color:var(--muted);font-size:11.5px;">Architect will treat this as a source-and-resell deal, not substitute with stock SKUs.</span></span>
+        </label>
+        <!-- Language toggle: when set, Writer generates the final proposal in Chinese -->
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink2);cursor:pointer;margin-top:8px;">
+          <input type="checkbox" id="chineseLangCheckbox" style="margin-top:2px;flex-shrink:0;"/>
+          <span><strong>Generate proposal in 中文 (Chinese)</strong><br/><span style="color:var(--muted);font-size:11.5px;">Discovery extraction stays in English (for internal review); the final client proposal is translated to Mandarin Chinese.</span></span>
         </label>
       </div>
 
@@ -1260,6 +1265,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:poin
    STATE
 ═══════════════════════════════════════ */
 let r1=null,r2=null;
+// Procurement plan (have/buy/rent split) — captured from Architect output, passed to Writer + saved on proposal
+let r2ProcurementPlan=[];
 // Re-run history: when Discovery or Architect re-runs with feedback, the prior output is archived
 // here so the user can compare or revert. Capped at 5 entries each to avoid memory bloat.
 let r1History=[];
@@ -1277,6 +1284,23 @@ let _editBaselineText='';
 let currentPage=1;
 const PAGE_SIZE=10;
 let agentRunning=false;
+let _agentRunningSince=0;
+// Wrapper that prevents agentRunning from staying stuck.
+// If an agent crashes outside the try/catch, this lets the user retry after a sensible delay.
+function isAgentBlocked(){
+  if(!agentRunning)return false;
+  // If "running" for more than 5 minutes, assume stuck and free the lock
+  if(Date.now()-_agentRunningSince>5*60*1000){
+    console.warn('agentRunning stuck for >5min — auto-clearing');
+    agentRunning=false;
+    return false;
+  }
+  return true;
+}
+function setAgentRunning(v){
+  agentRunning=v;
+  if(v)_agentRunningSince=Date.now();
+}
 
 /* ═══ COLLISION-SAFE ID ═══ */
 var _idCounter=0;
@@ -1689,28 +1713,85 @@ function updateDocTypeChip(dir){
 function normalizeClientName(name){
   if(!name)return '';
   return String(name).toLowerCase().trim()
-    .replace(/[,.]/g,' ')
+    .replace(/^the\s+/,'')              // strip leading "the"
+    .replace(/[,.()\/\\]/g,' ')          // punctuation → space
     .replace(/\s+/g,' ')
-    .replace(/\b(?:inc|incorporated|llc|ltd|limited|co|corp|corporation|company|labs?|technologies|tech|systems|group|holdings|gmbh|sa|ag)\b\.?/g,'')
+    .replace(/\b(?:inc|incorporated|llc|ltd|limited|co|corp|corporation|company|labs?|technologies|tech|systems|group|holdings|gmbh|sa|ag|networks?|network|solutions?|partners?|ventures?|capital)\b\.?/g,'')
     .replace(/\s+/g,' ')
     .trim();
 }
+
+// Lightweight Levenshtein for typo tolerance. Returns edit distance; small numbers = close.
+// Only used on already-normalized short-ish names so cost is bounded.
+function _levDistance(a,b){
+  if(a===b)return 0;
+  var la=a.length,lb=b.length;
+  if(la===0)return lb;if(lb===0)return la;
+  // Single-row DP; uses ~O(min(la,lb)) memory
+  var prev=[],cur=[];
+  for(var j=0;j<=lb;j++)prev[j]=j;
+  for(var i=1;i<=la;i++){
+    cur[0]=i;
+    for(var k=1;k<=lb;k++){
+      var cost=a.charAt(i-1)===b.charAt(k-1)?0:1;
+      cur[k]=Math.min(cur[k-1]+1,prev[k]+1,prev[k-1]+cost);
+    }
+    var tmp=prev;prev=cur;cur=tmp;cur=new Array(lb+1);
+  }
+  return prev[lb];
+}
+
+// Token-set similarity — how many words overlap between two normalized names.
+// "Phoenix Therapeutics" and "Phoenix Therapuetics" share "phoenix" exactly + close on "therapeutics"
+function _tokenOverlap(a,b){
+  var ta=a.split(' ').filter(function(w){return w.length>1;});
+  var tb=b.split(' ').filter(function(w){return w.length>1;});
+  if(!ta.length||!tb.length)return 0;
+  var matches=0;
+  ta.forEach(function(wa){
+    var found=tb.some(function(wb){
+      if(wa===wb)return true;
+      // Tolerate 1-char typo on words ≥5 chars
+      if(wa.length>=5&&wb.length>=5&&_levDistance(wa,wb)<=1)return true;
+      return false;
+    });
+    if(found)matches++;
+  });
+  // Symmetric similarity — fraction of shared tokens out of smaller name's tokens
+  return matches/Math.min(ta.length,tb.length);
+}
+
 function findExistingProposalsForClient(clientName){
   if(!clientName||!proposals||proposals.length===0)return [];
   var target=normalizeClientName(clientName);
   if(!target||target.length<3)return [];
-  return proposals.filter(function(p){
-    if(!p||!p.client)return false;
-    // Skip disqualified proposals — they're closed records, not active deals to build off
-    if(p.status==='disqualified')return false;
+  // Score each candidate; sort by best match; return matches above threshold
+  var scored=proposals.map(function(p){
+    if(!p||!p.client)return null;
+    if(p.status==='disqualified')return null; // closed records
     var existing=normalizeClientName(p.client);
-    if(!existing||existing.length<3)return false;
-    if(existing===target)return true;
-    // Substring match — require ≥6 chars on shorter side to avoid false positives
-    var shorter=existing.length<target.length?existing:target;
-    var longer=existing.length<target.length?target:existing;
-    return shorter.length>=6&&longer.indexOf(shorter)>=0;
-  });
+    if(!existing||existing.length<3)return null;
+    var score=0;
+    var why='';
+    if(existing===target){score=1.0;why='exact match';}
+    else if(existing.length>=6&&target.indexOf(existing)>=0){score=0.95;why='substring (existing in target)';}
+    else if(target.length>=6&&existing.indexOf(target)>=0){score=0.95;why='substring (target in existing)';}
+    else {
+      var tokScore=_tokenOverlap(existing,target);
+      if(tokScore>=0.5){score=tokScore;why=Math.round(tokScore*100)+'% token overlap';}
+      else {
+        // Whole-name Levenshtein for typo cases — only if names are similar length
+        if(Math.abs(existing.length-target.length)<=3){
+          var dist=_levDistance(existing,target);
+          var maxLen=Math.max(existing.length,target.length);
+          if(dist<=2&&maxLen>=6){score=0.7;why='close-typo match (edit dist '+dist+')';}
+        }
+      }
+    }
+    if(score>=0.5)return {p:p,score:score,why:why};
+    return null;
+  }).filter(function(x){return x;}).sort(function(a,b){return b.score-a.score;});
+  return scored.map(function(s){var px=Object.assign({},s.p);px._matchReason=s.why;px._matchScore=s.score;return px;});
 }
 
 /* Render the "existing customer found" banner above Step 1 output.
@@ -1767,26 +1848,39 @@ function renderExistingCustomerMatch(p){
     if(!anchor)anchor=document.getElementById('constraintBar');
     if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(banner,anchor);
   }
-  banner.style.cssText='margin:10px 0;padding:10px 14px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:6px;font-size:12px;color:#1E3A8A;line-height:1.55;';
-  // List up to 3 matches; if more, show "+N more"
+  banner.style.cssText='margin:10px 0;padding:11px 14px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:6px;font-size:12px;color:#1E3A8A;line-height:1.55;';
+  // List up to 3 matches; surface the match reason + a snippet of the existing deal so user knows what they\'re linking to
   var top=matches.slice(0,3);
+  var labels={outbound_sale:'Customer Sale',inbound_procurement:'Procurement',vendor_services:'Vendor Services'};
   var listHtml=top.map(function(m){
     var amt=m.amount||'TBD';
     var status=m.status||'pending';
     var date=m.date||'';
     var vCount=(m.versions||[]).length;
-    return '<div style="display:flex;gap:8px;align-items:baseline;padding:3px 0;border-top:1px solid rgba(147,197,253,0.4);">'+
-      '<span style="flex:1;font-weight:500;">'+escHtml(m.client)+'</span>'+
-      '<span style="color:#1E40AF;font-size:11px;font-family:ui-monospace,monospace;">'+escHtml(amt)+'</span>'+
-      '<span style="color:#3B82F6;font-size:11px;text-transform:capitalize;">'+escHtml(status)+'</span>'+
-      '<span style="color:#64748B;font-size:11px;">'+escHtml(date)+(vCount>0?(' · '+vCount+'v'):'')+'</span>'+
-      '<button onclick="linkToExistingProposal(\''+m.id+'\')" style="font-size:10.5px;padding:3px 10px;border:1px solid #3B82F6;border-radius:4px;background:#fff;color:#1E40AF;font-weight:600;cursor:pointer;">Link &amp; continue</button>'+
+    var matchPct=m._matchScore?Math.round(m._matchScore*100)+'%':'';
+    var matchWhy=m._matchReason||'';
+    var dirLabel=labels[m.deal_direction||'outbound_sale']||'';
+    return '<div style="padding:6px 0;border-top:1px solid rgba(147,197,253,0.4);">'+
+      '<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;">'+
+        '<span style="flex:1;font-weight:600;color:#0F172A;min-width:150px;">'+escHtml(m.client)+(matchPct?' <span style="font-weight:500;font-size:10.5px;color:#64748B;">· '+matchPct+' match</span>':'')+'</span>'+
+        '<span style="color:#1E40AF;font-size:11.5px;font-family:ui-monospace,monospace;">'+escHtml(amt)+'</span>'+
+        '<span style="color:#3B82F6;font-size:11px;text-transform:capitalize;">'+escHtml(status)+'</span>'+
+        '<span style="color:#64748B;font-size:11px;">'+escHtml(date)+(vCount>0?(' · '+vCount+' '+(vCount===1?'version':'versions')):'')+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap;">'+
+        (dirLabel?'<span style="font-size:10.5px;padding:1px 7px;border-radius:999px;background:rgba(147,197,253,0.3);color:#1E3A8A;font-weight:500;">'+escHtml(dirLabel)+'</span>':'')+
+        (matchWhy?'<span style="font-size:10.5px;color:#64748B;font-style:italic;">via '+escHtml(matchWhy)+'</span>':'')+
+        '<span style="margin-left:auto;display:flex;gap:6px;">'+
+          '<button onclick="goTracker();setTimeout(function(){toggleProposal(\''+m.id+'\');},150);" style="font-size:10.5px;padding:3px 10px;border:1px solid #CBD5E1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;" title="Jump to this proposal in the tracker">👁 View</button>'+
+          '<button onclick="linkToExistingProposal(\''+m.id+'\')" style="font-size:10.5px;padding:3px 10px;border:1px solid #3B82F6;border-radius:4px;background:#fff;color:#1E40AF;font-weight:600;cursor:pointer;">🔗 Link &amp; continue</button>'+
+        '</span>'+
+      '</div>'+
       '</div>';
   }).join('');
-  banner.innerHTML='<div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;">🔗 Existing customer found · '+matches.length+' prior '+(matches.length===1?'proposal':'proposals')+' for "'+escHtml(p.client_name)+'"</div>'+
-    '<div style="font-size:11px;color:#1E40AF;opacity:0.85;margin-bottom:6px;">Link this assessment to a prior deal to build a new version off it, or dismiss to treat as a new entry.</div>'+
+  banner.innerHTML='<div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;">🔗 Existing customer match · '+matches.length+' prior '+(matches.length===1?'proposal':'proposals')+' for "'+escHtml(p.client_name)+'"</div>'+
+    '<div style="font-size:11px;color:#1E40AF;opacity:0.85;margin-bottom:4px;">Link to a prior deal to save this as a new version off it. Use "View" to inspect the existing record first.</div>'+
     listHtml+
-    (matches.length>3?'<div style="font-size:10.5px;color:#64748B;padding:4px 0 0 0;text-align:center;">+'+(matches.length-3)+' more in tracker</div>':'')+
+    (matches.length>3?'<div style="font-size:10.5px;color:#64748B;padding:6px 0 0 0;text-align:center;">+'+(matches.length-3)+' more · open Proposals tracker to see all</div>':'')+
     '<div style="margin-top:8px;text-align:right;"><button onclick="dismissCustomerMatch()" style="font-size:10.5px;padding:3px 10px;border:1px solid #CBD5E1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;">Dismiss · treat as new deal</button></div>';
   banner.style.display='block';
 }
@@ -2125,26 +2219,44 @@ function showHandoff(stage){
 /* ═══ RESET ASSESSMENT — wipe everything except saved proposals ═══ */
 function resetAssessment(){
   if(!confirm('Reset this assessment? This clears your inputs, all extracted constraints, the Architect recommendation, and the proposal draft. The proposals tracker is unaffected.'))return;
+  // ── FORCE-CLEAR ALL IN-FLIGHT STATE ──
+  // Previously this could leave agentRunning=true if a prior agent errored in a way
+  // the catch block didn't see, blocking every subsequent agent run until page reload.
+  agentRunning=false;
+  // Abort any active streaming request (Writer can be mid-stream when user hits reset)
+  if(typeof _activeStream!=='undefined'&&_activeStream&&typeof _activeStream.abort==='function'){
+    try{_activeStream.abort();}catch(e){}
+    _activeStream=null;
+  }
+  // Cancel any in-flight progress animations to prevent zombie timers writing to the UI
+  ['prog1','prog2','prog3'].forEach(function(pid){
+    if(typeof window!=='undefined'&&window[pid]&&typeof stopProgress==='function'){
+      try{stopProgress(window[pid]);}catch(e){}
+    }
+  });
   ['txInput','granolaInput','emailInput','gdocInput','slackInput','reprompt1','reprompt2'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['cBudget','cGpu','cWorkflow','cTimeline','cBizModel','cDealStage'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';});
   ['out1','dealIntelCard','confCard','ragBadge','dealStageBadge','fuQuestionsWrap','compIntelWrap','out2','out3','propActions','splitToggle'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   ['gapsBanner','lowFitBanner','mcBanner','feedbackBanner','lowConfBanner','placeholderBanner','sectionPills','incompleteBanner','whyCard','overrideRerunHint','budgetOvershootBanner','hallucinationBanner','stockoutWarningBanner','dealDirectionBadge','existingCustomerMatch','multiThreadBanner'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
   var byo=document.getElementById('byodCheckbox');if(byo)byo.checked=false;
   var unl=document.getElementById('unlistedSkuCheckbox');if(unl)unl.checked=false;
+  var ch=document.getElementById('chineseLangCheckbox');if(ch)ch.checked=false;
   ['constraintBar','summaryBar','recBar','proposalBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('visible');});
   hideValidation('val1');hideValidation('val2');hideValidation('val3');
   r1=null;r2=null;origConstraints=null;origSummary=null;origRec=null;origProposal=null;savedProposal=null;
+  r2ProcurementPlan=[];
   proposalVersions=[];currentVersionIndex=0;_editBaselineText='';
   r1History=[];r2History=[];
   _lastArchitectR1Hash='';_lastArchitectR2='';
+  // Clear out3body so old proposal text doesn't flash on next pipeline
+  var out3body=document.getElementById('out3body');if(out3body){out3body.textContent='Drafting client-facing proposal…';out3body.contentEditable='false';}
   ['s1d','s2d','s3d'].forEach(function(id){var el=document.getElementById(id);if(el)el.className='sdot';});
-  // Reset doc-type chip back to default state
   var dtChip=document.getElementById('docTypeChip');if(dtChip)dtChip.style.display='none';
   var pTitle=document.getElementById('proposalCardTitle');if(pTitle)pTitle.textContent='📄 Proposal Output';
   var s1s=document.getElementById('s1s');if(s1s)s1s.textContent='Ready to extract constraints';
   var s2s=document.getElementById('s2s');if(s2s)s2s.textContent='Awaiting Discovery output';
   var s3s=document.getElementById('s3s');if(s3s)s3s.textContent='Awaiting Architect approval';
-  ['btn1','btn2','btn3'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=false;});
+  ['btn1','btn2','btn3'].forEach(function(id){var el=document.getElementById(id);if(el){el.disabled=false;el.style.background='';}});
   var b1=document.getElementById('btn1');if(b1)b1.textContent='Run Discovery Agent →';
   if(typeof clearDraft==='function')clearDraft();
   goStep(1);
@@ -2199,7 +2311,7 @@ async function testApiSetup(){
   }catch(err){
     btn.innerHTML='✗ Setup Required';btn.style.background='var(--red)';btn.style.color='#fff';
     var msg=err.message||'Unknown error';
-    if(msg==='NEEDS_API_KEY'){loadSettingsIntoModal();openSettings();}
+    if(msg==='NEEDS_API_KEY'){safeOpenSettings();}
     else{alert('API test failed: '+msg);}
     setTimeout(function(){btn.innerHTML=orig;btn.style.background='';btn.style.color='';btn.disabled=false;},3000);
   }
@@ -2516,7 +2628,47 @@ function quickEnableMockMode(){
 }
 
 /* ═══ SETTINGS MODAL ═══ */
-function openSettings(){document.getElementById('settingsModal').classList.remove('hidden');setTimeout(function(){if(!ZN_API_KEY){var f=document.getElementById('settingsApiKey');if(f)f.focus();}},100);}
+function openSettings(){
+  var modal=document.getElementById('settingsModal');
+  if(!modal){console.error('[openSettings] modal not found');return;}
+  modal.classList.remove('hidden');
+  // Inline display:flex as a defensive override against any future CSS rule that might
+  // try to hide the modal. The Step 1 setup bar Settings button was silently failing
+  // before this was added; the root cause was `inset:0` not being applied correctly,
+  // but keeping these inline styles is cheap insurance against similar regressions.
+  modal.style.display='flex';
+  modal.style.visibility='visible';
+  modal.style.opacity='1';
+  setTimeout(function(){if(!ZN_API_KEY){var f=document.getElementById('settingsApiKey');if(f)f.focus();}},100);
+}
+
+// Defensive wrapper used by all Settings buttons. If anything goes wrong opening Settings,
+// the error surfaces as a visible alert AND a console log AND the page itself stays usable.
+// Background: users reported the Step 1 Settings button silently doing nothing — turning
+// hidden failures into visible ones makes future debugging trivial.
+function safeOpenSettings(){
+  try{
+    var modal=document.getElementById('settingsModal');
+    if(!modal){
+      console.error('[safeOpenSettings] settingsModal element not found in DOM');
+      alert('Settings modal missing from the page. Please reload — if it persists, file a bug.');
+      return;
+    }
+    // Confirm required input elements exist before loadSettingsIntoModal tries to access them
+    var required=['settingsApiKey','settingsApiBase','settingsProxySection'];
+    var missing=required.filter(function(id){return !document.getElementById(id);});
+    if(missing.length>0){
+      console.error('[safeOpenSettings] Required elements missing:',missing);
+      alert('Settings cannot open — missing form elements: '+missing.join(', ')+'. Please reload.');
+      return;
+    }
+    loadSettingsIntoModal();
+    openSettings();
+  }catch(e){
+    console.error('[safeOpenSettings] Failed:',e);
+    alert('Settings failed to open: '+(e&&e.message?e.message:String(e))+'\n\nCheck the browser console for details and reload the page.');
+  }
+}
 function closeSettings(){document.getElementById('settingsModal').classList.add('hidden');}
 function switchSettingsTab(name){
   // Update tab styles
@@ -3140,6 +3292,142 @@ function generateVendorServicesRec(c,paths){
     '- Inventory of monitoring tools partner can support (DCGM, IPMI, custom)';
 }
 
+/* ═══ MOCK PROCUREMENT PLAN GENERATOR ═══
+ * Yuhan's workflow needs a have/buy/rent split on every BOM. The local mock engine doesn't
+ * call Claude, so we have to synthesize a plausible plan from the winning path + current
+ * inventory. We check whether the winning path's hardware (parsed from its content) maps
+ * to anything in INVENTORY — if yes, that line shows as "from inventory". If no, it shows
+ * as "to purchase" with vendor suggestions and a market-price estimate.
+ *
+ * Procurement and vendor-services deals don't get a procurement plan here — those flow
+ * through their own routing and the plan would be misleading. */
+function generateProcurementPlan(c,paths){
+  if(!c||(c.deal_direction&&c.deal_direction!=='outbound_sale'))return [];
+  if(c.customer_supplied_hardware)return []; // BYOD — Zillion supplies no hardware
+  var winning=(paths||[]).find(function(p){return p.status==='winning';})||paths[0];
+  if(!winning)return [];
+  // Try to identify the SKU from the winning path content
+  var content=String(winning.content||winning.label||'').toLowerCase();
+  // Match against catalog inventory
+  var skuMatch=null;
+  try{
+    skuMatch=INVENTORY.find(function(s){
+      var n=(s.gpu||s.name||'').toLowerCase();
+      var nLong=String(s.name||'').toLowerCase();
+      return (n.indexOf('pro 6000')>=0&&content.indexOf('pro 6000')>=0)
+        ||(n.indexOf('h100')>=0&&content.indexOf('h100')>=0)
+        ||(n.indexOf('h200')>=0&&content.indexOf('h200')>=0)
+        ||(n.indexOf('a100')>=0&&content.indexOf('a100')>=0)
+        ||(n.indexOf('5090')>=0&&content.indexOf('5090')>=0)
+        ||(n.indexOf('4090')>=0&&content.indexOf('4090')>=0)
+        ||(nLong&&content.indexOf(nLong.split(' ')[0])>=0);
+    });
+  }catch(e){}
+  // Parse rough quantity (e.g., "2 nodes", "8 GPUs") — fall back to 1
+  var qtyMatch=content.match(/(\d+)\s*(?:×|x|node|server|gpu)/i);
+  var qty=qtyMatch?Math.max(1,parseInt(qtyMatch[1],10)):1;
+  var plan=[];
+  if(skuMatch){
+    // Server is already in inventory — allocate from stock
+    plan.push({
+      item:(skuMatch.name||skuMatch.gpu)+' (full server, including CPU+RAM+storage as configured)',
+      qty:qty,
+      source:'inventory',
+      sku_or_vendor:skuMatch.name||skuMatch.gpu,
+      vendor_suggestions:[],
+      market_price_estimate_per_unit:'$'+(skuMatch.price||0).toLocaleString()+' (catalog list price, owned)',
+      total_estimated_cost:'$'+((skuMatch.price||0)*qty).toLocaleString(),
+      xander_to_confirm:false,
+      notes:'Pulled from Zillion inventory — no purchase needed. Verify available stock before commit.'
+    });
+  } else {
+    // Custom build — split into components Yuhan needs to source
+    var isHighEnd=/(h100|h200|gb|mi300|gb200|gb300)/i.test(content);
+    var gpuModel=content.match(/(h200|h100|a100|gb300|gb200|mi300|pro\s*6000|5090|4090)/i);
+    gpuModel=gpuModel?gpuModel[0]:'GPU (model TBD)';
+    plan.push({
+      item:'Server chassis (8-GPU configuration, 5kW typical)',
+      qty:qty,
+      source:'purchase',
+      sku_or_vendor:'TBD — see vendor suggestions',
+      vendor_suggestions:['Supermicro','Dell PowerEdge','ASUS','Inspur'],
+      market_price_estimate_per_unit:isHighEnd?'~$15,000-25,000':'~$8,000-12,000',
+      total_estimated_cost:isHighEnd?('~$'+(qty*20000).toLocaleString()):'~$'+(qty*10000).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'Pending Xander vendor selection. Lead time typically 4-8 weeks.'
+    });
+    plan.push({
+      item:'GPUs ('+gpuModel+', 8 per server)',
+      qty:qty*8,
+      source:'purchase',
+      sku_or_vendor:'TBD',
+      vendor_suggestions:isHighEnd?['NVIDIA direct','PNY','Penguin Solutions']:['PNY','ASBIS','Exxact'],
+      market_price_estimate_per_unit:isHighEnd?'~$28,000-35,000':'~$1,800-2,500',
+      total_estimated_cost:isHighEnd?('~$'+(qty*8*30000).toLocaleString()):'~$'+(qty*8*2200).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'GPU pricing volatile — Xander to confirm via supplier quote.'
+    });
+    plan.push({
+      item:'CPU (2x AMD EPYC 7763 or Xeon equivalent per server)',
+      qty:qty*2,
+      source:'purchase',
+      sku_or_vendor:'AMD EPYC 7763 (typical Zillion default)',
+      vendor_suggestions:['Authorized AMD/Intel distributor','direct from CPU vendor'],
+      market_price_estimate_per_unit:'~$2,500-3,500',
+      total_estimated_cost:'~$'+(qty*2*3000).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'AMD EPYC 7763 is Zillion typical choice; substitute 75F3 or 9354 if workload favors clock speed.'
+    });
+    plan.push({
+      item:'RAM (512GB DDR4 ECC RDIMM, 8x 64GB sticks per server)',
+      qty:qty*8,
+      source:'purchase',
+      sku_or_vendor:'TBD',
+      vendor_suggestions:['Samsung','SK Hynix','Micron'],
+      market_price_estimate_per_unit:'~$280-400 per 64GB stick',
+      total_estimated_cost:'~$'+(qty*8*340).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'Match CPU generation (DDR4 for EPYC 7xxx, DDR5 for EPYC 9xxx).'
+    });
+    plan.push({
+      item:'NVMe SSD (4x 3.84TB per server, hot data tier)',
+      qty:qty*4,
+      source:'purchase',
+      sku_or_vendor:'TBD',
+      vendor_suggestions:['Samsung PM9A3','Solidigm D7-P5520','Kioxia CD8'],
+      market_price_estimate_per_unit:'~$400-600 per 3.84TB',
+      total_estimated_cost:'~$'+(qty*4*500).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'Storage capacity should scale with workload — increase qty for data-heavy training.'
+    });
+    plan.push({
+      item:'Network cards (100G ConnectX or equivalent, 2 per server)',
+      qty:qty*2,
+      source:'purchase',
+      sku_or_vendor:'Mellanox ConnectX-6/7',
+      vendor_suggestions:['Mellanox/NVIDIA','Intel E810','Broadcom NetXtreme'],
+      market_price_estimate_per_unit:'~$800-1,500 per card',
+      total_estimated_cost:'~$'+(qty*2*1100).toLocaleString(),
+      xander_to_confirm:true,
+      notes:'InfiniBand recommended for multi-node training; Ethernet acceptable for inference.'
+    });
+    if(qty>=2){
+      plan.push({
+        item:'Network switch (100G top-of-rack, supports cluster fabric)',
+        qty:1,
+        source:'purchase',
+        sku_or_vendor:'TBD',
+        vendor_suggestions:['Arista 7060','Mellanox SN3700','Cisco Nexus 9300'],
+        market_price_estimate_per_unit:'~$15,000-35,000',
+        total_estimated_cost:'~$25,000',
+        xander_to_confirm:true,
+        notes:'Only needed for multi-node deployment. Single-node deals can omit.'
+      });
+    }
+  }
+  return plan;
+}
+
 function generateRec(c,paths){
   // Route to direction-specific generators for non-sale deals
   if(c.deal_direction==='inbound_procurement')return generateProcurementEval(c,paths);
@@ -3366,6 +3654,20 @@ async function runAgent1(){
   else if(tabName.indexOf('slack')>=0)inp=(document.getElementById('slackInput').value||'').trim();
   else inp=(document.getElementById('txInput').value||'').trim(); // fallback
   hideValidation('val1');
+  // Auto-detect Chinese transcripts and pre-check the language toggle.
+  // Threshold: if >25% of input chars are CJK, the proposal is almost certainly going to a Chinese-speaking customer.
+  // This catches the real-world case where the user pastes a Chinese transcript and forgets to tick the language box.
+  try{
+    if(inp&&inp.length>50){
+      var cjkMatches=inp.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
+      var cjkRatio=cjkMatches?cjkMatches.length/inp.length:0;
+      var chBox=document.getElementById('chineseLangCheckbox');
+      if(chBox&&!chBox.checked&&cjkRatio>0.25){
+        chBox.checked=true;
+        showValidation('val1','info','🇨🇳 Chinese transcript detected ('+Math.round(cjkRatio*100)+'% CJK characters). The final proposal will be generated in Chinese. Uncheck the language toggle in Deal Type Overrides if you want English.');
+      }
+    }
+  }catch(e){console.warn('CJK detection failed:',e);}
   // Skip transcript validation in mock mode — input is ignored, MOCK_R1 always returns
   if(getApiMode()!=='mock'){
     const v=validateTranscript(inp);
@@ -3410,7 +3712,7 @@ async function runAgent1(){
       agentRunning=false;stopProgress(prog1);
       var msg=apiErr.message||'Unknown error';
       if(msg==='NEEDS_API_KEY'){
-        loadSettingsIntoModal();openSettings();
+        safeOpenSettings();
         showValidation('val1','info','One-time setup: paste your Anthropic API key in Settings (the modal just opened) and click Save. Get a key at console.anthropic.com/settings/keys');
         err('s1d','s1s','btn1','Run Discovery Agent →','API key needed — see Settings');
         return;
@@ -3585,6 +3887,7 @@ async function runAgent2(){
         await mockDelay(800);
         totPaths=generateToTPaths(r1);
         recommendation=generateRec(r1,totPaths);
+        r2ProcurementPlan=generateProcurementPlan(r1,totPaths);
         logAgentRun('architect','mock',Date.now()-_archStart,true);
       } else {
       const liveInv=(_invData&&_invData.length>0)?_invData:INVENTORY;
@@ -3631,7 +3934,7 @@ async function runAgent2(){
         dealDirNote='\n\nDEAL DIRECTION: VENDOR_SERVICES. The counterparty ('+(r1.client_name||'partner')+') owns the hardware. They are paying Zillion to provide 24/7 L3 managed services on their fleet. Zillion does NOT sell hardware in this deal. The recommendation MUST be a VENDOR SERVICES RECOMMENDATION based on the Cudo Ventures 24/7 L3 pattern:\n- Services pricing as 8-12% of hardware MSRP per year (use comparable Zillion SKU as MSRP basis)\n- SLA commitments (<15 min incident response, <4hr swap coordination, monthly reports)\n- Contract terms to negotiate (term length, payment, out-of-scope rates, SLA credits, termination)\n- Operational readiness considerations (ops capacity, remote-access architecture, monitoring tools)\nDo NOT recommend hardware purchase or colocation.';
       }
       var unlistedNote=isUnlistedSku?'\n\nCRITICAL: client requested '+requestedGpu+' which is NOT in our standard inventory. Do NOT substitute silently with 4090/5090/A100/H100.\n\nThe winning path MUST be the procurement deal for '+requestedGpu+' (label it explicitly: "'+requestedGpu+' — source-and-resell"). State pricing as "TBD — pending supplier quote" and lead time as "8–12 weeks typical, pending supplier availability."\n\nFor each ALTERNATIVE in-stock path you generate, you MUST include in its content field:\n1. The IN-STOCK SKU and what makes it the closest available substitute to '+requestedGpu+' (e.g. "Pro 6000 SE has 96GB VRAM vs GB300\'s 192GB — sufficient for inference but undersized for FP8 training of frontier models")\n2. The specific tradeoff the customer accepts by switching (e.g. "loses NVL72 rack-scale fabric — falls back to 8-GPU node-scale NVLink only")\n3. A clear "if you choose this fallback because…" sentence (e.g. "if budget under $300K, choose this; if VRAM-bound on FP8 frontier training, wait for GB300")\n\nThis is what good salesperson behavior looks like — name the gap, propose alternatives, let the customer choose with full information. Do NOT pretend the in-stock SKU is equivalent.':'';
-      const sys='You are the Architect Agent for Zillion Network.'+(isVague?'\n\nIMPORTANT: The client requirements are VAGUE — budget and/or GPU preference are unknown. Instead of forcing a hardware recommendation:\n1. Generate 3-4 exploratory paths at different price points (entry $30-60K, mid $100-200K, high $500K+)\n2. For each path, explain what workload it serves\n3. In your recommendation, list 5-7 SPECIFIC QUESTIONS the sales team should ask to narrow down requirements\n4. Focus on understanding the client needs, not closing a deal\n':'')+dealDirNote+byodNote+unlistedNote+' Evaluate hardware paths using Tree-of-Thought reasoning.\n\nDEAL STRUCTURE PATTERNS — match the client to the right deal structure, not just the right hardware:\n\nPattern A — CapEx + Colo (Ab Initia Labs Plan #1, $134K/server actual deal):\n  Customer buys hardware outright, Zillion provides colocation + managed services. Use when client has IT budget for CapEx, wants ownership, and has predictable workload. Hardware cost + $2,240/mo per 8-GPU server (5kW × $448).\n\nPattern B — GPU Lease / OpEx (Ab Initia Labs Plan #2, actual closed at $0.40/GPU/hr):\n  Zillion buys hardware, customer leases GPU-hours under 12 or 24 month contract. Use when client prefers OpEx, wants flexibility, or has uncertain workload duration. Tier rates: 8 GPU $1.42/hr (12mo) or $1.32/hr (24mo); 64 GPU $1.35/$1.25; 128 GPU $1.25/$1.15. Deposit: 1 month for 12mo, 2 months for 24mo.\n\nPattern C — Colocation-Only / BYOD:\n  Customer brings their own hardware, Zillion provides rack + power + managed services only. Use when customer already owns hardware or sourcing it elsewhere. Just $448/kW/mo plus managed service tier.\n\nPattern D — Managed Services / 24/7 L3 Support (Cudo Ventures pattern, 4K H100 cluster actual deal):\n  Customer owns and operates the cluster (or buys from another vendor); Zillion provides 24/7 L3 remote support, monitoring, software deployment, troubleshooting. Use when customer has strong existing ops team but wants overflow / specialized expertise. Pricing typically per-cluster monthly retainer.\n\nPattern E — Source-and-Resell (Unlisted SKU procurement):\n  Customer wants hardware Zillion does not stock (GB300, MI300X, etc). Zillion sources from supplier, marks up, and may bundle colo. Use when customer is locked into a specific SKU. Lead time 8-12 weeks, pricing pending supplier quote.\n\nFor any deal where multiple patterns plausibly fit, generate paths covering 2-3 of them. Pattern A and Pattern B are commonly proposed side-by-side (the Ab Initia deal had both). For a customer with their own existing cluster who wants help operating it, propose Pattern D. Bias toward giving the customer choices, not choosing for them.\n\nKEY PRICING: Colo $448/kW/mo (5kW per 8-GPU node). SLA: 99.5% per-node uptime (Ab Initia closed deal), 99.95% network, <30 min response (NOC), <4hr minor issue, <24hr major issue, <72hr parts. Deploy: 3 weeks for first server. Bulk discount: 5% multi-node, larger negotiable.\n\n'+compStr+'\n\nINVENTORY (current stock):\n'+invStr+'\n\nReturn ONLY valid JSON:\n{"paths":[{"label":"Path A — Desc","status":"eliminated|winning","content":"deal pattern, nodes, cost, VRAM, rack, power, colo, interconnect, stock, tradeoff","score":"Score: X.X/10","deal_pattern":"capex|lease|colo|managed|resell"}],"recommendation":"RECOMMENDATION: hardware, qty, cost, colo monthly, justification.'+(isVague?' Include DISCOVERY QUESTIONS section with 5-7 questions to ask the client.':'')+(isBYOD?' This is a colocation-only deal — client supplies their own hardware. Do NOT include hardware costs.':'')+(isUnlistedSku?' This is an unlisted-SKU procurement deal — pricing TBD pending supplier quote.':'')+' If both CapEx (Pattern A) and Lease (Pattern B) are plausible, present both side-by-side with a 12-month TCO comparison so the client can choose."}\n\nIMPORTANT — MAXIMUM 4 PATHS in the paths array. Showing more options creates decision paralysis and makes the comparison hard to scan. Pick the 4 strongest candidates: 1 winner + up to 3 strong alternatives. Eliminate weaker options entirely rather than including them as "for completeness." Quality over quantity.';
+      const sys='You are the Architect Agent for Zillion Network.'+(isVague?'\n\nIMPORTANT: The client requirements are VAGUE — budget and/or GPU preference are unknown. Instead of forcing a hardware recommendation:\n1. Generate 3-4 exploratory paths at different price points (entry $30-60K, mid $100-200K, high $500K+)\n2. For each path, explain what workload it serves\n3. In your recommendation, list 5-7 SPECIFIC QUESTIONS the sales team should ask to narrow down requirements\n4. Focus on understanding the client needs, not closing a deal\n':'')+dealDirNote+byodNote+unlistedNote+' Evaluate hardware paths using Tree-of-Thought reasoning.\n\nDEAL STRUCTURE PATTERNS — match the client to the right deal structure, not just the right hardware:\n\nPattern A — CapEx + Colo (Ab Initia Labs Plan #1, $134K/server actual deal):\n  Customer buys hardware outright, Zillion provides colocation + managed services. Use when client has IT budget for CapEx, wants ownership, and has predictable workload. Hardware cost + $2,240/mo per 8-GPU server (5kW × $448).\n\nPattern B — GPU Lease / OpEx (Ab Initia Labs Plan #2, actual closed at $0.40/GPU/hr):\n  Zillion buys hardware, customer leases GPU-hours under 12 or 24 month contract. Use when client prefers OpEx, wants flexibility, or has uncertain workload duration. Tier rates: 8 GPU $1.42/hr (12mo) or $1.32/hr (24mo); 64 GPU $1.35/$1.25; 128 GPU $1.25/$1.15. Deposit: 1 month for 12mo, 2 months for 24mo.\n\nPattern C — Colocation-Only / BYOD:\n  Customer brings their own hardware, Zillion provides rack + power + managed services only. Use when customer already owns hardware or sourcing it elsewhere. Just $448/kW/mo plus managed service tier.\n\nPattern D — Managed Services / 24/7 L3 Support (Cudo Ventures pattern, 4K H100 cluster actual deal):\n  Customer owns and operates the cluster (or buys from another vendor); Zillion provides 24/7 L3 remote support, monitoring, software deployment, troubleshooting. Use when customer has strong existing ops team but wants overflow / specialized expertise. Pricing typically per-cluster monthly retainer.\n\nPattern E — Source-and-Resell (Unlisted SKU procurement):\n  Customer wants hardware Zillion does not stock (GB300, MI300X, etc). Zillion sources from supplier, marks up, and may bundle colo. Use when customer is locked into a specific SKU. Lead time 8-12 weeks, pricing pending supplier quote.\n\nFor any deal where multiple patterns plausibly fit, generate paths covering 2-3 of them. Pattern A and Pattern B are commonly proposed side-by-side (the Ab Initia deal had both). For a customer with their own existing cluster who wants help operating it, propose Pattern D. Bias toward giving the customer choices, not choosing for them.\n\nKEY PRICING: Colo $448/kW/mo (5kW per 8-GPU node). SLA: 99.5% per-node uptime (Ab Initia closed deal), 99.95% network, <30 min response (NOC), <4hr minor issue, <24hr major issue, <72hr parts. Deploy: 3 weeks for first server. Bulk discount: 5% multi-node, larger negotiable.\n\n'+compStr+'\n\nHARDWARE COMPONENT REFERENCE (from Yuhan, ops — use these exact models when speccing custom builds, do not invent names):\nCPUs Zillion typically uses — MATCH TIER TO WORKLOAD (do not default to the most powerful option):\n  ENTRY tier (web hosting, VM hosts, lightweight services, dev/test, anything where the customer asks for 2-8 cores per machine):\n    - AMD EPYC 7702, 7542, 7502 (older but plentiful, cheap, perfectly adequate for VMs and web workloads)\n    - Intel Xeon 8136 (similar tier, often cheaper than EPYC for the same job)\n    - Intel i9-14900KS only for single-socket low-cost desktop builds — NEVER use for production VM hosts\n  MID tier (mixed AI/CPU workloads, light training, inference, multi-tenant):\n    - AMD EPYC 7763, 75F3\n    - Intel Xeon 8167M\n  HIGH tier (heavy training, large language models, dense GPU clusters):\n    - AMD EPYC 7B13, 9354 (latest gen, premium pricing)\nCRITICAL: if the customer requirements list small per-machine specs (2-8 cores, 4-16GB RAM, web/VM/chat/storage workloads), pick from the ENTRY tier. The high-tier EPYCs are 3-5x the price and add zero value for non-training workloads. Over-specifying CPUs inflates the proposal cost and loses deals.\nEach server has 2 CPUs minimum, so two matched CPUs per node.\nRAM: 32GB or 64GB sticks, DDR4 or DDR5 (match CPU generation). Minimum 2 sticks per server (one per CPU socket). MATCH RAM TO WORKLOAD: small VMs need 16-32GB total per host (2x 16GB sticks); training nodes need 256-512GB+.\nStorage tiers: NVMe SSD (hot data, training scratch, search index), SATA SSD (warm, logs, OS), HDD (cold / bulk). Light VMs need 50-200GB total; training nodes need 4TB+ of NVMe.\nNetwork cards: 10G is ENOUGH for VM hosts, web servers, and most CPU-only workloads. 40G/100G are for InfiniBand training fabrics. Do not propose 100G NICs on web/VM hosts — it is wasted spend.\n\nMULTI-MACHINE DEALS (e.g. customer requests \"5 servers: 4 small VMs + 1 GPU box\"): treat each spec as a separate BOM line, not as a homogeneous cluster. The procurement_plan array should have one entry per distinct machine type, not one entry for the deal total. Different machines need different CPUs, RAM, storage, and NICs — sized to that machine\u2019s job.\n\nINVENTORY-FIRST ALLOCATION (CRITICAL):\nBefore recommending any \"purchase new\" line, check the inventory snapshot. If a comparable item exists, the procurement_plan entry MUST use source: \"inventory\" (zero acquisition cost — already owned). Common cases bizops missed in the past:\n  - Customer requested 2x RTX 4090s + Zillion has 4090 chassis in any DC → procurement_plan source: \"inventory\", not \"purchase\"\n  - Customer wants entry-tier VM hosts + Zillion has spare nodes → check inventory first\n  - Mismatched DC: even if the customer wants Dallas and the spare is in LA, that is a SHIPPING question, not a PURCHASE question. Flag as source: \"inventory\" with notes: \"spare available in <other DC>, requires inter-DC shipment — Yuhan to coordinate\"\nThe cost difference between \"inventory\" and \"purchase\" is the difference between a profitable deal and a losing one. Defaulting to \"purchase\" inflates the proposal cost unnecessarily.\n\nINVENTORY GAPS — physical movements not in the imported sheet:\nThe imported inventory sheet is updated periodically and may not reflect spare parts, recent inter-DC shipments, or out-of-cycle hardware arrivals. When recommending hardware that would otherwise be a \"purchase\" line in the procurement_plan, ALWAYS add a notes field saying \"Verify with Yuhan whether this is available from spare inventory before procurement.\" This catches the case where Yuhan has shipped spare GPUs or chassis between DCs without updating the sheet.\n\nPROCUREMENT PLAN — distinguish what Zillion HAS from what needs to be BOUGHT or RENTED:\nWhen the recommendation involves any hardware Zillion does not have in inventory, your output MUST include a procurement_plan array breaking the BOM into three buckets:\n  - source: \"inventory\" — already on hand, zero acquisition cost, just allocation. Reference the exact SKU from the inventory list above.\n  - source: \"purchase\" — must be bought new. Include vendor_suggestions (2-3 plausible vendors based on typical industry sources) and market_price_estimate_per_unit (rough current market range). MARK these with xander_to_confirm:true because Xander makes the final vendor + price decision.\n  - source: \"rent\" — capacity rented from an upstream provider (e.g., CoreWeave, Lambda, GCP). Only applicable for GPU capacity deals, not for component parts.\nYuhan, ops, uses this split to figure out what to ship from where, what to buy, and what to relay to Xander for vendor decisions. Without it, she has to do the split manually.\nUPSTREAM-PROVIDER RESALE: when source: \"rent\" or when the item is small CPU nodes / VM hosts (anything that maps to a Lightlayer / SaaS-style provider rather than discrete hardware purchase), the market_price_estimate_per_unit is the CUSTOMER-FACING resale price, not Zillion\u2019s wholesale cost. The procurement_plan should reflect what the customer will pay, with notes: \"resold from upstream provider — Zillion wholesale cost not shown here, captured separately in Hostbill.\"\n\nMULTI-MACHINE BOM: when the customer wants multiple distinct machines (e.g. 4 small VMs + 1 GPU server), create one procurement_plan entry per machine type. Do NOT collapse them into a single \"5 servers\" line. Yuhan needs to source each machine independently — different CPUs, RAM, storage per spec.\nVendor suggestions by component:\n  - Server chassis / barebones: Supermicro, Dell PowerEdge, ASUS, Inspur, Wiwynn\n  - GPUs: NVIDIA direct, PNY, Penguin Solutions, Exxact, ASBIS (region-dependent)\n  - NVMe SSD: Samsung (PM9A3, PM1733), Solidigm (D7-P5520, D5-P5430), Kioxia (CD8, CM7), Micron (7450)\n  - SATA SSD: Samsung (PM893), Micron (5400 Pro), Kioxia (HK6)\n  - HDD: Seagate Exos, WD Ultrastar, Toshiba MG\n  - Network cards (10G/40G/100G): Mellanox/NVIDIA ConnectX, Intel E810/X710, Broadcom NetXtreme\n  - Network switches: Arista, Mellanox/NVIDIA Spectrum, Cisco Nexus, Dell PowerSwitch\n  - RAM: Samsung, SK Hynix, Micron (server-grade ECC RDIMM/LRDIMM)\nALWAYS prefix purchase line market prices with \"~\" (e.g. \"~$2,800/unit\") to signal they are estimates, not firm quotes. Always include xander_to_confirm:true on every purchase line.\n\nINVENTORY (current stock):\n'+invStr+'\n\nReturn ONLY valid JSON:\n{"paths":[{"label":"Path A — Desc","status":"eliminated|winning","content":"deal pattern, nodes, cost, VRAM, rack, power, colo, interconnect, stock, tradeoff","score":"Score: X.X/10","deal_pattern":"capex|lease|colo|managed|resell"}],"procurement_plan":[{"item":"e.g. 8-GPU server with 2x AMD EPYC 7763, 512GB DDR4, 4x Samsung PM9A3 NVMe","qty":2,"source":"inventory|purchase|rent","sku_or_vendor":"existing inventory SKU OR suggested vendor","vendor_suggestions":["Supermicro","Dell","ASUS"],"market_price_estimate_per_unit":"~$X,XXX","total_estimated_cost":"~$X,XXX","xander_to_confirm":true,"notes":"why this line"}],"recommendation":"RECOMMENDATION: hardware, qty, cost, colo monthly, justification.'+(isVague?' Include DISCOVERY QUESTIONS section with 5-7 questions to ask the client.':'')+(isBYOD?' This is a colocation-only deal — client supplies their own hardware. Do NOT include hardware costs.':'')+(isUnlistedSku?' This is an unlisted-SKU procurement deal — pricing TBD pending supplier quote.':'')+' If both CapEx (Pattern A) and Lease (Pattern B) are plausible, present both side-by-side with a 12-month TCO comparison so the client can choose."}\n\nIMPORTANT — MAXIMUM 4 PATHS in the paths array. Showing more options creates decision paralysis and makes the comparison hard to scan. Pick the 4 strongest candidates: 1 winner + up to 3 strong alternatives. Eliminate weaker options entirely rather than including them as "for completeness." Quality over quantity.';
       var userPreamble='';
       if(dealDir==='inbound_procurement'){
         userPreamble+='DEAL DIRECTION: INBOUND PROCUREMENT. Zillion is the BUYER. Counterparty is the supplier. Generate a PROCUREMENT EVALUATION MEMO, not a customer proposal. The client_name field in the data below is the supplier, not a customer.\n\n';
@@ -3673,6 +3976,8 @@ async function runAgent2(){
       }
       const raw=await callClaude(sys,usr,"architect",3500);const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
       totPaths=parsed.paths||[];
+      // Capture procurement_plan (have/buy/rent split — Yuhan's workflow) so Writer can render it as a dedicated section
+      r2ProcurementPlan=Array.isArray(parsed.procurement_plan)?parsed.procurement_plan:[];
       // Defensive cap: if Claude returned >4 paths, keep winner + top 3 alternatives by score
       if(totPaths.length>4){
         var winner=totPaths.find(function(p){return p.status==='winning';});
@@ -3779,17 +4084,34 @@ async function runAgent3(){
     try{
       // Direction routing for Writer — three doc types
       var wDir=r1.deal_direction||'outbound_sale';
+      // Language toggle — when Chinese checkbox is set, instruct Writer to translate the proposal output
+      var generateInChinese=false;
+      var chCheck=document.getElementById('chineseLangCheckbox');
+      if(chCheck&&chCheck.checked)generateInChinese=true;
       var wDirNote='';
       if(wDir==='inbound_procurement'){
         wDirNote='\n\nDEAL DIRECTION: INBOUND_PROCUREMENT. This is NOT a customer-facing proposal — Zillion is the BUYER. Generate an INTERNAL PROCUREMENT EVALUATION MEMO addressed to the Zillion leadership team (Xander/Tony/Yuhan), NOT to a client. The supplier is the counterparty named in client_name.\n\nREQUIRED SECTIONS for procurement memo:\n1. # Procurement Evaluation — [Supplier Name]\n2. **Supplier:** / **Date:** (use supplied Proposal Date) / **Reference:** ZN-PROC-YYYY-MMDD-NNN / **Prepared by:** Zillion Network Bizops\n3. ## Summary (1 paragraph — what is being acquired, from whom, at what cost, timeline)\n4. ## Supplier Terms (table: hardware, quoted cost, payment terms, lead time, warranty, MOQ)\n5. ## Resale Margin Analysis (table comparing supplier price to comparable Zillion catalog sell price → estimated margin per unit, total margin at projected volume)\n6. ## Risk Assessment (numbered list of contract risks — supplier reliability, warranty pass-through, lead time vs customer commitments, exclusivity clauses)\n7. ## Recommended Terms to Negotiate (numbered list — pricing tiers, payment, termination, IP indemnity, volume discounts)\n8. ## Customer Demand Mapping (which named customers would this hardware serve — if any in flight)\n9. ## Next Steps (Tony reviews financial terms, Yuhan reviews operational fit, Legal reviews contract, Xander confirms with named customers)\n10. Footer: *Internal procurement evaluation — NOT a customer document. Prepared by Zillion Network Bizops.*\n\nDO NOT generate sections like Colocation & Managed Services, Proposed Hardware to Sell, SLA Commitments to Customer, or anything else implying outbound sales.';
       } else if(wDir==='vendor_services'){
         wDirNote='\n\nDEAL DIRECTION: VENDOR_SERVICES. The counterparty owns hardware; Zillion provides 24/7 L3 managed services. Generate a VENDOR SERVICES AGREEMENT, not a hardware sale proposal.\n\nREQUIRED SECTIONS for services agreement:\n1. # Vendor Services Agreement — [Partner Name]\n2. **Partner:** / **Date:** (use supplied Proposal Date) / **Reference:** ZN-VS-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (partner-owned hardware, Zillion-provided services scope, annual fee, term)\n4. ## Services Scope (detailed list: 24/7 L3 monitoring, incident response, software deployment, troubleshooting, monthly reporting — same scope as Cudo Ventures pattern)\n5. ## Pricing Structure (table: hardware MSRP basis, services fee as % of MSRP/year — typical 8-12%, monthly retainer)\n6. ## SLA Commitments (incident response <15 min, hardware swap coordination <4hr, monitoring uptime, monthly utilization reports)\n7. ## Out-of-Scope Rates (hourly rates for non-standard work, escalation tiers)\n8. ## Contract Terms (term length, renewal, termination notice, payment terms, SLA penalty credits)\n9. ## Operational Readiness (remote-access architecture, monitoring tool compatibility, ops team capacity)\n10. ## Next Steps (kickoff timeline, data access provisioning, monitoring tool integration)\n11. Footer: *Prepared by Zillion Network — Operate. Monitor. Support.*\n\nDO NOT mention Zillion-sold hardware, colocation Zillion owns, or anything implying Zillion provides the physical infrastructure.';
       }
-      const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.'+wDirNote+'\n\n'+(wDir==='inbound_procurement'?'VOICE: Internal team brief. Direct, frank, action-oriented. This document is for Zillion leadership (Tony/Yuhan/Xander) to make a decision — not a customer-facing pitch. Skip marketing language and pleasantries. State risks plainly. Use "we" for Zillion. Numbers and tradeoffs matter more than narrative. If the supplier deal looks weak, say so. If it looks strong, justify with specifics from the supplied data. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.':wDir==='vendor_services'?'VOICE: Professional services agreement tone. Operator-to-operator, peer infrastructure providers discussing terms. Concrete about scope and SLAs. Not pitchy — this is a partnership document. Numbers matter. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.':'BRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. The customer reading this is a sophisticated buyer — respect that. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.')+'\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** (USE THE EXACT "Proposal Date" SUPPLIED IN THE USER MESSAGE — do NOT generate or guess a date) / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n9. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n10. ## Deployment Timeline (table using 3-week Zillion pipeline)\n11. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n12. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
+      // Language directive — applies to ALL document types (proposal / memo / agreement).
+      // Translate the body but keep the structural anchors (reference IDs, dollar amounts, SLA percentages)
+      // in their canonical form to avoid breaking downstream tooling that scans for them.
+      if(generateInChinese){
+        wDirNote+='\n\n⚠ LANGUAGE: Generate the ENTIRE document body in Simplified Chinese (简体中文). Translate all section headers, descriptions, and prose into natural, professional Mandarin. KEEP these elements unchanged: numeric values ($448/kW, $2,240/mo, 99.95%), proper nouns (Zillion, GPU model names like H100/H200/RTX Pro 6000, location names like Irvine/Dallas/Ashburn, vendor names like NVIDIA/Supermicro), the reference ID format (ZN-YYYY-MMDD-NNN), and software stack names (Ubuntu, Ansible, DCGM, Slurm, NCCL). Use industry-standard Chinese technical terminology — e.g., 训练 for training, 推理 for inference, 集群 for cluster, 托管 for colocation, 月费 for monthly fee, 部署 for deployment. Tone matches the deal direction (formal for customer-facing, direct for internal memos).';
+      }
+      const sys='You are the Writer Agent for Zillion Network. Generate a professional, client-ready Markdown hardware proposal.'+wDirNote+'\n\n'+(wDir==='inbound_procurement'?'VOICE: Internal team brief. Direct, frank, action-oriented. This document is for Zillion leadership (Tony/Yuhan/Xander) to make a decision — not a customer-facing pitch. Skip marketing language and pleasantries. State risks plainly. Use "we" for Zillion. Numbers and tradeoffs matter more than narrative. If the supplier deal looks weak, say so. If it looks strong, justify with specifics from the supplied data. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.':wDir==='vendor_services'?'VOICE: Professional services agreement tone. Operator-to-operator, peer infrastructure providers discussing terms. Concrete about scope and SLAs. Not pitchy — this is a partnership document. Numbers matter. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.':'BRAND VOICE: Sophisticated, technically precise, execution-focused. Sound like a senior CTO speaking to another technical professional. The customer reading this is a sophisticated buyer — respect that. NO "delve," "revolutionary," "in the ever-evolving landscape," or AI cliches.\n\nPROPOSAL LENGTH MUST MATCH DEAL SIZE: A $30K deal does not need a 12-section proposal. If the recommendation totals under $100K OR the customer asks for fewer than 4 machines, produce a CONDENSED proposal: 1-2 paragraph summary, 1 BOM table, 1 deployment timeline, 1 next-steps list. Skip Alternatives Considered, skip TCO comparison sections, skip lease alternative tables. Match document length to deal complexity. Customers ordering small VM clusters do not want to read about lease vs CapEx tradeoffs and 24/7 L3 managed services SLAs — that is over-selling. Save the long-form proposal for deals over $200K.')+'\n\nZILLION COLOCATION PRICING (use exact numbers):\n- Power: $448/kW/month (metered). Typical 8-GPU server = 5kW = $2,240/mo.\n- Rack space: included. IP block (/29, 5 usable): $50/mo. Cross-connect: $150 one-time.\n- Managed Services: INCLUDED in colo fee — not a separate line item.\n- Locations: Irvine CA, Dallas TX, Ashburn VA.\n\nMANAGED SERVICES SCOPE (include in Colo & Managed Services section):\n- Hardware monitoring: IPMI/BMC health, temps, fan speeds, PSU — continuous, 24/7, auto-ticket on threshold breach\n- GPU monitoring: nvidia-smi stats, ECC errors, thermal throttle — every 60 seconds, alert to engineer within 15 min\n- Network monitoring: uplink status, latency, packet loss — continuous, auto-failover\n- OS & firmware: security patches, BIOS/BMC updates — monthly or critical, customer approval required\n- Physical ops: cable management, drive swaps, visual inspection — remote hands included\n- Backup: config backup daily, RAID monitoring — 24/7\n\nSLAs (include as table):\n- Network uptime: 99.95% (5% credit per 0.1% below)\n- Power uptime: 99.99% (N+1 redundancy, UPS + generator)\n- Incident response: <15 min from alert\n- Hardware replacement: <4 hours (spare parts on-site)\n- Scheduled maintenance: 72hr advance notice\n\nDEPLOYMENT (use for timeline section):\n- Zillion typical: 3 weeks total\n- Week 0-0.5: Hardware setup, IPMI config\n- Week 0.5-1.5: Software deployment via Ansible (Ubuntu 22.04, DCGM 3.3.7, UFM, Slurm, NCCL, NVIDIA Container Toolkit, MLNX_OFED)\n- Week 1.5-2.5: Burn-in testing, MLPerf benchmarks, thermal stress test\n- Week 2.5-3: Buffer for fixes, delivery handover\n\nGPU LEASE OPTION (include if budget >$500K or if client may prefer OpEx):\n- 8 GPU: $1.42/GPU/hr (12-mo) / $1.32 (24-mo)\n- 64 GPU: $1.35/hr / $1.25\n- 128 GPU: $1.25/hr / $1.15\n- Deposit = 1 month for 12-mo, 2 months for 24-mo\n\nREQUIRED SECTIONS (in this order):\n1. # Hardware Proposal — [Workload Type]\n2. **Client:** / **Date:** (USE THE EXACT "Proposal Date" SUPPLIED IN THE USER MESSAGE — do NOT generate or guess a date) / **Reference:** ZN-YYYY-MMDD-NNN / **Prepared by:** Zillion Network\n3. ## Executive Summary (2-3 paragraphs, quantified — total cost, VRAM, GPU count, payback vs cloud if applicable)\n4. ## Client Requirements (table: workload, budget, timeline, GPU pref, key requirements)\n5. ## Proposed Hardware (specs table: GPUs, VRAM, cost per node and total)\n6. ## Rack & Facility Plan (table: rack U, power kW, PDU, cooling, network fabric, DC location)\n7. ## Cost Breakdown (itemized table: servers, rack, switches, cabling, PDU → hardware subtotal)\n8. ## Procurement Plan (OPTIONAL — include ONLY IF the user message contains a Procurement Plan block. Split into three sub-tables: From Zillion Inventory (existing SKU, qty, allocated cost = $0 since owned), To Purchase New (item, vendor suggestions, ~market price/unit, total est, marked \"Pending Xander vendor selection\"), and To Rent from Upstream Provider when applicable. Include the Xander-callout sentence at section start.)\n9. ## Colocation & Managed Services (monthly cost table using exact $448/kW math, SLA table, managed scope summary)\n10. ## Alternatives Considered (table: config, VRAM, cost, elimination reason)\n11. ## Deployment Timeline (table using 3-week Zillion pipeline)\n12. ## Engagement Next Steps (weekly checklist with [ ] items and owners)\n13. Footer: *Prepared by Zillion Network — Build. Train. Ship.*';
       // Use the proposal's actual generation date — the moment the Writer was invoked.
       // Anchors the **Date:** line to a real timestamp instead of letting Claude guess.
       var proposalDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-      const usr='Generate a complete proposal from:\n\nProposal Date: '+proposalDate+' (use this exact date for the **Date:** line of the proposal)\n\nClient Constraints:\n'+JSON.stringify(r1,null,2)+'\n\nHardware Recommendation:\n'+r2;
+      // If Architect produced a procurement plan, include it for Writer to render as its own section.
+      // The plan tells the Writer which BOM lines come from inventory vs need to be bought vs need to be rented.
+      var procPlanBlock='';
+      if(Array.isArray(r2ProcurementPlan)&&r2ProcurementPlan.length>0){
+        procPlanBlock='\n\nProcurement Plan (BOM split — from Architect):\n'+JSON.stringify(r2ProcurementPlan,null,2)+
+          '\n\nRender this as a "## Procurement Plan" section in the proposal with three sub-tables: (1) From Zillion Inventory, (2) To Purchase New — with vendor suggestions and estimated market prices marked as "Pending Xander\'s vendor decision", (3) To Rent from Upstream Provider (if any). Include a callout at the section start: "Procurement plan separates components already in Zillion inventory from those that need to be sourced. All purchase prices are market estimates pending Xander\'s vendor-selection and final negotiation."';
+      }
+      const usr='Generate a complete proposal from:\n\nProposal Date: '+proposalDate+' (use this exact date for the **Date:** line of the proposal)\n\nClient Constraints:\n'+JSON.stringify(r1,null,2)+'\n\nHardware Recommendation:\n'+r2+procPlanBlock;
       // Stream partial text into the proposal box so the user sees progress, not just a spinner.
       // Sets contentEditable later — during streaming the box is read-only.
       var streamBox=document.getElementById('out3body');
@@ -3911,7 +4233,133 @@ function deleteVersion(idx){if(proposalVersions.length<=1){alert('Cannot delete 
 /* ═══ TRACKER VERSION HELPERS ═══ */
 function renderTrackerVersionBtns(p){if(!p.versions||!p.versions.length)return '';var pid=p.id;var tot=p.versions.length;return p.versions.map(function(v,i){var cls='ver-btn'+(v.current?' current':'');var out='<button class="'+cls+'" onclick="event.stopPropagation();loadTrackerVersion(this)" ondblclick="event.stopPropagation();renameTrackerVersion(this)" data-pid="'+pid+'" data-idx="'+i+'" title="Double-click to rename | '+v.ts+'">'+escHtml(v.label)+'</button>';if(tot>1)out+='<button class="ver-delete-btn" onclick="event.stopPropagation();deleteTrackerVersionBtn(this)" data-pid="'+pid+'" data-idx="'+i+'" title="Delete">✕</button>';return out;}).join('');}
 function addTrackerVersion(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var el=document.getElementById('ptext-'+id);var txt=el.innerText||el.textContent;if(!p.versions)p.versions=[];var n=p.versions.length+1;p.versions.forEach(function(v){v.current=false;});p.versions.push({label:'v'+n+' — '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),text:txt,ts:new Date().toISOString(),current:true});p.text=txt;p.savedText=txt;storageSave();var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
-function loadTrackerVersion(btnOrId,idx){var id,vidx;if(typeof btnOrId==='string'){id=btnOrId;vidx=idx;}else{id=btnOrId.dataset.pid;vidx=parseInt(btnOrId.dataset.idx,10);}var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;p.versions.forEach(function(v,i){v.current=(i===vidx);});p._editBaselineText=p.versions[vidx].text;var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(p.versions[vidx].text||p.text||'');var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
+
+/* ═══ REPROMPT PROPOSAL VERSION ═══
+ * Per-version Writer reprompt. From the tracker, the user types feedback and clicks
+ * "Generate v+1" — we rebuild the Writer call with the proposal's frozen r1/r2 plus
+ * the new feedback, then save the result as a new version on the same proposal.
+ *
+ * Why this matters: previously, refining a saved proposal meant going back to Step 2
+ * and re-running the whole pipeline, which threw away v1. Now v1 stays as a frozen
+ * record while the user iterates a v2, v3, v4. They can switch between versions
+ * to compare and pick the best one.
+ *
+ * Key behavior: Discovery + Architect outputs DO NOT re-run. Only the Writer does.
+ * This is intentional — the underlying recommendation is the same; the user is asking
+ * for a different EXPRESSION of it (different emphasis, different language, different tone).
+ */
+async function repromptProposalVersion(id){
+  var p=proposals.find(function(x){return x.id===id;});
+  if(!p){alert('Proposal not found.');return;}
+  if(!p.r1Snapshot){
+    alert('This proposal was saved before reprompt support was added — no Discovery snapshot exists. To refine it, go back to a new assessment and re-run the full pipeline.');
+    return;
+  }
+  var ta=document.getElementById('rprompt-'+id);
+  if(!ta){console.error('reprompt textarea missing for '+id);return;}
+  var feedback=ta.value.trim();
+  if(!feedback){alert('Type some feedback first — e.g. "Add a section comparing 12-month vs 24-month lease totals."');ta.focus();return;}
+  // Re-running the Writer is a Writer-only operation. Use the agent lock so we don't
+  // race with other agent calls (e.g., if the user kicks off a new assessment in another tab).
+  if(isAgentBlocked()){alert('Another agent run is in progress. Wait for it to finish or refresh.');return;}
+  setAgentRunning(true);
+  var btn=document.querySelector('button[onclick*="repromptProposalVersion(\''+id+'\')"]');
+  if(btn){btn.disabled=true;btn.textContent='↻ Generating…';}
+  try{
+    var newText=await _writerReprompt(p,feedback);
+    if(!newText||!newText.trim())throw new Error('Writer returned empty output.');
+    // Save as new version. Mark old versions not-current; new one is current.
+    if(!p.versions)p.versions=[];
+    // If versions array is empty, seed it with the current text as v1 so history is preserved
+    if(p.versions.length===0&&p.text){
+      p.versions.push({label:'v1 — Original',text:p.text,ts:p.createdAt||new Date().toISOString(),current:false});
+    }
+    p.versions.forEach(function(v){v.current=false;});
+    var n=p.versions.length+1;
+    // Label includes a snippet of the feedback so the user can tell versions apart at a glance
+    var fbLabel=feedback.length>30?feedback.substring(0,28)+'…':feedback;
+    p.versions.push({
+      label:'v'+n+' — '+fbLabel,
+      text:newText,
+      ts:new Date().toISOString(),
+      current:true,
+      feedback:feedback
+    });
+    p.text=newText;p.savedText=newText;
+    // Amount might change if the new version restructured pricing; re-extract
+    var newAmount=normalizeAmount(extractAmount(newText));
+    if(newAmount&&newAmount!=='TBD')p.amount=newAmount;
+    storageSave();
+    if(typeof updateProposalOnBackend==='function'){
+      updateProposalOnBackend(id,{text:newText,amount:p.amount,versions:p.versions.map(function(v){return{label:v.label,text:v.text,current:!!v.current};})});
+    }
+    // Re-render the row: update text, version strip, summary card. Skip full renderTracker
+    // because that closes the expanded row — we want to stay expanded.
+    var txtEl=document.getElementById('ptext-'+id);if(txtEl)txtEl.innerHTML=escHtml(newText);
+    var vstrip=document.getElementById('tvbtn-'+id);if(vstrip)vstrip.innerHTML=renderTrackerVersionBtns(p);
+    var sumEl=document.getElementById('psum-'+id);if(sumEl)sumEl.textContent=getProposalSummary(p);
+    ta.value='';
+    showStorageBadge('saved','Saved as v'+n+' — feedback applied');
+  }catch(e){
+    console.error('Reprompt failed:',e);
+    alert('Reprompt failed: '+e.message);
+  }finally{
+    setAgentRunning(false);
+    if(btn){btn.disabled=false;btn.textContent='↻ Generate v+1';}
+  }
+}
+
+/* Internal Writer re-runner. Routes mock vs live based on current mode.
+ * Reuses the proposal's frozen r1Snapshot/r2Snapshot so the agent reasons from the
+ * same constraints + recommendation as the original version — feedback is the only delta. */
+async function _writerReprompt(p,feedback){
+  var r1Snap=p.r1Snapshot,r2Snap=p.r2Snapshot||'';
+  var mode=getApiMode();
+  if(mode==='mock'){
+    // Mock mode: rebuild the proposal from the snapshots, then append a note that feedback was applied.
+    // Honest about what mock can do — it can't actually rewrite based on feedback semantically.
+    var paths=generateToTPaths(r1Snap);
+    var rec=generateRec(r1Snap,paths);
+    var newDoc=generateProposal(r1Snap,rec,paths);
+    return newDoc+'\n\n---\n\n**Mock-mode note:** Feedback received but not applied (mock generator is deterministic). Switch to direct/proxy API mode to have the Writer actually incorporate this feedback:\n\n> '+feedback;
+  }
+  // Live mode: call the Writer with r1Snap/r2Snap plus feedback override.
+  // Build the same sys/usr that runAgent3 builds, plumbing in feedback as override directive.
+  var wDir=r1Snap.deal_direction||'outbound_sale';
+  var generateInChinese=false;
+  // Detect Chinese intent from feedback itself — saves the user from having to toggle the checkbox
+  if(/中文|chinese|mandarin|translate.*chinese/i.test(feedback))generateInChinese=true;
+  // Otherwise honor any prior Chinese setting from the proposal (if we want to add that later).
+  var wDirNote='';
+  // Reuse the same direction-specific section requirements
+  if(wDir==='inbound_procurement'){
+    wDirNote='\n\nDEAL DIRECTION: INBOUND_PROCUREMENT. Internal procurement evaluation memo for Zillion leadership (Tony/Yuhan/Xander). Do NOT generate a customer-facing proposal.';
+  } else if(wDir==='vendor_services'){
+    wDirNote='\n\nDEAL DIRECTION: VENDOR_SERVICES. Vendor services agreement — counterparty owns hardware, Zillion provides 24/7 L3 services.';
+  }
+  if(generateInChinese){
+    wDirNote+='\n\nLANGUAGE: Generate the entire body in Simplified Chinese (简体中文). Keep numeric values, GPU model names, vendor names, location names, and reference IDs in their canonical English form. Use industry-standard Chinese technical terminology.';
+  }
+  // Reprompt-specific instructions
+  var voiceNote=wDir==='inbound_procurement'?'VOICE: Direct internal team brief — frank about risks.':wDir==='vendor_services'?'VOICE: Operator-to-operator professional services tone.':'VOICE: Senior CTO speaking to another technical professional.';
+  var sys='You are the Writer Agent for Zillion Network. You are REGENERATING an existing proposal with reviewer feedback applied.'+wDirNote+'\n\n'+voiceNote+' No marketing cliches.\n\nThis is a reprompt — produce a complete proposal document (same Markdown structure as the original) that incorporates the reviewer feedback as an override. Keep what was working in the original; change what the feedback addresses. Preserve all factual anchors (pricing, GPU counts, dates, reference IDs) unless the feedback explicitly asks to change them.';
+  var proposalDate=p.date||new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  var usr='Reprompt an existing proposal with this reviewer feedback applied.\n\n'+
+    '=== ORIGINAL PROPOSAL (v'+((p.versions||[]).length||1)+') ===\n'+(p.text||'')+'\n=== END ORIGINAL ===\n\n'+
+    '=== DISCOVERY OUTPUT (frozen — same as original) ===\n'+JSON.stringify(r1Snap,null,2)+'\n=== END DISCOVERY ===\n\n'+
+    '=== ARCHITECT RECOMMENDATION (frozen — same as original) ===\n'+(r2Snap||'(not available)')+'\n=== END ARCHITECT ===\n\n'+
+    '=== REVIEWER FEEDBACK (apply as OVERRIDE) ===\n'+feedback+'\n=== END FEEDBACK ===\n\n'+
+    'Proposal Date: '+proposalDate+' (preserve from original).\n\nGenerate the FULL new proposal document. Do not summarize the change — output the complete new Markdown.';
+  // Direct callClaude (non-streaming for simplicity — reprompt is a one-shot operation in the tracker)
+  var text=await callClaude(sys,usr,'writer',7000);
+  return text;
+}
+function loadTrackerVersion(btnOrId,idx){var id,vidx;if(typeof btnOrId==='string'){id=btnOrId;vidx=idx;}else{id=btnOrId.dataset.pid;vidx=parseInt(btnOrId.dataset.idx,10);}var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;p.versions.forEach(function(v,i){v.current=(i===vidx);});p._editBaselineText=p.versions[vidx].text;var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(p.versions[vidx].text||p.text||'');var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);
+  // Refresh the summary card — previously this kept showing v1's executive summary even after switching versions
+  var sumEl=document.getElementById('psum-'+id);if(sumEl)sumEl.textContent=getProposalSummary(p);
+  // Persist current-version flag change so a reload doesn't revert to v1
+  storageSave();if(typeof updateProposalOnBackend==='function')updateProposalOnBackend(id,{versions:p.versions.map(function(v){return{label:v.label,text:v.text,current:!!v.current};})});
+}
 function deleteTrackerVersionBtn(btn){deleteTrackerVersion(btn.dataset.pid,parseInt(btn.dataset.idx,10));}
 function deleteTrackerVersion(id,idx){var p=proposals.find(function(x){return x.id===id;});if(!p||!p.versions)return;if(p.versions.length<=1){alert('Cannot delete the only version.');return;}if(!confirm('Delete "'+p.versions[idx].label+'"?'))return;p.versions.splice(idx,1);var ni=Math.max(0,Math.min(idx,p.versions.length-1));p.versions.forEach(function(v,i){v.current=(i===ni);});var nt=p.versions[ni].text||p.text||'';p.text=nt;p.savedText=nt;storageSave();var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(nt);var c=document.getElementById('tvbtn-'+id);if(c)c.innerHTML=renderTrackerVersionBtns(p);}
 function revertTrackerEdit(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var cur=p.versions&&p.versions.find(function(v){return v.current;});var txt=cur&&cur.text?cur.text:(p.savedText||p.text);var el=document.getElementById('ptext-'+id);if(el)el.innerHTML=escHtml(txt);}
@@ -4063,15 +4511,23 @@ function saveToTracker(){if(!r1){alert('No proposal data to save.');return;}
       if(r1.competitive_intel)existing.competitive_intel=r1.competitive_intel;
       // If linked, carry deal_direction over so the tracker filter (procurement vs customer) reflects the latest
       if(r1.deal_direction)existing.deal_direction=r1.deal_direction;
+      // Refresh procurement plan from the latest run so Yuhan sees current have/buy/rent split
+      if(Array.isArray(r2ProcurementPlan)&&r2ProcurementPlan.length>0)existing.procurementPlan=r2ProcurementPlan.slice();
       storageSave();updateProposalOnBackend(existing.id,{text:txt,status:existing.status,amount:existing.amount});
       var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Updated!';btn.style.background='var(--green)';btn.disabled=true;
       setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(existing.id);},150);},1200);
       return;
   }
-  var p={id:genId(),client:clientName,amount:normalizeAmount(extractAmount(txt)),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,deal_stage:r1.deal_stage||'Discovery',deal_direction:r1.deal_direction||'outbound_sale',follow_up_questions:r1.follow_up_questions||[],competitive_intel:r1.competitive_intel||'',versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});})};
+  var p={id:genId(),client:clientName,amount:normalizeAmount(extractAmount(txt)),date:now.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}),status:'pending',text:txt,savedText:txt,notes:'',createdAt:now.toISOString(),confidence:r1.confidence||null,deal_stage:r1.deal_stage||'Discovery',deal_direction:r1.deal_direction||'outbound_sale',follow_up_questions:r1.follow_up_questions||[],competitive_intel:r1.competitive_intel||'',versions:proposalVersions.map(function(v,i){return Object.assign({},v,{current:i===currentVersionIndex});}),
+    // Stash Discovery + Architect outputs so per-version reprompts can rebuild the Writer\'s input
+    // without forcing the user to re-run the whole pipeline. Stored as r1Snapshot / r2Snapshot
+    // to avoid colliding with any in-memory r1/r2.
+    r1Snapshot:r1?Object.assign({},r1):null,
+    r2Snapshot:r2||null,
+    // Procurement plan (have/buy/rent split) — Yuhan needs this preserved with the proposal
+    procurementPlan:Array.isArray(r2ProcurementPlan)?r2ProcurementPlan.slice():[]
+  };
   proposals.unshift(p);updateTrackerCount();storageSave();saveProposalToBackend(p);
-  var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;
-  setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);
   var btn=document.querySelector('[onclick="saveToTracker()"]');btn.innerHTML='✓ Saved!';btn.style.background='var(--green)';btn.disabled=true;
   setTimeout(function(){btn.innerHTML='💾 Save to Proposals Tracker';btn.style.background='';btn.disabled=false;goTracker();setTimeout(function(){toggleProposal(p.id);},150);},1200);
 }
@@ -4174,7 +4630,7 @@ function renderTracker(){
   var rc=document.getElementById('resultsCount');if(rc)rc.textContent=filtered.length!==proposals.length?filtered.length+' of '+proposals.length+' proposals':'';
   var list=document.getElementById('proposalList');
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">'+(proposals.length?'🔍':'📭')+'</div><div class="empty-state-title">'+(proposals.length?'No proposals match this filter':'No proposals yet')+'</div></div>';document.getElementById('paginationControls').style.display='none';return;}
-  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client"><button class="pr-pin '+(p.pinned?'pinned':'')+'" onclick="event.stopPropagation();togglePin(\''+p.id+'\')" title="'+(p.pinned?'Unpin from top':'Pin to top')+'">'+(p.pinned?'📌':'📍')+'</button>'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount" ondblclick="event.stopPropagation();editAmount(\''+p.id+'\')" title="'+(p.amount==='TBD'?'Amount pending — under negotiation. Double-click to edit.':'Double-click to edit amount')+'" style="cursor:pointer;'+(p.amount==='TBD'?'font-style:italic;color:var(--muted);':'')+'">'+escHtml(p.amount)+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(function(){var dir=p.deal_direction||'outbound_sale';if(dir==='outbound_sale')return '';var dcfg=dir==='inbound_procurement'?{txt:'← Procurement',bg:'#FFF8E1',fg:'#78350F',bd:'#D97706'}:{txt:'⇄ Vendor svc',bg:'#EFF6FF',fg:'#1E3A8A',bd:'#2563EB'};return '<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:'+dcfg.bg+';color:'+dcfg.fg+';border:1px solid '+dcfg.bd+';">'+dcfg.txt+'</span>';})()+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':p.status==='draft'?'📝 Draft':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div><div class=\"sp-opt\" onclick=\"event.stopPropagation();setStatus(\\\'"+p.id+"\\\',\\\'disqualified\\\')\"><div class=\"sp-dot l\" style=\"background:#94A3B8;\"></div>✕ Disqualified</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
+  list.innerHTML=pageItems.map(function(p){return '<div class="proposal-row" id="prow-'+p.id+'"><div class="pr-top" onclick="toggleProposal(\''+p.id+'\')"><div class="pr-client" ondblclick="event.stopPropagation();renameClient(\''+p.id+'\')" title="Double-click to rename client"><button class="pr-pin '+(p.pinned?'pinned':'')+'" onclick="event.stopPropagation();togglePin(\''+p.id+'\')" title="'+(p.pinned?'Unpin from top':'Pin to top')+'">'+(p.pinned?'📌':'📍')+'</button>'+p.client+'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" style="margin-left:6px;transition:transform 0.2s;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="pr-meta"><span class="pr-ref">'+p.id+'</span><span class="pr-amount" ondblclick="event.stopPropagation();editAmount(\''+p.id+'\')" title="'+(p.amount==='TBD'?'Amount pending — under negotiation. Double-click to edit.':'Double-click to edit amount')+'" style="cursor:pointer;'+(p.amount==='TBD'?'font-style:italic;color:var(--muted);':'')+'">'+escHtml(p.amount)+'</span><span class="pr-date">'+p.date+'</span>'+(p.confidence?'<span style="font-size:11.5px;font-weight:600;color:'+(p.confidence.score>=8?'var(--green)':p.confidence.score>=6?'var(--amber)':'var(--red)')+';">◉ '+p.confidence.score+' conf</span>':'')+(p.deal_stage?'<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--green);border:1px solid var(--accent-border);">'+escHtml(p.deal_stage)+'</span>':'')+(function(){var dir=p.deal_direction||'outbound_sale';if(dir==='outbound_sale')return '';var dcfg=dir==='inbound_procurement'?{txt:'← Procurement',bg:'#FFF8E1',fg:'#78350F',bd:'#D97706'}:{txt:'⇄ Vendor svc',bg:'#EFF6FF',fg:'#1E3A8A',bd:'#2563EB'};return '<span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:'+dcfg.bg+';color:'+dcfg.fg+';border:1px solid '+dcfg.bd+';">'+dcfg.txt+'</span>';})()+(p.status==='pending'&&p.followup?'<span class="followup-pr-badge '+followupBadgeClass(p)+'">'+followupPrBadgeText(p)+'</span>':'')+'<div style="position:relative;"><button class="status-badge '+p.status+'" onclick="event.stopPropagation();toggleStatusPicker(\''+p.id+'\')"><span class="status-dot-sm"></span>'+(p.status==='success'?'✓ Successful':p.status==='pending'?'⏳ Pending':p.status==='disqualified'?'✕ Disqualified':p.status==='draft'?'📝 Draft':'✗ Not Successful')+'</button><div class="status-picker" id="sp-'+p.id+'"><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'success\')"><div class="sp-dot s"></div>✓ Successful</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'pending\')"><div class="sp-dot p"></div>⏳ Pending</div><div class="sp-opt" onclick="event.stopPropagation();setStatus(\''+p.id+'\',\'lost\')"><div class="sp-dot l"></div>✗ Not Successful</div><div class=\"sp-opt\" onclick=\"event.stopPropagation();setStatus(\\\'"+p.id+"\\\',\\\'disqualified\\\')\"><div class=\"sp-dot l\" style=\"background:#94A3B8;\"></div>✕ Disqualified</div></div></div></div></div><div class="pr-expanded" id="pexp-'+p.id+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"><div style="font-size:13px;font-weight:600;color:var(--ink2);">Proposal Document</div><span style="font-size:11.5px;color:var(--placeholder);">✏️ Click to edit inline</span></div><div class="version-strip" style="margin-bottom:10px;"><span class="ver-label">Versions:</span><span id="tvbtn-'+p.id+'" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'+renderTrackerVersionBtns(p)+'</span><button class="ver-add-btn" onclick="event.stopPropagation();addTrackerVersion(\''+p.id+'\')">+ Save Version</button></div><div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:12px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);margin-bottom:6px;">Summary</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;" id="psum-'+p.id+'">'+escHtml(getProposalSummary(p))+'</div></div><div class="pr-proposal-text" id="ptext-'+p.id+'" contenteditable="true" spellcheck="false">'+escHtml(getCurrentVersionText(p))+'</div><div class="pr-actions"><button class="act-btn" onclick="saveTrackerEdit(\''+p.id+'\')">✓ Save edits</button><button class="act-btn" onclick="revertTrackerEdit(\''+p.id+'\')">↺ Revert</button><button class="act-btn" onclick="exportTrackerProposal(\''+p.id+'\')">⬇ Export .md</button><button class="act-btn" onclick="openPdfModal(\''+p.id+'\')" style="color:var(--blue);border-color:rgba(26,86,219,0.3);">📄 Export PDF</button><button class="act-btn" onclick="deleteProposal(\''+p.id+'\')" style="color:var(--red);">🗑 Delete</button></div>'+(p.r1Snapshot?'<div class="pr-reprompt" style="margin-top:12px;padding:10px 12px;background:#FAFBFC;border:1px solid var(--border);border-radius:6px;"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;">↻ Reprompt this proposal version</div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.5;">Generates a NEW version with your feedback applied. The Discovery + Architect outputs from when this proposal was first created stay frozen — only the Writer re-runs.</div><div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="rprompt-'+p.id+'" rows="2" placeholder="Feedback for the Writer — e.g. emphasize the colo savings, add a Chinese section, tighten the timeline to 2 weeks…" style="flex:1;font-family:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;resize:vertical;line-height:1.5;background:#fff;"></textarea><button onclick="event.stopPropagation();repromptProposalVersion(\''+p.id+'\')" style="font-size:11.5px;font-weight:600;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">↻ Generate v+1</button></div></div>':'')+(p.status==='pending'?'<div class="'+followupClass(p)+'" id="fu-'+p.id+'"><span class="followup-label">'+followupIcon(p)+' Follow-up by:</span><input type="date" class="followup-date-input" id="fudate-'+p.id+'" value="'+(p.followup||'')+'" onchange="saveFollowup(\''+p.id+'\',this.value)"/>'+followupBadgeHtml(p)+'</div>':'')+'<div class="pr-notes-label">Negotiation Notes</div><textarea class="pr-notes" id="pnotes-'+p.id+'" placeholder="Add notes…" onchange="saveNotes(\''+p.id+'\')">'+escHtml(p.notes||'')+'</textarea></div></div>';}).join('');
   var pc=document.getElementById('paginationControls');if(totalPages>1){pc.style.display='flex';document.getElementById('pageInfo').textContent='Page '+currentPage+' of '+totalPages;document.getElementById('prevPage').disabled=currentPage<=1;document.getElementById('nextPage').disabled=currentPage>=totalPages;}else{pc.style.display='none';}
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -4323,7 +4779,37 @@ function filterByDirection(d,btn){
   btn.classList.add('active');renderTracker();
 }
 function saveTrackerEdit(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var el=document.getElementById('ptext-'+id);var nt=el.innerText||el.textContent;var origText=p.savedText||p.text||'';p.text=nt;p.savedText=nt;var cur=p.versions&&p.versions.find(function(v){return v.current;});if(cur)cur.text=nt;storageSave();updateProposalOnBackend(id,{text:nt});if(origText&&nt!==origText)logEditDelta(id,'tracker',origText,nt,p.status);captureEditDelta(id,'tracker');var btn=el.nextElementSibling.querySelector('button');btn.textContent='✓ Saved!';setTimeout(function(){btn.textContent='✓ Save edits';},2000);}
-function exportTrackerProposal(id){var p=proposals.find(function(x){return x.id===id;});if(!p)return;var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([p.text],{type:'text/markdown'}));a.download=p.id+'_proposal.md';a.click();}
+function exportTrackerProposal(id){
+  var p=proposals.find(function(x){return x.id===id;});
+  if(!p)return;
+  // Read the actual displayed text from the editable element so any in-progress edits get exported too.
+  // Falls back to the current version's text, then to p.text. Previously this always read p.text,
+  // which is why all "v1/v2/v3" exports came out identical when the user clicked Export after
+  // navigating between versions in the tracker.
+  var txt='';
+  var el=document.getElementById('ptext-'+id);
+  if(el)txt=(el.innerText||el.textContent||'').trim();
+  if(!txt){
+    if(p.versions&&p.versions.length){
+      var cur=p.versions.find(function(v){return v.current;});
+      if(cur)txt=cur.text||'';
+    }
+  }
+  if(!txt)txt=p.text||'';
+  // Tag the filename with the version label so multiple exports of different versions don't clobber
+  var verSuffix='';
+  if(p.versions&&p.versions.length){
+    var cur=p.versions.find(function(v){return v.current;});
+    if(cur&&cur.label){
+      // Sanitize label for filename: strip non-alphanumerics, replace spaces with underscores
+      verSuffix='_'+cur.label.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').substring(0,30);
+    }
+  }
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/markdown'}));
+  a.download=p.id+verSuffix+'_proposal.md';
+  a.click();
+}
 function deleteProposal(id){if(!confirm('Delete this proposal permanently?'))return;proposals=proposals.filter(function(p){return p.id!==id;});updateTrackerCount();storageSave();deleteProposalOnBackend(id);renderTracker();renderHomeRecent();}
 function saveNotes(id){var p=proposals.find(function(x){return x.id===id;});if(p){p.notes=document.getElementById('pnotes-'+id).value;storageSave();updateProposalOnBackend(id,{notes:p.notes});}}
 
@@ -4457,13 +4943,90 @@ document.addEventListener('DOMContentLoaded',function(){
   if(typeof renderDiscoveryInvPanel==='function')renderDiscoveryInvPanel();
   // Restore in-progress draft if available
   restoreDraft();
+  // Surface uncaught errors so silent button failures don't go undebugged.
+  // Logs to console AND shows a small dismissible banner so non-developers see something happened.
+  window.addEventListener('error',function(e){
+    console.error('Bizops uncaught error:',e.message,'at',e.filename+':'+e.lineno);
+    try{
+      var b=document.getElementById('zn_runtime_err_banner');
+      if(!b){
+        b=document.createElement('div');
+        b.id='zn_runtime_err_banner';
+        b.style.cssText='position:fixed;top:12px;right:12px;z-index:99999;max-width:380px;padding:10px 14px;background:#FEE2E2;border:1px solid #DC2626;border-radius:6px;font-size:12px;color:#7F1D1D;box-shadow:0 4px 16px rgba(0,0,0,0.15);line-height:1.5;font-family:system-ui,-apple-system,sans-serif;';
+        document.body.appendChild(b);
+      }
+      b.innerHTML='<div style="font-weight:700;margin-bottom:4px;">⚠ Bizops JS error detected</div>'+
+        '<div style="font-size:11.5px;">'+(e.message||'(no message)').replace(/[<>]/g,'')+'</div>'+
+        '<div style="font-size:10.5px;margin-top:4px;opacity:0.8;">'+(e.filename||'').split('/').pop()+':'+(e.lineno||'?')+'</div>'+
+        '<div style="margin-top:6px;display:flex;gap:6px;"><button onclick="this.parentNode.parentNode.style.display=\'none\'" style="font-size:10.5px;padding:2px 8px;border:1px solid #DC2626;background:#fff;color:#7F1D1D;border-radius:4px;cursor:pointer;">Dismiss</button><span style="font-size:10.5px;color:#7F1D1D;align-self:center;">Send to Larry with browser console output</span></div>';
+    }catch(_){}
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    console.error('Bizops unhandled promise rejection:',e.reason);
+  });
   // Warn before navigating away with unsaved proposal edits
   window.addEventListener('beforeunload',function(e){
     var bars=document.querySelectorAll('.edit-bar.visible');
     if(bars.length>0){e.preventDefault();e.returnValue='You have unsaved proposal edits.';}
   });
-  // Check for backup reminder 3s after load (so banner appears as a second-impression)
+  // Check for backup reminder 3s after load
   setTimeout(maybeShowBackupReminder,3000);
+
+  // ═══ SETTINGS BUTTON SELF-TEST + BULLETPROOF BINDING ═══
+  // Two-layer fix for the persistent "Settings button does nothing" report:
+  //
+  // Layer 1: programmatic addEventListener on every Settings button. This bypasses any
+  // potential issue with the inline onclick attribute (sanitizer stripping it, CSP, etc).
+  // The inline onclick stays as a fallback, but the listener guarantees the button works
+  // regardless of how onclick is processed.
+  //
+  // Layer 2: an immediate self-test that verifies the Settings modal can actually open.
+  // If anything is wrong, surface it visibly RIGHT NOW at page load instead of waiting
+  // for the user to click.
+  try{
+    // Find every button whose onclick mentions Settings — header + Step 1 setup bar
+    var settingsButtons=Array.prototype.slice.call(document.querySelectorAll('button')).filter(function(b){
+      var oc=b.getAttribute('onclick')||'';
+      return oc.indexOf('safeOpenSettings')>=0||oc.indexOf('openSettings')>=0;
+    });
+    settingsButtons.forEach(function(btn,i){
+      // Attach a fresh listener that always works, independent of onclick attribute.
+      // Bug history: the Step 1 setup bar Settings button silently failed; root cause
+      // turned out to be `inset:0` CSS not applying. Programmatic listener stays as
+      // defense against future regression of the same kind.
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof safeOpenSettings==='function')safeOpenSettings();
+        else if(typeof openSettings==='function'){if(typeof loadSettingsIntoModal==='function')loadSettingsIntoModal();openSettings();}
+        else alert('Settings functions are missing from the page. Hard-reload (Cmd+Shift+R) to refresh.');
+      },true);
+    });
+    // Self-test: confirm Settings dependencies exist. Failure surfaces visibly so future
+    // bugs of the same shape get caught at page load instead of on click.
+    var selfTestFailures=[];
+    if(!document.getElementById('settingsModal'))selfTestFailures.push('settingsModal element missing');
+    if(!document.getElementById('settingsApiKey'))selfTestFailures.push('settingsApiKey input missing');
+    if(!document.getElementById('settingsApiBase'))selfTestFailures.push('settingsApiBase input missing');
+    if(!document.getElementById('settingsProxySection'))selfTestFailures.push('settingsProxySection missing');
+    if(typeof safeOpenSettings!=='function')selfTestFailures.push('safeOpenSettings function not defined');
+    if(typeof openSettings!=='function')selfTestFailures.push('openSettings function not defined');
+    if(typeof loadSettingsIntoModal!=='function')selfTestFailures.push('loadSettingsIntoModal function not defined');
+    if(settingsButtons.length===0)selfTestFailures.push('no Settings buttons found in the DOM');
+    if(selfTestFailures.length>0){
+      console.error('[bizops init] Settings self-test FAILED:',selfTestFailures);
+      var sb=document.createElement('div');
+      sb.id='zn_settings_selftest_banner';
+      sb.style.cssText='position:fixed;top:12px;right:12px;z-index:99999;max-width:400px;padding:12px 14px;background:#FEE2E2;border:1px solid #DC2626;border-radius:6px;font-size:12px;color:#7F1D1D;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-family:system-ui,-apple-system,sans-serif;line-height:1.5;';
+      sb.innerHTML='<div style="font-weight:700;margin-bottom:5px;">⚠ Settings button self-test failed</div>'+
+        '<ul style="margin:0;padding:0 0 0 18px;font-size:11.5px;">'+selfTestFailures.map(function(f){return '<li>'+f.replace(/[<>]/g,'')+'</li>';}).join('')+'</ul>'+
+        '<div style="margin-top:6px;font-size:11px;opacity:0.85;">Send this to Larry. The Settings button will not work until these are resolved.</div>'+
+        '<button onclick="this.parentNode.style.display=\'none\'" style="margin-top:6px;font-size:10.5px;padding:2px 8px;border:1px solid #DC2626;background:#fff;color:#7F1D1D;border-radius:4px;cursor:pointer;">Dismiss</button>';
+      document.body.appendChild(sb);
+    }
+  }catch(initErr){
+    console.error('[bizops init] Settings binding crashed:',initErr);
+  }
 });
 
 /* ═══ INVENTORY MANAGEMENT PAGE ═══ */
@@ -5195,16 +5758,71 @@ function analyzeEditPatterns(){
 
   report+='Raw JSON summary:\n'+JSON.stringify(summary,null,2);
 
-  // Show in a modal-like prompt the user can copy
-  var w=window.open('','_blank','width=800,height=700,scrollbars=yes');
-  if(w){
-    w.document.write('<title>Edit Log Analysis</title><pre style="font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;padding:24px;white-space:pre-wrap;word-wrap:break-word;">'+report.replace(/</g,'&lt;')+'</pre>');
-    w.document.close();
-  } else {
-    // Popup blocked — fall back to download
-    var blob=new Blob([report],{type:'text/plain'});
+  // Display the report inline in an overlay (not via window.open — popup blockers reject it).
+  // The previous version used window.open which returned a valid window object even when blocked,
+  // so the fallback download never fired and the click looked silent.
+  showAnalysisReport(report);
+}
+
+/* ═══ INLINE REPORT MODAL ═══
+ * Displays large diagnostic reports without depending on window.open (popup blockers).
+ * Built as a self-contained overlay; created on demand, removed on close. */
+function showAnalysisReport(reportText){
+  // Tear down any existing instance so consecutive analyzes don't stack
+  var prior=document.getElementById('zn_analysis_modal');
+  if(prior)prior.parentNode.removeChild(prior);
+
+  var overlay=document.createElement('div');
+  overlay.id='zn_analysis_modal';
+  overlay.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(15,17,23,0.55);backdrop-filter:blur(4px);padding:24px;';
+
+  var box=document.createElement('div');
+  box.style.cssText='background:var(--white);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:min(820px,100%);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;';
+
+  // Header with title + actions
+  var header=document.createElement('div');
+  header.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);';
+  header.innerHTML='<div style="font-size:15px;font-weight:700;color:var(--ink);">🔍 Edit Log Analysis</div>'+
+    '<div style="display:flex;gap:8px;">'+
+      '<button id="zn_analysis_copy" style="font-size:11.5px;padding:6px 12px;border:1px solid var(--border);background:var(--bg);color:var(--ink2);border-radius:5px;cursor:pointer;font-weight:600;">📋 Copy</button>'+
+      '<button id="zn_analysis_download" style="font-size:11.5px;padding:6px 12px;border:1px solid var(--border);background:var(--bg);color:var(--ink2);border-radius:5px;cursor:pointer;font-weight:600;">⬇ Download .txt</button>'+
+      '<button id="zn_analysis_close" style="font-size:11.5px;padding:6px 12px;border:1px solid var(--border);background:var(--white);color:var(--muted);border-radius:5px;cursor:pointer;font-weight:600;">✕ Close</button>'+
+    '</div>';
+
+  var body=document.createElement('pre');
+  body.style.cssText='margin:0;padding:20px 22px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55;color:var(--ink2);background:var(--white);white-space:pre-wrap;word-wrap:break-word;overflow-y:auto;flex:1;';
+  body.textContent=reportText; // textContent so HTML in the report can\'t break the layout
+
+  box.appendChild(header);
+  box.appendChild(body);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Wire up the actions
+  document.getElementById('zn_analysis_close').addEventListener('click',function(){
+    if(overlay.parentNode)overlay.parentNode.removeChild(overlay);
+  });
+  // Click outside the box closes
+  overlay.addEventListener('click',function(e){
+    if(e.target===overlay&&overlay.parentNode)overlay.parentNode.removeChild(overlay);
+  });
+  document.getElementById('zn_analysis_copy').addEventListener('click',function(){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(reportText).then(function(){
+        var b=document.getElementById('zn_analysis_copy');var orig=b.textContent;
+        b.textContent='✓ Copied';setTimeout(function(){b.textContent=orig;},1500);
+      }).catch(function(){alert('Copy failed — try Download instead.');});
+    } else {
+      // Older browser fallback — select the text in the pre and copy via execCommand
+      var sel=window.getSelection();var range=document.createRange();range.selectNodeContents(body);sel.removeAllRanges();sel.addRange(range);
+      try{document.execCommand('copy');alert('Copied (legacy method).');}catch(e){alert('Copy failed — try Download instead.');}
+      sel.removeAllRanges();
+    }
+  });
+  document.getElementById('zn_analysis_download').addEventListener('click',function(){
+    var blob=new Blob([reportText],{type:'text/plain'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='edit_log_analysis_'+new Date().toISOString().slice(0,10)+'.txt';a.click();
-  }
+  });
 }
 
 /* ═══ INVENTORY SNAPSHOT FOR STEP 1 (Discovery) ═══
@@ -5329,7 +5947,7 @@ function err(dot,stat,btn,btnTxt,msg){document.getElementById(dot).className='sd
 </div>
 
 <!-- ════════ SETTINGS MODAL ════════ -->
-<div id="settingsModal" class="hidden" role="dialog" aria-label="Settings" style="position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);">
+<div id="settingsModal" class="hidden" role="dialog" aria-label="Settings" style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(15,17,23,0.5);backdrop-filter:blur(4px);">
   <div style="background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:24px 28px;width:540px;max-width:90vw;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="font-size:18px;font-weight:700;color:var(--ink);">⚙ Settings</div>
